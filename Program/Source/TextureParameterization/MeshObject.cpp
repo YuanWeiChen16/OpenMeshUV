@@ -212,6 +212,22 @@ void MeshObject::DeleteSelectedFace(unsigned int faceID)
 	selectedFace.erase(std::remove(selectedFace.begin(), selectedFace.end(), faceID), selectedFace.end());
 }
 
+bool MeshObject::AddSelectedPoint(unsigned int PointID)
+{
+	if (std::find(selectedPoint.begin(), selectedPoint.end(), PointID) == selectedPoint.end() &&
+		PointID >= 0 && PointID < model.mesh.n_vertices())
+	{
+		selectedPoint.push_back(PointID);
+		return true;
+	}
+	return false;
+}
+
+void MeshObject::DeleteSelectedPoint(unsigned int PointID)
+{
+	selectedPoint.erase(std::remove(selectedPoint.begin(), selectedPoint.end(), PointID), selectedPoint.end());
+}
+
 bool MeshObject::FindClosestPoint(unsigned int faceID, glm::vec3 worldPos, glm::vec3& closestPos)
 {
 	OpenMesh::FaceHandle fh = model.mesh.face_handle(faceID);

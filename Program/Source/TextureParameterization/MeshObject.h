@@ -48,11 +48,18 @@ public:
 	void RenderSelectedFace();
 	bool AddSelectedFace(unsigned int faceID);
 	void DeleteSelectedFace(unsigned int faceID);
+
+	bool AddSelectedPoint(unsigned int PointID);
+	void DeleteSelectedPoint(unsigned int PointID);
+
 	bool FindClosestPoint(unsigned int faceID, glm::vec3 worldPos, glm::vec3& closestPos);
 
 private:
 	GLMesh model;
 	std::vector<unsigned int> selectedFace;
+
+	std::vector<unsigned int> selectedPoint;
+
 	std::vector<unsigned int*> fvIDsPtr;
 	std::vector<int> elemCount;
 

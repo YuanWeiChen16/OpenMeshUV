@@ -24,7 +24,7 @@ bool isRightButtonPress = false;
 GLuint currentFaceID = 0;
 int currentMouseX = 0;
 int currentMouseY = 0;
-int windowWidth = 600;
+int windowWidth = 1200;
 int windowHeight = 600;
 const std::string ProjectName = "TextureParameterization";
 
@@ -50,12 +50,16 @@ enum SelectionMode
 {
 	ADD_FACE,
 	DEL_FACE,
-	SELECT_POINT
+	SELECT_POINT,
+	ADD_POINT,
+	DEL_POINT,
+	ONE_RING
+
 };
 SelectionMode selectionMode = ADD_FACE;
 
 TwBar* bar;
-TwEnumVal SelectionModeEV[] = { {ADD_FACE, "Add face"}, {DEL_FACE, "Delete face"}, {SELECT_POINT, "Point"} };
+TwEnumVal SelectionModeEV[] = { {ADD_FACE, "Add face"}, {DEL_FACE, "Delete face"}, {SELECT_POINT, "Point"},{ADD_POINT,"Add point"},{DEL_POINT,"Delete point"},{ONE_RING,"One Ring"} };
 TwType SelectionModeType;
 
 
@@ -168,7 +172,7 @@ void RenderMeshWindow()
 	pickingShader.Disable();
 	pickingTexture.Disable();
 
-	
+
 	// draw model
 	glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -187,7 +191,7 @@ void RenderMeshWindow()
 	model.Render();
 
 	drawModelShader.Disable();
-	
+
 	// render selected face
 	if (selectionMode == SelectionMode::ADD_FACE || selectionMode == SelectionMode::DEL_FACE)
 	{
@@ -219,28 +223,8 @@ void RenderMeshWindow()
 
 			updateFlag = false;
 		}
-		/*
-			Using OpenGL 1.1 to draw point
-		*/
-		/*glPushMatrix();
-		glPushAttrib(GL_POINT_BIT);
-			glMatrixMode(GL_PROJECTION);
-			glLoadIdentity();
-			glMultMatrixf(glm::value_ptr(pMat));
-
-			glMatrixMode(GL_MODELVIEW);
-			glLoadIdentity();
-			glMultMatrixf(glm::value_ptr(mvMat));
-
-			glPointSize(15.0f);
-			glColor3f(1.0, 0.0, 1.0);
-			glBegin(GL_POINTS);
-			glVertex3fv(glm::value_ptr(worldPos));
-			glEnd();
-		glPopAttrib();
-		glPopMatrix();*/
-
 		
+
 		glBindBuffer(GL_ARRAY_BUFFER, vboPoint);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3), glm::value_ptr(worldPos), GL_STATIC_DRAW);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -305,6 +289,14 @@ void SelectionHandler(unsigned int x, unsigned int y)
 		currentMouseX = x;
 		currentMouseY = y;
 		updateFlag = true;
+	}
+	else if (selectionMode == ADD_POINT)
+	{
+
+	}
+	else if (selectionMode == DEL_POINT)
+	{
+
 	}
 }
 
