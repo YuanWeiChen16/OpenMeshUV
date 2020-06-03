@@ -1,0 +1,22 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(377,5): warning MSB8004: Output 目錄結尾不是結尾斜線。這個建置執行個體將會加入此斜線，因為這樣才能正確評估 Output 目錄。
+  Common.cpp
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\common.cpp(151): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\common.cpp(153): warning C4018: '<': signed/unsigned 不相符
+  ResourcePath.cpp
+  ShaderObject.cpp
+  DrawModelShader.cpp
+  DrawPickingFaceShader.cpp
+  DrawPointShader.cpp
+  OpenMesh.cpp
+  PickingShader.cpp
+  PickingTexture.cpp
+  TextureParameterization.cpp
+  MeshObject.cpp
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\meshobject.cpp(186): warning C4018: '<': signed/unsigned 不相符
+  tiny_obj_loader.cpp
+  ViewManager.cpp
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\viewmanager.cpp(134): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\viewmanager.cpp(139): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\viewmanager.cpp(283): warning C4244: '=': 將 'int' 轉換為 'float'，由於類型不同，可能導致資料遺失
+  正在產生程式碼...
+  TextureParameterization.vcxproj -> C:\Users\user\Desktop\OpenMeshP3\OpenMeshUV\Program\VC14\TextureParameterization\..\..\Assets\TextureParameterization.exe

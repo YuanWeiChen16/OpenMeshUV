@@ -1,0 +1,34 @@
+﻿已經開始建置於 2017/7/5 下午 11:12:27。
+     1>節點 2 (Build 目標) 上的專案 "D:\ShaderBook\Frameworks\TinyFrameworkExample\VC12\Quiz Framework\Quiz Framework.vcxproj"。
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\Source\Common.cpp ..\..\Source\main.cpp ..\..\Source\tiny_obj_loader.cpp ..\..\Source\ViewManager.cpp
+         Common.cpp
+     1>..\..\Source\Common.cpp(83): warning C4018: '<' : signed/unsigned 不相符
+     1>..\..\Source\Common.cpp(85): warning C4018: '<' : signed/unsigned 不相符
+     1>..\..\Source\Common.cpp(100): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\stdio.h(211) : 請參閱 'fopen' 的宣告
+         main.cpp
+     1>..\..\Source\main.cpp(59): warning C4018: '<' : signed/unsigned 不相符
+     1>..\..\Source\main.cpp(162): warning C4244: '正在初始化' : 將 'double' 轉換為 'GLfloat'，由於類型不同，可能導致資料遺失
+         tiny_obj_loader.cpp
+     1>..\..\Source\tiny_obj_loader.cpp(951): warning C4996: 'sscanf': This function or variable may be unsafe. Consider using sscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\stdio.h(304) : 請參閱 'sscanf' 的宣告
+     1>..\..\Source\tiny_obj_loader.cpp(975): warning C4996: 'sscanf': This function or variable may be unsafe. Consider using sscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\stdio.h(304) : 請參閱 'sscanf' 的宣告
+         ViewManager.cpp
+     1>..\..\Source\ViewManager.cpp(129): warning C4244: '引數' : 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+     1>..\..\Source\ViewManager.cpp(134): warning C4244: '引數' : 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+     1>..\..\Source\ViewManager.cpp(278): warning C4244: '=' : 將 'int' 轉換為 'float'，由於類型不同，可能導致資料遺失
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\ShaderBook\Frameworks\TinyFrameworkExample\VC12\Quiz Framework\Release\Quiz Framework.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\ShaderBook\Frameworks\TinyFrameworkExample\VC12\Quiz Framework\Release\Quiz Framework.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\ShaderBook\Frameworks\TinyFrameworkExample\VC12\Quiz Framework\Release\Quiz Framework.lib" /MACHINE:X86 /SAFESEH Release\Common.obj
+         Release\main.obj
+         Release\tiny_obj_loader.obj
+         Release\ViewManager.obj
+         正在產生程式碼
+         已完成程式碼產生
+         Quiz Framework.vcxproj -> D:\ShaderBook\Frameworks\TinyFrameworkExample\VC12\Quiz Framework\Release\Quiz Framework.exe
+     1>專案 "D:\ShaderBook\Frameworks\TinyFrameworkExample\VC12\Quiz Framework\Quiz Framework.vcxproj" (Build 目標) 建置完成。
+
+建置成功。
+
+經過時間 00:00:09.72

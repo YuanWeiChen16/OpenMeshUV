@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\Source\main.cpp" />
+    <ClCompile Include="..\..\Source\ViewManager.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Common.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\tiny_obj_loader.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\Assets\fragment.fs.glsl" />
+    <None Include="..\..\Assets\vertex.vs.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Tools">
+      <UniqueIdentifier>{11a77163-1f5e-4fa7-a185-ea0daf296047}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ToolsHeader">
+      <UniqueIdentifier>{c17c676a-f3c6-4594-b940-70dbaeea605d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Include\Common.h">
+      <Filter>ToolsHeader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Include\ViewManager.h">
+      <Filter>ToolsHeader</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
