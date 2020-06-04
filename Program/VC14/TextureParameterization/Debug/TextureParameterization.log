@@ -1,3 +1,16 @@
 ﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(377,5): warning MSB8004: Output 目錄結尾不是結尾斜線。這個建置執行個體將會加入此斜線，因為這樣才能正確評估 Output 目錄。
   TextureParameterization.cpp
-  TextureParameterization.vcxproj -> C:\Users\user\Desktop\OpenMeshP3\OpenMeshUV\Program\VC14\TextureParameterization\..\..\Assets\TextureParameterization.exe
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(371): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(378): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(387): error C3867: 'OpenMesh::PolyConnectivity::halfedges': 非標準語法; 請使用 '&' 建立成員的指標
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(387): error C2446: '<': 沒有從 'OpenMesh::PolyConnectivity::ConstHalfedgeRange (__thiscall OpenMesh::PolyConnectivity::* )(void) const' 至 'int' 的轉換
+  c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(387): note: 沒有可以進行此轉換的內容
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(410): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(421): error C3867: 'OpenMesh::PolyConnectivity::vertices': 非標準語法; 請使用 '&' 建立成員的指標
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(421): error C2446: '<': 沒有從 'OpenMesh::PolyConnectivity::ConstVertexRange (__thiscall OpenMesh::PolyConnectivity::* )(void) const' 至 'int' 的轉換
+  c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(421): note: 沒有可以進行此轉換的內容
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(424): warning C4018: '<': signed/unsigned 不相符
+  MeshObject.cpp
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\meshobject.cpp(186): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\meshobject.cpp(266): warning C4018: '<': signed/unsigned 不相符
+  正在產生程式碼...

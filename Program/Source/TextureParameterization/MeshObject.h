@@ -54,7 +54,9 @@ public:
 
 	bool FindClosestPoint(unsigned int faceID, glm::vec3 worldPos, glm::vec3& closestPos);
 
-private:
+	bool FaceToPoint();
+
+
 	GLMesh model;
 	std::vector<unsigned int> selectedFace;
 

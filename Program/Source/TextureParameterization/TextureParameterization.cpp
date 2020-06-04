@@ -34,6 +34,14 @@ float			aspect;
 ViewManager		meshWindowCam;
 
 MeshObject model;
+MeshObject BeSelectModel;
+
+vector<unsigned int> OuterPoint;
+vector<unsigned int> InnerPoint;
+
+float OuterLengh = 0;
+
+
 
 // shaders
 DrawModelShader drawModelShader;
@@ -190,7 +198,29 @@ void RenderMeshWindow()
 
 	model.Render();
 
+	BeSelectModel.Render();
+
 	drawModelShader.Disable();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	// render selected face
 	if (selectionMode == SelectionMode::ADD_FACE || selectionMode == SelectionMode::DEL_FACE)
@@ -223,7 +253,7 @@ void RenderMeshWindow()
 
 			updateFlag = false;
 		}
-		
+
 
 		glBindBuffer(GL_ARRAY_BUFFER, vboPoint);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3), glm::value_ptr(worldPos), GL_STATIC_DRAW);
@@ -328,6 +358,90 @@ void MyKeyboard(unsigned char key, int x, int y)
 	if (!TwEventKeyboardGLUT(key, x, y))
 	{
 		meshWindowCam.keyEvents(key);
+	}
+	cout << "Input : " << key << endl;
+	if (key == 'f')
+	{
+
+
+
+		model.FaceToPoint();
+		MyMesh::VertexHandle* vhandle;
+		vhandle = new MyMesh::VertexHandle[model.selectedPoint.size()];
+		for (int i = 0; i < model.selectedPoint.size(); i++)
+		{
+			MyMesh::VertexHandle TempPoint = model.model.mesh.vertex_handle(model.selectedPoint[i]);
+			MyMesh::Point closestPoint = model.model.mesh.point(TempPoint);
+			vhandle[i] = BeSelectModel.model.mesh.add_vertex(closestPoint);
+		}
+		std::vector<MyMesh::VertexHandle>  face_vhandles;
+		for (int i = 0; i < model.selectedPoint.size(); i++)
+		{
+			face_vhandles.clear();
+			face_vhandles.push_back(vhandle[i]);
+			face_vhandles.push_back(vhandle[i -= -1]);
+			face_vhandles.push_back(vhandle[i -= -2]);
+			BeSelectModel.model.mesh.add_face(face_vhandles);
+		}
+		MyMesh::HalfedgeHandle HFh;
+		for (int i = 0; i < BeSelectModel.model.mesh.halfedges; i++)
+		{
+			HFh = BeSelectModel.model.mesh.halfedge_handle(i);
+			bool ISBOUND = BeSelectModel.model.mesh.is_boundary(HFh);
+			if (ISBOUND)
+			{
+				MyMesh::VertexHandle outPoint = BeSelectModel.model.mesh.from_vertex_handle(HFh);
+				OuterPoint.push_back(outPoint.idx());
+				break;
+			}
+		}
+		HFh = BeSelectModel.model.mesh.next_halfedge_handle(HFh);
+		for (;;)
+		{
+			MyMesh::VertexHandle outPoint = BeSelectModel.model.mesh.from_vertex_handle(HFh);
+			if (outPoint.idx() == OuterPoint[0])
+			{
+				break;
+			}
+			OuterPoint.push_back(outPoint.idx());
+			HFh = BeSelectModel.model.mesh.next_halfedge_handle(HFh);
+		}
+
+		for (int i = 0; i < OuterPoint.size(); i++)
+		{
+			MyMesh::VertexHandle outPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i) % OuterPoint.size()]);
+			MyMesh::VertexHandle outPoint2 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i + 1) % OuterPoint.size()]);
+			MyMesh::Point outPoint1_p = BeSelectModel.model.mesh.point(outPoint1);
+			MyMesh::Point outPoint2_p = BeSelectModel.model.mesh.point(outPoint2);
+			MyMesh::Point disPoint = outPoint2_p - outPoint2_p;
+			float dis = disPoint[0] * disPoint[0] + disPoint[1] * disPoint[1];
+			OuterLengh += dis;
+
+		}
+		for (int i = 0; i < BeSelectModel.model.mesh.vertices; i++)
+		{
+			MyMesh::VertexHandle SeachPoint = BeSelectModel.model.mesh.vertex_handle(i);
+			for (int j = 0; j < OuterPoint.size(); j++)
+			{
+				if (OuterPoint[j] != SeachPoint.idx())
+				{
+					InnerPoint.push_back(SeachPoint.idx());
+				}
+			}
+		}
+
+
+
+
+
+
+
+
+
+	}
+	else if (key == 'g')
+	{
+
 	}
 }
 

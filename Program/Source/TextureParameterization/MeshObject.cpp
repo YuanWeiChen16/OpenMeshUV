@@ -260,3 +260,25 @@ bool MeshObject::FindClosestPoint(unsigned int faceID, glm::vec3 worldPos, glm::
 	closestPos.z = closestPoint[2];
 	return true;
 }
+
+bool MeshObject::FaceToPoint()
+{
+	for (int i = 0; i < selectedFace.size(); i++)
+	{
+		OpenMesh::FaceHandle fh = model.mesh.face_handle(selectedFace[i]);
+		if (!fh.is_valid())
+		{
+			return false;
+		}
+		
+		MyMesh::FVIter fv_it = model.mesh.fv_iter(fh);
+		MyMesh::VertexHandle VH = *fv_it;
+		for (; fv_it.is_valid(); ++fv_it)
+		{
+			VH = *fv_it;
+			AddSelectedPoint(VH.idx());
+		}
+	}
+
+	return true;
+}
