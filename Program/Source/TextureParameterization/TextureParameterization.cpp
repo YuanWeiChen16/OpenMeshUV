@@ -383,10 +383,12 @@ void MyKeyboard(unsigned char key, int x, int y)
 			face_vhandles.push_back(vhandle[i -= -2]);
 			BeSelectModel.model.mesh.add_face(face_vhandles);
 		}
+
+		MyMesh::HalfedgeIter HFI = BeSelectModel.model.mesh.halfedges_begin();
 		MyMesh::HalfedgeHandle HFh;
-		for (int i = 0; i < BeSelectModel.model.mesh.halfedges; i++)
+		for (; HFI!= BeSelectModel.model.mesh.halfedges_end(); ++HFI)
 		{
-			HFh = BeSelectModel.model.mesh.halfedge_handle(i);
+			HFh = HFI->handle();
 			bool ISBOUND = BeSelectModel.model.mesh.is_boundary(HFh);
 			if (ISBOUND)
 			{
@@ -395,6 +397,7 @@ void MyKeyboard(unsigned char key, int x, int y)
 				break;
 			}
 		}
+
 		HFh = BeSelectModel.model.mesh.next_halfedge_handle(HFh);
 		for (;;)
 		{
@@ -418,9 +421,10 @@ void MyKeyboard(unsigned char key, int x, int y)
 			OuterLengh += dis;
 
 		}
-		for (int i = 0; i < BeSelectModel.model.mesh.vertices; i++)
+		MyMesh::VertexIter VI = BeSelectModel.model.mesh.vertices_begin();
+		for (;VI!= BeSelectModel.model.mesh.vertices_end();++VI)
 		{
-			MyMesh::VertexHandle SeachPoint = BeSelectModel.model.mesh.vertex_handle(i);
+			MyMesh::VertexHandle SeachPoint = VI.handle();// BeSelectModel.model.mesh.vertex_handle(VI);
 			for (int j = 0; j < OuterPoint.size(); j++)
 			{
 				if (OuterPoint[j] != SeachPoint.idx())

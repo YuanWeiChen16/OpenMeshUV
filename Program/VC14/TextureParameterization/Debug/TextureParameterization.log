@@ -2,15 +2,9 @@
   TextureParameterization.cpp
 c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(371): warning C4018: '<': signed/unsigned 不相符
 c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(378): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(387): error C3867: 'OpenMesh::PolyConnectivity::halfedges': 非標準語法; 請使用 '&' 建立成員的指標
-c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(387): error C2446: '<': 沒有從 'OpenMesh::PolyConnectivity::ConstHalfedgeRange (__thiscall OpenMesh::PolyConnectivity::* )(void) const' 至 'int' 的轉換
-  c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(387): note: 沒有可以進行此轉換的內容
-c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(410): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(421): error C3867: 'OpenMesh::PolyConnectivity::vertices': 非標準語法; 請使用 '&' 建立成員的指標
-c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(421): error C2446: '<': 沒有從 'OpenMesh::PolyConnectivity::ConstVertexRange (__thiscall OpenMesh::PolyConnectivity::* )(void) const' 至 'int' 的轉換
-  c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(421): note: 沒有可以進行此轉換的內容
-c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(424): warning C4018: '<': signed/unsigned 不相符
-  MeshObject.cpp
-c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\meshobject.cpp(186): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\meshobject.cpp(266): warning C4018: '<': signed/unsigned 不相符
-  正在產生程式碼...
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(413): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(428): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(391): error C4996: 'OpenMesh::Iterators::GenericIteratorT<OpenMesh::PolyConnectivity::This,OpenMesh::ArrayKernel::HalfedgeHandle,OpenMesh::ArrayKernel,{&OpenMesh::ArrayKernel::has_halfedge_status,0},{&OpenMesh::ArrayKernel::[thunk]: __thiscall OpenMesh::ArrayKernel::`vcall'{8,{flat}}' }',0}>::handle': This function clutters your code. Use dereferencing operators -> and * instead.
+  c:\users\user\desktop\openmeshp3\openmeshuv\program\include\openmesh\core\mesh\iteratorst.hh(133): note: 請參閱 'OpenMesh::Iterators::GenericIteratorT<OpenMesh::PolyConnectivity::This,OpenMesh::ArrayKernel::HalfedgeHandle,OpenMesh::ArrayKernel,{&OpenMesh::ArrayKernel::has_halfedge_status,0},{&OpenMesh::ArrayKernel::[thunk]: __thiscall OpenMesh::ArrayKernel::`vcall'{8,{flat}}' }',0}>::handle' 的宣告
+c:\users\user\desktop\openmeshp3\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(427): error C4996: 'OpenMesh::Iterators::GenericIteratorT<OpenMesh::PolyConnectivity::This,OpenMesh::ArrayKernel::VertexHandle,OpenMesh::ArrayKernel,{&OpenMesh::ArrayKernel::has_vertex_status,0},{&OpenMesh::ArrayKernel::[thunk]: __thiscall OpenMesh::ArrayKernel::`vcall'{4,{flat}}' }',0}>::handle': This function clutters your code. Use dereferencing operators -> and * instead.
+  c:\users\user\desktop\openmeshp3\openmeshuv\program\include\openmesh\core\mesh\iteratorst.hh(133): note: 請參閱 'OpenMesh::Iterators::GenericIteratorT<OpenMesh::PolyConnectivity::This,OpenMesh::ArrayKernel::VertexHandle,OpenMesh::ArrayKernel,{&OpenMesh::ArrayKernel::has_vertex_status,0},{&OpenMesh::ArrayKernel::[thunk]: __thiscall OpenMesh::ArrayKernel::`vcall'{4,{flat}}' }',0}>::handle' 的宣告
