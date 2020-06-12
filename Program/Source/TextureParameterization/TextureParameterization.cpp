@@ -3,6 +3,8 @@
 #include <AntTweakBar/AntTweakBar.h>
 #include <ResourcePath.h>
 
+#include <Eigen/Sparse>
+
 #include "OpenMesh.h"
 #include "MeshObject.h"
 #include "DrawModelShader.h"
@@ -17,6 +19,7 @@
 
 using namespace glm;
 using namespace std;
+using namespace Eigen;
 
 glm::vec3 worldPos;
 bool updateFlag = false;
@@ -203,7 +206,9 @@ void RenderMeshWindow()
 
 	if (model.selectedPoint.size() > 0)
 	{
+		drawModelShader.SetWireColor(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 		drawModelShader.SetFaceColor(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+
 		BeSelectModel.Render();
 
 	}
@@ -214,6 +219,43 @@ void RenderMeshWindow()
 	drawModelShader.Disable();
 
 
+	if (model.selectedPoint.size() > 0)
+	{
+
+
+		glColor3f(0, 0, 1);
+		glBegin(GL_LINES);
+		glLineWidth(5);
+
+		for (int i = 0; i < (OuterPoint.size() + 1); i++)
+		{
+			MyMesh::VHandle DrawPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[i%OuterPoint.size()]);
+			MyMesh::VHandle DrawPoint2 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i + 1) % OuterPoint.size()]);
+			MyMesh::TexCoord2D outPoint1_p = BeSelectModel.model.mesh.texcoord2D(DrawPoint1);
+			MyMesh::TexCoord2D outPoint2_p = BeSelectModel.model.mesh.texcoord2D(DrawPoint2);
+
+			glVertex3f(outPoint1_p[0], outPoint1_p[1], 0);
+			glVertex3f(outPoint2_p[0], outPoint2_p[1], 0);
+		}
+		glEnd();
+
+
+
+		glColor3f(0, 1, 0);
+
+		glBegin(GL_POINTS);
+
+		glPointSize(20);
+
+		for (int i = 0; i < (OuterPoint.size() + 1); i++)
+		{
+			MyMesh::VHandle DrawPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[i%OuterPoint.size()]);
+			MyMesh::TexCoord2D outPoint1_p = BeSelectModel.model.mesh.texcoord2D(DrawPoint1);
+
+			glColor3f(0, 1,(float)i/ OuterPoint.size());
+			glVertex3f(outPoint1_p[0], outPoint1_p[1], 0);
+		}
+		glEnd();
 
 
 
@@ -221,6 +263,7 @@ void RenderMeshWindow()
 
 
 
+	}
 
 
 
@@ -438,17 +481,82 @@ void MyKeyboard(unsigned char key, int x, int y)
 			HFh = BeSelectModel.model.mesh.next_halfedge_handle(HFh);
 		}
 
+
+
+		//caclu Outer lengh
 		for (int i = 0; i < OuterPoint.size(); i++)
 		{
 			MyMesh::VertexHandle outPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i) % OuterPoint.size()]);
 			MyMesh::VertexHandle outPoint2 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i + 1) % OuterPoint.size()]);
 			MyMesh::Point outPoint1_p = BeSelectModel.model.mesh.point(outPoint1);
 			MyMesh::Point outPoint2_p = BeSelectModel.model.mesh.point(outPoint2);
-			MyMesh::Point disPoint = outPoint2_p - outPoint2_p;
+			MyMesh::Point disPoint = outPoint1_p - outPoint2_p;
 			float dis = disPoint[0] * disPoint[0] + disPoint[1] * disPoint[1];
+			dis = sqrt(dis);
+			dis = sqrt(dis*dis + disPoint[2] * disPoint[2]);
 			OuterLengh += dis;
-
 		}
+		cout << "Outer Lengh is " << OuterLengh << endl;
+		//Make UV
+		BeSelectModel.model.mesh.request_vertex_texcoords2D();// _vertex_texcoords2D();
+		float nowDis = 0;
+
+
+		MyMesh::VertexHandle tempoutPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(0) % OuterPoint.size()]);
+		MyMesh::TexCoord2D tempUV;
+		tempUV[0] = 0;
+		tempUV[1] = 0;
+		cout << "Point " << 0 << " UV " << tempUV[0] << " " << tempUV[1] << endl;
+		BeSelectModel.model.mesh.set_texcoord2D(tempoutPoint1, tempUV);
+
+		for (int i = 0; i < OuterPoint.size(); i++)
+		{
+			MyMesh::VertexHandle outPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i) % OuterPoint.size()]);
+			MyMesh::VertexHandle outPoint2 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i + 1) % OuterPoint.size()]);
+			MyMesh::Point outPoint1_p = BeSelectModel.model.mesh.point(outPoint1);
+			MyMesh::Point outPoint2_p = BeSelectModel.model.mesh.point(outPoint2);
+			MyMesh::Point disPoint = outPoint1_p - outPoint2_p;
+			float dis = disPoint[0] * disPoint[0] + disPoint[1] * disPoint[1];
+			dis = sqrt(dis);
+			dis = sqrt(dis*dis + disPoint[2] * disPoint[2]);
+			cout << "Dis "  <<dis;
+			nowDis = nowDis + dis;
+			if (nowDis <= (OuterLengh / 4.0))
+			{
+				MyMesh::TexCoord2D UV;
+				UV[0] = 0;
+				UV[1] = nowDis / (OuterLengh / 4.0);
+				BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
+				cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
+			}
+			else if ((nowDis <= ((OuterLengh / 4.0) * 2.0)) && (nowDis > ((OuterLengh / 4.0)*1.0)))
+			{
+				MyMesh::TexCoord2D UV;
+				UV[0] = ((nowDis - (OuterLengh / 4.0)*1.0) / (OuterLengh / 4.0));
+				UV[1] = 1;
+				BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
+				cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
+			}
+			else if ((nowDis <= ((OuterLengh / 4.0) * 3.0)) && (nowDis > ((OuterLengh / 4.0)*2.0)))
+			{
+				MyMesh::TexCoord2D UV;
+				UV[0] = 1;
+				UV[1] = 1 - ((nowDis - (OuterLengh / 4.0)*2.0)) / (OuterLengh / 4.0);
+				BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
+				cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
+			}
+			else if ((nowDis <= (OuterLengh)) && (nowDis > ((OuterLengh / 4.0)*3.0)))
+			{
+				MyMesh::TexCoord2D UV;
+				UV[0] = 1 - ((nowDis - (OuterLengh / 4.0)*3.0)) / (OuterLengh / 4.0);
+				UV[1] = 0;
+				BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
+				cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
+			}
+		}
+
+
+
 		MyMesh::VertexIter VI = BeSelectModel.model.mesh.vertices_begin();
 		for (; VI != BeSelectModel.model.mesh.vertices_end(); ++VI)
 		{
@@ -464,11 +572,42 @@ void MyKeyboard(unsigned char key, int x, int y)
 		}
 		BeSelectModel.MY_LoadToShader();
 
+
+
+
+		SparseMatrix<double> A(3, 3);
+		A.insert(0, 0) = 1.0;
+		A.insert(1, 1) = 1.0;
+		A.insert(2, 2) = 1.0;
+ 
+		OpenMesh::EPropHandleT<MyMesh::Point> Wi;
+		BeSelectModel.model.mesh.add_property(Wi);
+
+		for (MyMesh::EdgeIter EI = BeSelectModel.model.mesh.edges_begin(); EI != BeSelectModel.model.mesh.edges_begin();++EI)
+		{
+			MyMesh::Point tmepWi;
+
+			MyMesh::EdgeHandle Eh = BeSelectModel.model.mesh.edge_handle(EI->idx());
+			MyMesh::HalfedgeHandle HeH = BeSelectModel.model.mesh.halfedge_handle(Eh,0);
+
+			MyMesh::VertexHandle FromVertex = BeSelectModel.model.mesh.from_vertex_handle(HeH);
+			MyMesh::VertexHandle TOVertex = BeSelectModel.model.mesh.to_vertex_handle(HeH);
+			MyMesh::VertexHandle OppositeVertex = BeSelectModel.model.mesh.to_vertex_handle(HeH);
+			tmepWi[0] = 0;
+			tmepWi[1] = 1;
+			tmepWi[2] = 20;
+
+			BeSelectModel.model.mesh.property(Wi, *EI) = tmepWi;
+		}
+
+
+
+
 	}
 	else if (key == 'g')
 	{
 
-	}
+}
 }
 
 
@@ -481,7 +620,7 @@ void MyMouseMoving(int x, int y) {
 		{
 			SelectionHandler(x, y);
 		}
-	}
+}
 }
 
 int main(int argc, char* argv[])
