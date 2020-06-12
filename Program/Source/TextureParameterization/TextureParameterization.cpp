@@ -74,6 +74,19 @@ TwEnumVal SelectionModeEV[] = { {ADD_FACE, "Add face"}, {DEL_FACE, "Delete face"
 TwType SelectionModeType;
 
 
+
+double PointAngle(MyMesh::Point P1, MyMesh::Point P2, MyMesh::Point VPoint)
+{
+	double dx = (P1[0] - VPoint[0]) - (P2[0] - VPoint[0]);
+	double dy = (P1[1] - VPoint[1]) - (P2[1] - VPoint[1]);
+	double dz = (P1[2] - VPoint[2]) - (P2[2] - VPoint[2]);
+
+	double angle = atan2(abs(dz), sqrt(dx*dx + dy * dy));
+
+	angle = (angle*180.0) / 3.1415926;
+	return angle;
+}
+
 void SetupGUI()
 {
 #ifdef _MSC_VER
@@ -252,7 +265,7 @@ void RenderMeshWindow()
 			MyMesh::VHandle DrawPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[i%OuterPoint.size()]);
 			MyMesh::TexCoord2D outPoint1_p = BeSelectModel.model.mesh.texcoord2D(DrawPoint1);
 
-			glColor3f(0, 1,(float)i/ OuterPoint.size());
+			glColor3f(0, 1, (float)i / OuterPoint.size());
 			glVertex3f(outPoint1_p[0], outPoint1_p[1], 0);
 		}
 		glEnd();
@@ -519,7 +532,7 @@ void MyKeyboard(unsigned char key, int x, int y)
 			float dis = disPoint[0] * disPoint[0] + disPoint[1] * disPoint[1];
 			dis = sqrt(dis);
 			dis = sqrt(dis*dis + disPoint[2] * disPoint[2]);
-			cout << "Dis "  <<dis;
+			cout << "Dis " << dis;
 			nowDis = nowDis + dis;
 			if (nowDis <= (OuterLengh / 4.0))
 			{
@@ -555,8 +568,6 @@ void MyKeyboard(unsigned char key, int x, int y)
 			}
 		}
 
-
-
 		MyMesh::VertexIter VI = BeSelectModel.model.mesh.vertices_begin();
 		for (; VI != BeSelectModel.model.mesh.vertices_end(); ++VI)
 		{
@@ -572,31 +583,48 @@ void MyKeyboard(unsigned char key, int x, int y)
 		}
 		BeSelectModel.MY_LoadToShader();
 
+		SparseMatrix<double> Ax(InnerPoint.size(),InnerPoint.size());
+		SparseMatrix<double> Ay(InnerPoint.size(),InnerPoint.size());
+		
+		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> linearSolver;
+		VectorXd Bx(InnerPoint.size());
+		VectorXd By(InnerPoint.size());
+		
 
+		linearSolver.compute(Ax);
+		VectorXd Xx = linearSolver.solve(Bx);
+		linearSolver.compute(Ay);
+		VectorXd Xy = linearSolver.solve(By);
+		
 
-
-		SparseMatrix<double> A(3, 3);
-		A.insert(0, 0) = 1.0;
-		A.insert(1, 1) = 1.0;
-		A.insert(2, 2) = 1.0;
- 
 		OpenMesh::EPropHandleT<MyMesh::Point> Wi;
 		BeSelectModel.model.mesh.add_property(Wi);
 
-		for (MyMesh::EdgeIter EI = BeSelectModel.model.mesh.edges_begin(); EI != BeSelectModel.model.mesh.edges_begin();++EI)
+		for (MyMesh::EdgeIter EI = BeSelectModel.model.mesh.edges_begin(); EI != BeSelectModel.model.mesh.edges_begin(); ++EI)
 		{
 			MyMesh::Point tmepWi;
 
 			MyMesh::EdgeHandle Eh = BeSelectModel.model.mesh.edge_handle(EI->idx());
-			MyMesh::HalfedgeHandle HeH = BeSelectModel.model.mesh.halfedge_handle(Eh,0);
+			MyMesh::HalfedgeHandle HeH = BeSelectModel.model.mesh.halfedge_handle(Eh, 0);
 
-			MyMesh::VertexHandle FromVertex = BeSelectModel.model.mesh.from_vertex_handle(HeH);
-			MyMesh::VertexHandle TOVertex = BeSelectModel.model.mesh.to_vertex_handle(HeH);
-			MyMesh::VertexHandle OppositeVertex = BeSelectModel.model.mesh.to_vertex_handle(HeH);
-			tmepWi[0] = 0;
-			tmepWi[1] = 1;
-			tmepWi[2] = 20;
+			MyMesh::VertexHandle FromVertexH = BeSelectModel.model.mesh.from_vertex_handle(HeH);
+			MyMesh::VertexHandle ToVertexH = BeSelectModel.model.mesh.to_vertex_handle(HeH);
+			MyMesh::VertexHandle OppositeVertexH = BeSelectModel.model.mesh.opposite_vh(HeH);
+			MyMesh::VertexHandle OppoOppoVertexH = BeSelectModel.model.mesh.opposite_he_opposite_vh(HeH);
 
+			MyMesh::Point FromVertex = BeSelectModel.model.mesh.point(FromVertexH);
+			MyMesh::Point ToVertex = BeSelectModel.model.mesh.point(ToVertexH);
+			MyMesh::Point OppositeVertex = BeSelectModel.model.mesh.point(OppositeVertexH);
+			MyMesh::Point OppoOppoVertex = BeSelectModel.model.mesh.point(OppoOppoVertexH);
+
+			double Angle1, Angle2;
+
+			Angle1 = PointAngle(FromVertex,ToVertex ,OppositeVertex );
+			Angle2 = PointAngle(FromVertex,ToVertex , OppoOppoVertex);
+
+			tmepWi[0] = ((1.0/tan(Angle1)) +(1.0/tan(Angle2)));
+			tmepWi[1] = 123;
+			tmepWi[2] = 456;
 			BeSelectModel.model.mesh.property(Wi, *EI) = tmepWi;
 		}
 
@@ -607,7 +635,7 @@ void MyKeyboard(unsigned char key, int x, int y)
 	else if (key == 'g')
 	{
 
-}
+	}
 }
 
 
