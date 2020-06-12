@@ -31,8 +31,6 @@ public:
 	GLuint ebo;
 	GLuint vboVertices, vboNormal;
 
-private:
-
 	bool LoadModel(std::string fileName);
 	void LoadToShader();
 };
@@ -61,6 +59,9 @@ public:
 	std::vector<unsigned int> selectedFace;
 
 	std::vector<unsigned int> selectedPoint;
+
+	std::vector<int> selectPoint_Seq;
+	void MY_LoadToShader();
 
 	std::vector<unsigned int*> fvIDsPtr;
 	std::vector<int> elemCount;

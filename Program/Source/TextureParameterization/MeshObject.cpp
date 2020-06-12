@@ -277,8 +277,17 @@ bool MeshObject::FaceToPoint()
 		{
 			VH = *fv_it;
 			AddSelectedPoint(VH.idx());
+			selectPoint_Seq.push_back(VH.idx());
+			//selectedPoint.push_back(VH.idx());
 		}
 	}
 
 	return true;
+}
+
+
+
+void MeshObject::MY_LoadToShader()
+{
+	model.LoadToShader();
 }

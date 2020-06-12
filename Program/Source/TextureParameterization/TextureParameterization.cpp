@@ -175,7 +175,10 @@ void RenderMeshWindow()
 	pickingShader.SetMVMat(value_ptr(mvMat));
 	pickingShader.SetPMat(value_ptr(pMat));
 
+
 	model.Render();
+
+
 
 	pickingShader.Disable();
 	pickingTexture.Disable();
@@ -198,8 +201,16 @@ void RenderMeshWindow()
 
 	model.Render();
 
-	BeSelectModel.Render();
+	if (model.selectedPoint.size() > 0)
+	{
+		drawModelShader.SetFaceColor(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+		BeSelectModel.Render();
 
+	}
+	else
+	{
+
+	}
 	drawModelShader.Disable();
 
 
@@ -366,29 +377,46 @@ void MyKeyboard(unsigned char key, int x, int y)
 
 
 		model.FaceToPoint();
-		MyMesh::VertexHandle* vhandle;
-		vhandle = new MyMesh::VertexHandle[model.selectedPoint.size()];
+
+		for (int i = 0; i < model.selectPoint_Seq.size(); i++)
+		{
+			for (int j = 0; j < model.selectedPoint.size(); j++)
+			{
+				if (model.selectedPoint[j] == model.selectPoint_Seq[i])
+				{
+					model.selectPoint_Seq[i] = j;
+				}
+			}
+		}
+
+
+		std::vector < MyMesh::VertexHandle> vhandle;
+		//vhandle = new MyMesh::VertexHandle[model.selectedPoint.size()];
+
 		for (int i = 0; i < model.selectedPoint.size(); i++)
 		{
 			MyMesh::VertexHandle TempPoint = model.model.mesh.vertex_handle(model.selectedPoint[i]);
 			MyMesh::Point closestPoint = model.model.mesh.point(TempPoint);
-			vhandle[i] = BeSelectModel.model.mesh.add_vertex(closestPoint);
+			vhandle.push_back(BeSelectModel.model.mesh.add_vertex(closestPoint));
+			cout << "X: " << closestPoint[0] << "Y: " << closestPoint[1] << "Z: " << closestPoint[2] << endl;
 		}
 		std::vector<MyMesh::VertexHandle>  face_vhandles;
-		for (int i = 0; i < model.selectedPoint.size(); i++)
+		for (int i = 0; i < model.selectPoint_Seq.size() / 3; i++)
 		{
 			face_vhandles.clear();
-			face_vhandles.push_back(vhandle[i]);
-			face_vhandles.push_back(vhandle[i -= -1]);
-			face_vhandles.push_back(vhandle[i -= -2]);
+			face_vhandles.push_back(vhandle[model.selectPoint_Seq[i * 3]]);
+			face_vhandles.push_back(vhandle[model.selectPoint_Seq[(i * 3) + 1]]);
+			face_vhandles.push_back(vhandle[model.selectPoint_Seq[(i * 3) + 2]]);
 			BeSelectModel.model.mesh.add_face(face_vhandles);
+			cout << "FACE " << i << " Is be Rebuild" << endl;
 		}
 
 		MyMesh::HalfedgeIter HFI = BeSelectModel.model.mesh.halfedges_begin();
 		MyMesh::HalfedgeHandle HFh;
-		for (; HFI!= BeSelectModel.model.mesh.halfedges_end(); ++HFI)
+		for (; HFI != BeSelectModel.model.mesh.halfedges_end(); ++HFI)
 		{
-			HFh = HFI->handle();
+			HFh = BeSelectModel.model.mesh.halfedge_handle(HFI->idx());
+
 			bool ISBOUND = BeSelectModel.model.mesh.is_boundary(HFh);
 			if (ISBOUND)
 			{
@@ -422,9 +450,10 @@ void MyKeyboard(unsigned char key, int x, int y)
 
 		}
 		MyMesh::VertexIter VI = BeSelectModel.model.mesh.vertices_begin();
-		for (;VI!= BeSelectModel.model.mesh.vertices_end();++VI)
+		for (; VI != BeSelectModel.model.mesh.vertices_end(); ++VI)
 		{
-			MyMesh::VertexHandle SeachPoint = VI.handle();// BeSelectModel.model.mesh.vertex_handle(VI);
+			MyMesh::VertexHandle SeachPoint = BeSelectModel.model.mesh.vertex_handle(VI->idx());// VI.handle();// BeSelectModel.model.mesh.vertex_handle(VI);
+
 			for (int j = 0; j < OuterPoint.size(); j++)
 			{
 				if (OuterPoint[j] != SeachPoint.idx())
@@ -433,14 +462,7 @@ void MyKeyboard(unsigned char key, int x, int y)
 				}
 			}
 		}
-
-
-
-
-
-
-
-
+		BeSelectModel.MY_LoadToShader();
 
 	}
 	else if (key == 'g')
