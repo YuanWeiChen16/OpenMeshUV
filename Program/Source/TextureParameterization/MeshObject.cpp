@@ -114,19 +114,31 @@ void GLMesh::LoadToShader(bool hasUv)
 	}
 
 	std::vector<MyMesh::Normal> normals;
-	normals.reserve(mesh.n_vertices());
-	for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
-	{
-		normals.push_back(mesh.normal(*v_it));
-	}
 	std::vector<MyMesh::TexCoord2D> texcoods;
 	if (hasUv == true)
 	{
+		normals.reserve(mesh.n_vertices());
+		for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
+		{
+			MyMesh::Normal temp = mesh.normal(*v_it);
+			/*temp[0]=-temp[0];
+			temp[1]=-temp[1];
+			temp[2]=-temp[2];*/
+			normals.push_back(temp);
+		}
 		texcoods.reserve(mesh.n_vertices());
 		for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
 		{
 			MyMesh::TexCoord2D Mytex = mesh.texcoord2D(*v_it);
 			texcoods.push_back(Mytex);
+		}
+	}
+	else
+	{
+		normals.reserve(mesh.n_vertices());
+		for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
+		{
+			normals.push_back(mesh.normal(*v_it));
 		}
 	}
 	std::vector<unsigned int> indices;
@@ -245,7 +257,7 @@ void MeshObject::DeleteSelectedPoint(unsigned int PointID)
 	selectedPoint.erase(std::remove(selectedPoint.begin(), selectedPoint.end(), PointID), selectedPoint.end());
 }
 
-bool MeshObject::FindClosestPoint(unsigned int faceID, glm::vec3 worldPos, glm::vec3& closestPos)
+bool MeshObject::FindClosestPoint(unsigned int faceID, glm::vec3 worldPos, glm::vec3& closestPos, MyMesh::VertexHandle& IDX)
 {
 	OpenMesh::FaceHandle fh = model.mesh.face_handle(faceID);
 	if (!fh.is_valid())
@@ -275,6 +287,7 @@ bool MeshObject::FindClosestPoint(unsigned int faceID, glm::vec3 worldPos, glm::
 	closestPos.x = closestPoint[0];
 	closestPos.y = closestPoint[1];
 	closestPos.z = closestPoint[2];
+	IDX = closestVH;
 	return true;
 }
 
@@ -288,9 +301,9 @@ bool MeshObject::FaceToPoint()
 			return false;
 		}
 
-		MyMesh::FVIter fv_it = model.mesh.fv_iter(fh);
+		MyMesh::FVIter fv_it = model.mesh.fv_begin(fh);
 		MyMesh::VertexHandle VH = *fv_it;
-		for (; fv_it.is_valid(); ++fv_it)
+		for (; fv_it != model.mesh.fv_end(fh); ++fv_it)
 		{
 			VH = *fv_it;
 			AddSelectedPoint(VH.idx());

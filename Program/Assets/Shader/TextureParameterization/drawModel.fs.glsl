@@ -7,16 +7,23 @@ in VertexData
 	vec3 vNormal;
 	vec3 vViewPos;
 	vec2 vTexCoord;
+	vec3 vTanget;
+	vec3 vBitanget;
 	vec3 barycentric;
 } vertexIn;
 
 uniform sampler2D texImage;
+
+uniform sampler2D NortexImage;
+
 uniform bool useLighting;
 uniform bool drawWireframe;
 uniform bool drawTexture;
 uniform vec4 faceColor;
 uniform vec4 wireColor;
-
+uniform float TexX;
+uniform float TexY;
+uniform float TexR;
 float edgeFactor()
 {
 	vec3 d = fwidth(vertexIn.barycentric);
@@ -28,13 +35,34 @@ void main(void)
 {
 	//vec4 faceColor = vec4(vec3(1.0) * lightIntense, 1.0);
 	vec4 newFaceColor = faceColor;
+	vec3 RealNormal = vertexIn.vNormal;
 	if (drawTexture)
 	{
-		vec4 texColor = texture(texImage, vertexIn.vTexCoord);
-		//vec4 texColor = vec4(vertexIn.vTexCoord.x,vertexIn.vTexCoord.y,0,1);//texture(texImage, vertexIn.vTexCoord);
+		vec2 temptex = vec2(vertexIn.vTexCoord.x-0.5, vertexIn.vTexCoord.y-0.5);
+		vec2 Texxx= vec2(0,0);
+		Texxx.x = (cos(TexR)*temptex.x- sin(TexR)*temptex.y)+0.5+TexX;
+		Texxx.y = (sin(TexR)*temptex.x+ cos(TexR)*temptex.y)+0.5+TexY;
+		vec4 texColor = texture(texImage, Texxx);
 		newFaceColor = texColor;
-		fragColor = texColor;
-		return;
+		
+		vec3 viewVector = -vertexIn.vViewPos;
+		vec3 lightDir = vec3(0, 0, -1);
+
+
+		vec3 T = vertexIn.vTanget;
+   		vec3 B = vertexIn.vBitanget;
+
+		vec3 L = -lightDir;
+		vec3 V = normalize(viewVector);
+		vec3 MyN = normalize(vertexIn.vNormal);
+		mat3 TBN = mat3(T,B,MyN);
+
+		vec3 N = texture(NortexImage, Texxx).rbg;
+		N = N * 2.0 - 1.0;
+		
+		N = normalize(TBN * N);
+
+		//RealNormal = vec3(N.x,N.y,N.z);
 	}
 
 	if (useLighting)
@@ -44,7 +72,7 @@ void main(void)
 
 		vec3 L = -lightDir;
 		vec3 V = normalize(viewVector);
-		vec3 N = normalize(vertexIn.vNormal);
+		vec3 N = normalize(RealNormal);
 
 		float ambient = 0.01;
 		float diffuse = max(dot(N, L), 0);
@@ -58,9 +86,9 @@ void main(void)
 		newFaceColor = vec4(vec3(1.0) * (ambient + specular) + newFaceColor.xyz * diffuse, newFaceColor.a);
 	}
 
-	vec4 color = vec4(1.0, 0.0, 0.0, 1.0);
+	vec4 color = newFaceColor;
 	//vec4 color = faceColor;
-	if (drawWireframe)
+	if(drawWireframe)
 	{
 		float ef = edgeFactor();
 		color = mix(wireColor, newFaceColor, ef);

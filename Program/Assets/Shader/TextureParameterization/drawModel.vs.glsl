@@ -15,6 +15,8 @@ out VertexData
 	vec3 vNormal;
 	vec3 vViewPos;
 	vec2 vTexCoord;
+	vec4 VRealPos;
+	mat4 MV;
 } vertexOut;
 
 void main()
@@ -32,9 +34,10 @@ void main()
 
 	vec4 newTexCoord = vec4(texCoord, 0.0, 1.0);
 	vec4 viewModelPos = um4mv * vec4(vertex, 1.0);
-	vertexOut.vNormal = normalize(um3n * normal);
+	vertexOut.vNormal = normalize(um3n * (normal));
 	vertexOut.vViewPos = viewModelPos.xyz;
 	vertexOut.vTexCoord = newTexCoord.xy;
-
+	vertexOut.MV = um4mv;
+	vertexOut.VRealPos =  pos;
 	gl_Position = um4p * um4mv * pos;
 }

@@ -55,7 +55,16 @@ vector<unsigned int> InnerPoint;
 
 float OuterLengh = 0;
 
+
+float TextureX = 0;
+float TextureY = 0;
+float TexRotate = 0;
+
+
 unsigned int textureID;
+unsigned int NormalID;
+
+
 
 // shaders
 DrawModelShader drawModelShader;
@@ -76,7 +85,6 @@ enum SelectionMode
 	ADD_POINT,
 	DEL_POINT,
 	ONE_RING
-
 };
 SelectionMode selectionMode = ADD_FACE;
 
@@ -106,6 +114,11 @@ double PointAngle(MyMesh::Point P1, MyMesh::Point P2, MyMesh::Point VPoint)
 	return angle;
 }
 unsigned int loadTexture(std::string path, int imageType);
+void magic();
+void magic_delete();
+
+
+
 void SetupGUI()
 {
 #ifdef _MSC_VER
@@ -164,7 +177,7 @@ void InitData()
 	//ResourcePath::imagePath = "./Imgs/" + ProjectName + "/";
 	ResourcePath::imagePath = "./Imgs/" + ProjectName + "/";
 
-	ResourcePath::modelPath = "./Model/UnionSphere.obj";
+	ResourcePath::modelPath = "./Model/bear.obj";
 
 	//Initialize shaders
 	///////////////////////////	
@@ -178,8 +191,8 @@ void InitData()
 
 	//Load model to shader program
 	My_LoadModel();
-
 	textureID = loadTexture("Imgs\\TextureParameterization\\checkerboard4.jpg", GL_RGB);
+	NormalID = loadTexture("Imgs\\TextureParameterization\\normalmap.jpg", GL_RGB);
 
 }
 
@@ -227,12 +240,14 @@ void RenderMeshWindow()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	drawModelShader.Enable();
-	glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(mvMat)));
+	//glm::mat3 normalMat; // glm::transpose(glm::inverse(glm::mat3(mvMat)));
+	glm::mat3 normalMat = glm::mat3(mvMat);//glm::transpose(glm::inverse(glm::mat3(mvMat)));
 
 	drawModelShader.SetWireColor(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 	drawModelShader.SetFaceColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	drawModelShader.UseLighting(true);
 	drawModelShader.DrawWireframe(true);
+	drawModelShader.SetTexcoord(0, 0, 0);
 	drawModelShader.SetNormalMat(normalMat);
 	drawModelShader.SetMVMat(mvMat);
 	drawModelShader.SetPMat(pMat);
@@ -246,12 +261,18 @@ void RenderMeshWindow()
 		//drawModelShader.DrawTexCoord(true);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureID);
-		drawModelShader.DrawTexture(true);
-		//BeSelectModel.Render();
 
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, NormalID);
+
+		drawModelShader.DrawTexture(true);
+		drawModelShader.DrawWireframe(false);
+		//BeSelectModel.Render();
+		drawModelShader.SetTexcoord(TextureX, TextureY, TexRotate);
 		//drawModelShader.DrawTexCoord(true);
 		BeSelectModel.Render();
 		drawModelShader.DrawTexture(false);
+		drawModelShader.DrawWireframe(true);
 		//drawModelShader.DrawTexCoord(false);
 
 	}
@@ -281,6 +302,8 @@ void RenderMeshWindow()
 	// render closest point
 	if (selectionMode == SelectionMode::SELECT_POINT)
 	{
+		unsigned int Pointidx;
+		MyMesh::VertexHandle VH;
 		if (updateFlag)
 		{
 			float depthValue = 0;
@@ -293,29 +316,73 @@ void RenderMeshWindow()
 			glm::vec4 viewport(_viewport[0], _viewport[1], _viewport[2], _viewport[3]);
 			glm::vec3 windowPos(windowX, windowY, depthValue);
 			glm::vec3 wp = glm::unProject(windowPos, mvMat, pMat, viewport);
-			model.FindClosestPoint(currentFaceID - 1, wp, worldPos);
+			model.FindClosestPoint(currentFaceID - 1, wp, worldPos, VH);
+			magic_delete();
+			model.selectedFace.clear();
+
+			//MyMesh::Vertex Vthis = model.model.mesh.vertex(VH);
+
+			for (MyMesh::VFIter VF = model.model.mesh.vf_begin(VH); VF != model.model.mesh.vf_end(VH); ++VF)
+			{
+				MyMesh::FaceHandle Fh = model.model.mesh.face_handle(VF->idx());
+				model.AddSelectedFace(Fh.idx());
+				for (MyMesh::FFIter FF1 = model.model.mesh.ff_begin(Fh); FF1 != model.model.mesh.ff_end(Fh); ++FF1)
+				{
+					MyMesh::FaceHandle Fh1 = model.model.mesh.face_handle(FF1->idx());
+					model.AddSelectedFace(Fh1.idx());
+					for (MyMesh::FFIter FF2 = model.model.mesh.ff_begin(*FF1); FF2 != model.model.mesh.ff_end(*FF1); ++FF2)
+					{
+						MyMesh::FaceHandle Fh2 = model.model.mesh.face_handle(FF2->idx());
+						model.AddSelectedFace(Fh2.idx());
+						for (MyMesh::FFIter FF3 = model.model.mesh.ff_begin(*FF2); FF3 != model.model.mesh.ff_end(*FF2); ++FF3)
+						{
+							MyMesh::FaceHandle Fh3 = model.model.mesh.face_handle(FF3->idx());
+							model.AddSelectedFace(Fh3.idx());
+							for (MyMesh::FFIter FF4 = model.model.mesh.ff_begin(*FF3); FF4 != model.model.mesh.ff_end(*FF3); ++FF4)
+							{
+								MyMesh::FaceHandle Fh4 = model.model.mesh.face_handle(FF4->idx());
+								model.AddSelectedFace(Fh4.idx());
+								/*for (MyMesh::FFIter FF5 = model.model.mesh.ff_begin(*FF4); FF3 != model.model.mesh.ff_end(*FF4); ++FF3)
+								{
+									MyMesh::FaceHandle Fh5 = model.model.mesh.face_handle(FF5->idx());
+									model.AddSelectedFace(Fh5.idx());
+									cout << "HA" << kkk << endl;;
+									kkk ++ ;
+								}*/
+							}
+						}
+					}
+				}
+			}
+			///this who magic work
+			magic();
 
 			updateFlag = false;
 		}
+		drawPickingFaceShader.Enable();
+		drawPickingFaceShader.SetMVMat(value_ptr(mvMat));
+		drawPickingFaceShader.SetPMat(value_ptr(pMat));
+		if (model.selectedPoint.size() <= 0)
+		{
+			model.RenderSelectedFace();
+		}
+		drawPickingFaceShader.Disable();
 
 
 		glBindBuffer(GL_ARRAY_BUFFER, vboPoint);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3), glm::value_ptr(worldPos), GL_STATIC_DRAW);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(0);
-
 		glm::vec4 pointColor(1.0, 0.0, 1.0, 1.0);
 		drawPointShader.Enable();
 		drawPointShader.SetMVMat(mvMat);
 		drawPointShader.SetPMat(pMat);
 		drawPointShader.SetPointColor(pointColor);
 		drawPointShader.SetPointSize(15.0);
-
 		glDrawArrays(GL_POINTS, 0, 1);
-
 		drawPointShader.Disable();
-
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 
 	}
 
@@ -425,14 +492,6 @@ void SelectionHandler(unsigned int x, unsigned int y)
 		currentMouseY = y;
 		updateFlag = true;
 	}
-	else if (selectionMode == ADD_POINT)
-	{
-
-	}
-	else if (selectionMode == DEL_POINT)
-	{
-
-	}
 }
 
 //Mouse event
@@ -464,402 +523,43 @@ void MyKeyboard(unsigned char key, int x, int y)
 	{
 		meshWindowCam.keyEvents(key);
 	}
-	cout << "Input : " << key << endl;
+
+	std::cout << "Input : " << key << endl;
+
 	if ((key == 'f') && (model.selectedFace.size() > 0))
 	{
-		model.FaceToPoint();
-
-		for (int i = 0; i < model.selectPoint_Seq.size(); i++)
-		{
-			for (int j = 0; j < model.selectedPoint.size(); j++)
-			{
-				if (model.selectedPoint[j] == model.selectPoint_Seq[i])
-				{
-					model.selectPoint_Seq[i] = j;
-				}
-			}
-		}
-
-
-		std::vector < MyMesh::VertexHandle> vhandle;
-		//vhandle = new MyMesh::VertexHandle[model.selectedPoint.size()];
-
-		for (int i = 0; i < model.selectedPoint.size(); i++)
-		{
-			MyMesh::VertexHandle TempPoint = model.model.mesh.vertex_handle(model.selectedPoint[i]);
-			MyMesh::Point closestPoint = model.model.mesh.point(TempPoint);
-			vhandle.push_back(BeSelectModel.model.mesh.add_vertex(closestPoint));
-#ifdef DEBUG
-			cout << "X: " << closestPoint[0] << "Y: " << closestPoint[1] << "Z: " << closestPoint[2] << endl;
-#endif // DEBUG
-
-
-		}
-		std::vector<MyMesh::VertexHandle>  face_vhandles;
-		for (int i = 0; i < model.selectPoint_Seq.size() / 3; i++)
-		{
-			face_vhandles.clear();
-			face_vhandles.push_back(vhandle[model.selectPoint_Seq[i * 3]]);
-			face_vhandles.push_back(vhandle[model.selectPoint_Seq[(i * 3) + 1]]);
-			face_vhandles.push_back(vhandle[model.selectPoint_Seq[(i * 3) + 2]]);
-			BeSelectModel.model.mesh.add_face(face_vhandles);
-#ifdef DEBUG
-			cout << "FACE " << i << " Is be Rebuild" << endl;
-#endif // DEBUG
-
-
-		}
-
-		MyMesh::HalfedgeIter HFI = BeSelectModel.model.mesh.halfedges_begin();
-		MyMesh::HalfedgeHandle HFh;
-		for (; HFI != BeSelectModel.model.mesh.halfedges_end(); ++HFI)
-		{
-			HFh = BeSelectModel.model.mesh.halfedge_handle(HFI->idx());
-
-			bool ISBOUND = BeSelectModel.model.mesh.is_boundary(HFh);
-			if (ISBOUND)
-			{
-				MyMesh::VertexHandle outPoint = BeSelectModel.model.mesh.from_vertex_handle(HFh);
-				OuterPoint.push_back(outPoint.idx());
-				break;
-			}
-		}
-
-		HFh = BeSelectModel.model.mesh.next_halfedge_handle(HFh);
-		for (;;)
-		{
-			MyMesh::VertexHandle outPoint = BeSelectModel.model.mesh.from_vertex_handle(HFh);
-			if (outPoint.idx() == OuterPoint[0])
-			{
-				break;
-			}
-			OuterPoint.push_back(outPoint.idx());
-			HFh = BeSelectModel.model.mesh.next_halfedge_handle(HFh);
-		}
-
-
-
-		//caclu Outer lengh===================================================================================================================
-		for (int i = 0; i < OuterPoint.size(); i++)
-		{
-			MyMesh::VertexHandle outPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i) % OuterPoint.size()]);
-			MyMesh::VertexHandle outPoint2 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i + 1) % OuterPoint.size()]);
-			MyMesh::Point outPoint1_p = BeSelectModel.model.mesh.point(outPoint1);
-			MyMesh::Point outPoint2_p = BeSelectModel.model.mesh.point(outPoint2);
-			MyMesh::Point disPoint = outPoint1_p - outPoint2_p;
-			float dis = disPoint[0] * disPoint[0] + disPoint[1] * disPoint[1];
-			dis = sqrt(dis);
-			dis = sqrt(dis*dis + disPoint[2] * disPoint[2]);
-			OuterLengh += dis;
-		}
-#ifdef DEBUG
-		cout << "Outer Lengh is " << OuterLengh << endl;
-#endif // DEBUG
-
-
-		//Make OuterSide UV=====================================================================================================
-		BeSelectModel.model.mesh.request_vertex_texcoords2D();// _vertex_texcoords2D();
-		float nowDis = 0;
-		MyMesh::VertexHandle tempoutPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(0) % OuterPoint.size()]);
-		MyMesh::TexCoord2D tempUV;
-		tempUV[0] = 0;
-		tempUV[1] = 0;
-#ifdef DEBUG
-		cout << "Point " << 0 << " UV " << tempUV[0] << " " << tempUV[1] << endl;
-#endif // DEBUG
-		BeSelectModel.model.mesh.set_texcoord2D(tempoutPoint1, tempUV);
-
-		//set Outter UV================================================================================================================
-		for (int i = 0; i < OuterPoint.size(); i++)
-		{
-			MyMesh::VertexHandle outPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i) % OuterPoint.size()]);
-			MyMesh::VertexHandle outPoint2 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i + 1) % OuterPoint.size()]);
-			MyMesh::Point outPoint1_p = BeSelectModel.model.mesh.point(outPoint1);
-			MyMesh::Point outPoint2_p = BeSelectModel.model.mesh.point(outPoint2);
-			MyMesh::Point disPoint = outPoint1_p - outPoint2_p;
-			float dis = disPoint[0] * disPoint[0] + disPoint[1] * disPoint[1];
-			dis = sqrt(dis);
-			dis = sqrt(dis*dis + disPoint[2] * disPoint[2]);
-#ifdef DEBUG
-			cout << "Dis " << dis;
-#endif // DEBUG	
-			nowDis = nowDis + dis;
-			if (nowDis <= (OuterLengh / 4.0))
-			{
-				MyMesh::TexCoord2D UV;
-				UV[0] = 0;
-				UV[1] = nowDis / (OuterLengh / 4.0);
-				BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
-#ifdef DEBUG
-				cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
-#endif // DEBUG
-			}
-			else if ((nowDis <= ((OuterLengh / 4.0) * 2.0)) && (nowDis > ((OuterLengh / 4.0)*1.0)))
-			{
-				MyMesh::TexCoord2D UV;
-				UV[0] = ((nowDis - (OuterLengh / 4.0)*1.0) / (OuterLengh / 4.0));
-				UV[1] = 1;
-				BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
-#ifdef DEBUG
-				cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
-#endif // DEBUG
-			}
-			else if ((nowDis <= ((OuterLengh / 4.0) * 3.0)) && (nowDis > ((OuterLengh / 4.0)*2.0)))
-			{
-				MyMesh::TexCoord2D UV;
-				UV[0] = 1;
-				UV[1] = 1 - ((nowDis - (OuterLengh / 4.0)*2.0)) / (OuterLengh / 4.0);
-				BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
-#ifdef DEBUG
-				cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
-#endif // DEBUG
-			}
-			else if ((nowDis <= (OuterLengh)) && (nowDis > ((OuterLengh / 4.0)*3.0)))
-			{
-				MyMesh::TexCoord2D UV;
-				UV[0] = 1 - ((nowDis - (OuterLengh / 4.0)*3.0)) / (OuterLengh / 4.0);
-				UV[1] = 0;
-				BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
-#ifdef DEBUG
-				cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
-#endif // DEBUG
-			}
-		}
-		//select inner point================================================================================================================
-		MyMesh::VertexIter VI = BeSelectModel.model.mesh.vertices_begin();
-		for (; VI != BeSelectModel.model.mesh.vertices_end(); ++VI)
-		{
-			MyMesh::VertexHandle SeachPoint = BeSelectModel.model.mesh.vertex_handle(VI->idx());// VI.handle();// BeSelectModel.model.mesh.vertex_handle(VI);
-			bool ISOUT = false;
-			for (int j = 0; j < OuterPoint.size(); j++)
-			{
-				if (OuterPoint[j] == SeachPoint.idx())
-				{
-					ISOUT = true;
-				}
-			}
-			if (ISOUT == false)
-			{
-				InnerPoint.push_back(SeachPoint.idx());
-#ifdef DEBUG
-				cout << "InnerPoint " << InnerPoint.size() << " ID: " << SeachPoint.idx() << endl;
-#endif // DEBUG
-			}
-		}
-
-
-		SparseMatrix<double> A(InnerPoint.size(), InnerPoint.size());
-		for (int i = 0; i < InnerPoint.size(); i++)
-		{
-			A.insert(i, i) = 1.0;
-		}
-		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> linearSolver;
-		VectorXd Bx(InnerPoint.size());
-		VectorXd By(InnerPoint.size());
-
-		OpenMesh::EPropHandleT<MyMesh::Point> Wi;
-		BeSelectModel.model.mesh.add_property(Wi);
-		//Do wi==================================================================================================================================
-		for (MyMesh::EdgeIter EI = BeSelectModel.model.mesh.edges_begin(); EI != BeSelectModel.model.mesh.edges_end(); ++EI)
-		{
-			MyMesh::Point tmepWi;
-
-			MyMesh::EdgeHandle Eh = BeSelectModel.model.mesh.edge_handle(EI->idx());
-			MyMesh::HalfedgeHandle HeH = BeSelectModel.model.mesh.halfedge_handle(Eh, 0);
-			if (BeSelectModel.model.mesh.is_boundary(Eh) == false)
-			{
-				MyMesh::VertexHandle FromVertexH = BeSelectModel.model.mesh.from_vertex_handle(HeH);
-				MyMesh::VertexHandle ToVertexH = BeSelectModel.model.mesh.to_vertex_handle(HeH);
-				MyMesh::VertexHandle OppositeVertexH = BeSelectModel.model.mesh.opposite_vh(HeH);
-				MyMesh::VertexHandle OppoOppoVertexH = BeSelectModel.model.mesh.opposite_he_opposite_vh(HeH);
-
-				MyMesh::Point FromVertex = BeSelectModel.model.mesh.point(FromVertexH);
-				MyMesh::Point ToVertex = BeSelectModel.model.mesh.point(ToVertexH);
-				MyMesh::Point OppositeVertex = BeSelectModel.model.mesh.point(OppositeVertexH);
-				MyMesh::Point OppoOppoVertex = BeSelectModel.model.mesh.point(OppoOppoVertexH);
-
-				double Angle1, Angle2;
-
-				Angle1 = PointAngle(FromVertex, ToVertex, OppositeVertex);
-				Angle2 = PointAngle(FromVertex, ToVertex, OppoOppoVertex);
-#ifdef DEBUG
-				cout << "Tri1_1" << FromVertex[0] << " " << FromVertex[1] << " " << FromVertex[2] << endl;
-				cout << "Tri1_2" << ToVertex[0] << " " << ToVertex[1] << " " << ToVertex[2] << endl;
-				cout << "Tri1_3" << OppositeVertex[0] << " " << OppositeVertex[1] << " " << OppositeVertex[2] << endl;
-				cout << "Tri2_3" << OppoOppoVertex[0] << " " << OppoOppoVertex[1] << " " << OppoOppoVertex[2] << endl;
-				cout << "Angles 1 2 " << Angle1 << " " << Angle2 << endl;
-#endif // DEBUG
-
-				tmepWi[0] = ((1.0 / tan((Angle1*3.1415926) / 180.0)) + (1.0 / tan((Angle2*3.1415926) / 180.0)));
-				cout << tmepWi[0] << endl;
-				tmepWi[1] = 123;
-				tmepWi[2] = 456;
-				BeSelectModel.model.mesh.property(Wi, *EI) = tmepWi;
-			}
-		}
-		cout << endl;
-		for (int j = 0; j < InnerPoint.size(); j++)
-		{
-			Bx[j] = 0;
-			By[j] = 0;
-		}
-
-		//make matrix================================================================================================================
-		for (int i = 0; i < InnerPoint.size(); i++)
-		{
-			float ABigWi = 0;
-			MyMesh::VertexHandle NowVertex = BeSelectModel.model.mesh.vertex_handle(InnerPoint[i]);
-			vector<double> ThisA_Array;
-			for (int j = 0; j < InnerPoint.size(); j++)
-			{
-				ThisA_Array.push_back(0.0);
-			}
-#ifdef DEBUG
-			cout << "NOW POINT" << InnerPoint[i] << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
-#endif // DEBUG
-
-			//Done Matrix===========================================================================================================================
-			for (MyMesh::VVIter VV = BeSelectModel.model.mesh.vv_begin(NowVertex); VV != BeSelectModel.model.mesh.vv_end(NowVertex); ++VV)
-			{
-				float ThisVertexWi = 0;
-				MyMesh::VertexHandle TargetVet = BeSelectModel.model.mesh.vertex_handle(VV->idx());
-
-				///Not Boundry
-				for (MyMesh::VEIter VE = BeSelectModel.model.mesh.ve_begin(NowVertex); VE != BeSelectModel.model.mesh.ve_end(NowVertex); ++VE)
-				{
-					MyMesh::EdgeHandle Eh = BeSelectModel.model.mesh.edge_handle(VE->idx());
-					MyMesh::HalfedgeHandle HeH1 = BeSelectModel.model.mesh.halfedge_handle(Eh, 0);
-					MyMesh::HalfedgeHandle HeH2 = BeSelectModel.model.mesh.halfedge_handle(Eh, 1);//?
-					MyMesh::VertexHandle HeH1_FromVetx = BeSelectModel.model.mesh.from_vertex_handle(HeH1);
-					MyMesh::VertexHandle HeH1_ToVetx = BeSelectModel.model.mesh.to_vertex_handle(HeH1);
-					if (BeSelectModel.model.mesh.is_boundary(TargetVet) == true)
-					{
-						//MyMesh::Point tempwi = BeSelectModel.model.mesh.property(Wi, Eh);
-						if ((HeH1_FromVetx.idx() == TargetVet.idx()) && (HeH1_ToVetx.idx() == NowVertex.idx()))
-						{
-							MyMesh::Point EdgeWi = BeSelectModel.model.mesh.property(Wi, Eh);
-							MyMesh::TexCoord2D tempT2D = BeSelectModel.model.mesh.texcoord2D(HeH1_FromVetx);
-							Bx[i] += EdgeWi[0] * tempT2D[0];//x
-							By[i] += EdgeWi[0] * tempT2D[1];//y
-							ThisVertexWi = EdgeWi[0];
-#ifdef DEBUG
-							cout << "wi Right1 " << EdgeWi[0] << " " << tempT2D[0] << endl;
-							cout << "wi Right2 " << EdgeWi[0] << " " << tempT2D[1] << endl;
-							cout << "wi Right3 " << Bx[i] << " " << By[i] << endl << endl;
-#endif // DEBUG
-							break;
-						}
-						else if ((HeH1_FromVetx.idx() == NowVertex.idx()) && (HeH1_ToVetx.idx() == TargetVet.idx()))
-						{
-							MyMesh::Point EdgeWi = BeSelectModel.model.mesh.property(Wi, Eh);
-							MyMesh::TexCoord2D tempT2D = BeSelectModel.model.mesh.texcoord2D(HeH1_ToVetx);
-							Bx[i] += EdgeWi[0] * tempT2D[0];//x
-							By[i] += EdgeWi[0] * tempT2D[1];//y
-							ThisVertexWi = EdgeWi[0];
-#ifdef DEBUG
-							cout << "wi Right1 " << EdgeWi[0] << " " << tempT2D[0] << endl;
-							cout << "wi Right2 " << EdgeWi[0] << " " << tempT2D[1] << endl;
-							cout << "wi Right3 " << Bx[i] << " " << By[i] << endl << endl;
-#endif // DEBUG
-							break;
-						}
-
-					}
-					else
-					{
-						if ((HeH1_FromVetx.idx() == TargetVet.idx()) && (HeH1_ToVetx.idx() == NowVertex.idx()))
-						{
-							MyMesh::Point EdgeWi = BeSelectModel.model.mesh.property(Wi, Eh);
-							ThisVertexWi = EdgeWi[0];
-#ifdef DEBUG
-							cout << "wi Left " << ThisVertexWi << endl << endl;
-#endif // DEBUG
-							for (int j = 0; j < InnerPoint.size(); j++)
-							{
-								if (InnerPoint[j] == TargetVet.idx())
-								{
-									ThisA_Array[j] = ThisVertexWi;
-									break;
-								}
-							}
-							break;
-						}
-						else if ((HeH1_FromVetx.idx() == NowVertex.idx()) && (HeH1_ToVetx.idx() == TargetVet.idx()))
-						{
-							MyMesh::Point EdgeWi = BeSelectModel.model.mesh.property(Wi, Eh);
-							ThisVertexWi = EdgeWi[0];
-#ifdef DEBUG
-							cout << "wi Left " << ThisVertexWi << endl << endl;
-#endif // DEBUG
-							for (int j = 0; j < InnerPoint.size(); j++)
-							{
-								if (InnerPoint[j] == TargetVet.idx())
-								{
-									ThisA_Array[j] = ThisVertexWi;
-									break;
-								}
-							}
-							break;
-						}
-					}
-				}
-				ABigWi += ThisVertexWi;
-			}
-			Bx[i] = Bx[i] / ABigWi;
-			By[i] = By[i] / ABigWi;
-			for (int j = 0; j < InnerPoint.size(); j++)
-			{
-				if (i != j)
-				{
-					A.insert(i, j) = ((-ThisA_Array[j]) / ABigWi);
-				}
-			}
-
-		}
-
-
-
-#ifdef DEBUG
-		cout << "A" << endl;
-		cout << A;
-		cout << "Bx" << endl;
-		cout << Bx;
-		cout << "By" << endl;
-		cout << By;
-#endif // DEBUG
-		A.makeCompressed();
-		linearSolver.compute(A);
-		VectorXd Xx = linearSolver.solve(Bx);
-		linearSolver.compute(A);
-		VectorXd Xy = linearSolver.solve(By);
-
-		for (int i = 0; i < InnerPoint.size(); i++)
-		{
-			MyMesh::TexCoord2D UV;
-			MyMesh::VertexHandle innerPoint = BeSelectModel.model.mesh.vertex_handle(InnerPoint[i]);
-			UV[0] = Xx[i];
-			UV[1] = Xy[i];
-			BeSelectModel.model.mesh.set_texcoord2D(innerPoint, UV);
-#ifdef DEBUG
-			cout << "InnerUV " << UV[0] << " " << UV[1] << endl;
-#endif // DEBUG
-
-
-			BeSelectModel.MY_LoadToShader();
-		}
-
+		magic();
 	}
 	else if (key == 'g')
 	{
-		model.selectedFace.clear();
-		model.selectedPoint.clear();
-		model.selectPoint_Seq.clear();
-		BeSelectModel.model.mesh.clear();
-		BeSelectModel.model.mesh.ClearMesh();
-		InnerPoint.clear();
-		OuterPoint.clear();
-		OuterLengh = 0;
+		magic_delete();
 	}
+
+	else if (key == 'u')
+	{
+		TextureY += 0.01;
+	}
+	else if (key == 'j')
+	{
+		TextureY -= 0.01;
+	}
+	else if (key == 'h')
+	{
+		TextureX -= 0.01;
+	}
+	else if (key == 'k')
+	{
+		TextureX += 0.01;
+	}
+	else if (key == 'i')
+	{
+		TexRotate += 0.01;
+	}
+	else if (key == 'y')
+	{
+		TexRotate -= 0.01;
+	}
+
 }
 
 
@@ -941,4 +641,422 @@ unsigned int loadTexture(std::string path, int imageType)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
 	return textureID;
+}
+
+void magic()
+{
+	model.FaceToPoint();
+
+	for (int i = 0; i < model.selectPoint_Seq.size(); i++)
+	{
+		for (int j = 0; j < model.selectedPoint.size(); j++)
+		{
+			if (model.selectedPoint[j] == model.selectPoint_Seq[i])
+			{
+				model.selectPoint_Seq[i] = j;
+			}
+		}
+	}
+
+	std::vector < MyMesh::VertexHandle> vhandle;
+	//std::vector < MyMesh::Normal> ThisNormal;
+	//vhandle = new MyMesh::VertexHandle[model.selectedPoint.size()];
+
+	for (int i = 0; i < model.selectedPoint.size(); i++)
+	{
+		MyMesh::VertexHandle TempPoint = model.model.mesh.vertex_handle(model.selectedPoint[i]);
+		MyMesh::Point closestPoint = model.model.mesh.point(TempPoint);
+		//MyMesh::Normal closestNor = model.model.mesh.normal(TempPoint);
+		//ThisNormal.push_back(closestNor);
+
+		vhandle.push_back(BeSelectModel.model.mesh.add_vertex(closestPoint));
+		//BeSelectModel.model.mesh.normal(vhandle[vhandle.size()-1]) = closestNor;
+
+#ifdef DEBUG
+		cout << "X: " << closestPoint[0] << "Y: " << closestPoint[1] << "Z: " << closestPoint[2] << endl;
+#endif // DEBUG
+
+
+	}
+	std::vector<MyMesh::VertexHandle>  face_vhandles;
+	for (int i = 0; i < model.selectPoint_Seq.size() / 3; i++)
+	{
+		face_vhandles.clear();
+		face_vhandles.push_back(vhandle[model.selectPoint_Seq[i * 3]]);
+		face_vhandles.push_back(vhandle[model.selectPoint_Seq[(i * 3) + 1]]);
+		face_vhandles.push_back(vhandle[model.selectPoint_Seq[(i * 3 + 2)]]);
+		BeSelectModel.model.mesh.add_face(face_vhandles);
+#ifdef DEBUG
+		cout << "FACE " << i << " Is be Rebuild" << endl;
+#endif // DEBUG
+
+		/*for (int i=0;i< vhandle.size();i++)
+		{
+			MyMesh::Normal temp = model.model.mesh.vertex(v_it->idx());
+			temp[0] = -temp[0];
+			temp[1] = -temp[1];
+			temp[2] = -temp[2];
+			normals.push_back(temp);
+		}
+*/
+
+
+	}
+
+	MyMesh::HalfedgeIter HFI = BeSelectModel.model.mesh.halfedges_begin();
+	MyMesh::HalfedgeHandle HFh;
+	for (; HFI != BeSelectModel.model.mesh.halfedges_end(); ++HFI)
+	{
+		HFh = BeSelectModel.model.mesh.halfedge_handle(HFI->idx());
+
+		bool ISBOUND = BeSelectModel.model.mesh.is_boundary(HFh);
+		if (ISBOUND)
+		{
+			MyMesh::VertexHandle outPoint = BeSelectModel.model.mesh.from_vertex_handle(HFh);
+			OuterPoint.push_back(outPoint.idx());
+			break;
+		}
+	}
+
+	HFh = BeSelectModel.model.mesh.next_halfedge_handle(HFh);
+	for (;;)
+	{
+		MyMesh::VertexHandle outPoint = BeSelectModel.model.mesh.from_vertex_handle(HFh);
+		if (outPoint.idx() == OuterPoint[0])
+		{
+			break;
+		}
+		OuterPoint.push_back(outPoint.idx());
+		HFh = BeSelectModel.model.mesh.next_halfedge_handle(HFh);
+	}
+
+
+
+	//caclu Outer lengh===================================================================================================================
+	for (int i = 0; i < OuterPoint.size(); i++)
+	{
+		MyMesh::VertexHandle outPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i) % OuterPoint.size()]);
+		MyMesh::VertexHandle outPoint2 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i + 1) % OuterPoint.size()]);
+		MyMesh::Point outPoint1_p = BeSelectModel.model.mesh.point(outPoint1);
+		MyMesh::Point outPoint2_p = BeSelectModel.model.mesh.point(outPoint2);
+		MyMesh::Point disPoint = outPoint1_p - outPoint2_p;
+		float dis = disPoint[0] * disPoint[0] + disPoint[1] * disPoint[1];
+		dis = sqrt(dis);
+		dis = sqrt(dis*dis + disPoint[2] * disPoint[2]);
+		OuterLengh += dis;
+	}
+#ifdef DEBUG
+	cout << "Outer Lengh is " << OuterLengh << endl;
+#endif // DEBUG
+
+
+	//Make OuterSide UV=====================================================================================================
+	BeSelectModel.model.mesh.request_vertex_texcoords2D();// _vertex_texcoords2D();
+	float nowDis = 0;
+	MyMesh::VertexHandle tempoutPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(0) % OuterPoint.size()]);
+	MyMesh::TexCoord2D tempUV;
+	tempUV[0] = 0;
+	tempUV[1] = 0;
+#ifdef DEBUG
+	cout << "Point " << 0 << " UV " << tempUV[0] << " " << tempUV[1] << endl;
+#endif // DEBUG
+	BeSelectModel.model.mesh.set_texcoord2D(tempoutPoint1, tempUV);
+
+	//set Outter UV================================================================================================================
+	for (int i = 0; i < OuterPoint.size(); i++)
+	{
+		MyMesh::VertexHandle outPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i) % OuterPoint.size()]);
+		MyMesh::VertexHandle outPoint2 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i + 1) % OuterPoint.size()]);
+		MyMesh::Point outPoint1_p = BeSelectModel.model.mesh.point(outPoint1);
+		MyMesh::Point outPoint2_p = BeSelectModel.model.mesh.point(outPoint2);
+		MyMesh::Point disPoint = outPoint1_p - outPoint2_p;
+		float dis = disPoint[0] * disPoint[0] + disPoint[1] * disPoint[1];
+		dis = sqrt(dis);
+		dis = sqrt(dis*dis + disPoint[2] * disPoint[2]);
+#ifdef DEBUG
+		cout << "Dis " << dis;
+#endif // DEBUG	
+		nowDis = nowDis + dis;
+		if (nowDis <= (OuterLengh / 4.0))
+		{
+			MyMesh::TexCoord2D UV;
+			UV[0] = 0;
+			UV[1] = nowDis / (OuterLengh / 4.0);
+			BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
+#ifdef DEBUG
+			cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
+#endif // DEBUG
+	}
+		else if ((nowDis <= ((OuterLengh / 4.0) * 2.0)) && (nowDis > ((OuterLengh / 4.0)*1.0)))
+		{
+			MyMesh::TexCoord2D UV;
+			UV[0] = ((nowDis - (OuterLengh / 4.0)*1.0) / (OuterLengh / 4.0));
+			UV[1] = 1;
+			BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
+#ifdef DEBUG
+			cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
+#endif // DEBUG
+}
+		else if ((nowDis <= ((OuterLengh / 4.0) * 3.0)) && (nowDis > ((OuterLengh / 4.0)*2.0)))
+		{
+			MyMesh::TexCoord2D UV;
+			UV[0] = 1;
+			UV[1] = 1 - ((nowDis - (OuterLengh / 4.0)*2.0)) / (OuterLengh / 4.0);
+			BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
+#ifdef DEBUG
+			cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
+#endif // DEBUG
+	}
+		else if ((nowDis <= (OuterLengh)) && (nowDis > ((OuterLengh / 4.0)*3.0)))
+		{
+			MyMesh::TexCoord2D UV;
+			UV[0] = 1 - ((nowDis - (OuterLengh / 4.0)*3.0)) / (OuterLengh / 4.0);
+			UV[1] = 0;
+			BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
+#ifdef DEBUG
+			cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
+#endif // DEBUG
+}
+	}
+	//select inner point================================================================================================================
+	MyMesh::VertexIter VI = BeSelectModel.model.mesh.vertices_begin();
+	for (; VI != BeSelectModel.model.mesh.vertices_end(); ++VI)
+	{
+		MyMesh::VertexHandle SeachPoint = BeSelectModel.model.mesh.vertex_handle(VI->idx());// VI.handle();// BeSelectModel.model.mesh.vertex_handle(VI);
+		bool ISOUT = false;
+		for (int j = 0; j < OuterPoint.size(); j++)
+		{
+			if (OuterPoint[j] == SeachPoint.idx())
+			{
+				ISOUT = true;
+			}
+		}
+		if (ISOUT == false)
+		{
+			InnerPoint.push_back(SeachPoint.idx());
+#ifdef DEBUG
+			cout << "InnerPoint " << InnerPoint.size() << " ID: " << SeachPoint.idx() << endl;
+#endif // DEBUG
+		}
+			}
+
+
+	SparseMatrix<double> A(InnerPoint.size(), InnerPoint.size());
+	for (int i = 0; i < InnerPoint.size(); i++)
+	{
+		A.insert(i, i) = 1.0;
+	}
+	SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> linearSolver;
+	VectorXd Bx(InnerPoint.size());
+	VectorXd By(InnerPoint.size());
+
+	OpenMesh::EPropHandleT<MyMesh::Point> Wi;
+	BeSelectModel.model.mesh.add_property(Wi);
+	//Do wi==================================================================================================================================
+	for (MyMesh::EdgeIter EI = BeSelectModel.model.mesh.edges_begin(); EI != BeSelectModel.model.mesh.edges_end(); ++EI)
+	{
+		MyMesh::Point tmepWi;
+
+		MyMesh::EdgeHandle Eh = BeSelectModel.model.mesh.edge_handle(EI->idx());
+		MyMesh::HalfedgeHandle HeH = BeSelectModel.model.mesh.halfedge_handle(Eh, 0);
+		if (BeSelectModel.model.mesh.is_boundary(Eh) == false)
+		{
+			MyMesh::VertexHandle FromVertexH = BeSelectModel.model.mesh.from_vertex_handle(HeH);
+			MyMesh::VertexHandle ToVertexH = BeSelectModel.model.mesh.to_vertex_handle(HeH);
+			MyMesh::VertexHandle OppositeVertexH = BeSelectModel.model.mesh.opposite_vh(HeH);
+			MyMesh::VertexHandle OppoOppoVertexH = BeSelectModel.model.mesh.opposite_he_opposite_vh(HeH);
+
+			MyMesh::Point FromVertex = BeSelectModel.model.mesh.point(FromVertexH);
+			MyMesh::Point ToVertex = BeSelectModel.model.mesh.point(ToVertexH);
+			MyMesh::Point OppositeVertex = BeSelectModel.model.mesh.point(OppositeVertexH);
+			MyMesh::Point OppoOppoVertex = BeSelectModel.model.mesh.point(OppoOppoVertexH);
+
+			double Angle1, Angle2;
+
+			Angle1 = PointAngle(FromVertex, ToVertex, OppositeVertex);
+			Angle2 = PointAngle(FromVertex, ToVertex, OppoOppoVertex);
+#ifdef DEBUG
+			cout << "Tri1_1" << FromVertex[0] << " " << FromVertex[1] << " " << FromVertex[2] << endl;
+			cout << "Tri1_2" << ToVertex[0] << " " << ToVertex[1] << " " << ToVertex[2] << endl;
+			cout << "Tri1_3" << OppositeVertex[0] << " " << OppositeVertex[1] << " " << OppositeVertex[2] << endl;
+			cout << "Tri2_3" << OppoOppoVertex[0] << " " << OppoOppoVertex[1] << " " << OppoOppoVertex[2] << endl;
+			cout << "Angles 1 2 " << Angle1 << " " << Angle2 << endl;
+#endif // DEBUG
+
+			tmepWi[0] = ((1.0 / tan((Angle1*3.1415926) / 180.0)) + (1.0 / tan((Angle2*3.1415926) / 180.0)));
+#ifdef DEBUG
+			cout << tmepWi[0] << endl;
+#endif // DEBUG
+			tmepWi[1] = 123;
+			tmepWi[2] = 456;
+			BeSelectModel.model.mesh.property(Wi, *EI) = tmepWi;
+		}
+	}
+#ifdef DEBUG
+	cout << endl;
+#endif // DEBUG
+	for (int j = 0; j < InnerPoint.size(); j++)
+	{
+		Bx[j] = 0;
+		By[j] = 0;
+	}
+
+	//make matrix================================================================================================================
+	for (int i = 0; i < InnerPoint.size(); i++)
+	{
+		float ABigWi = 0;
+		MyMesh::VertexHandle NowVertex = BeSelectModel.model.mesh.vertex_handle(InnerPoint[i]);
+		vector<double> ThisA_Array;
+		for (int j = 0; j < InnerPoint.size(); j++)
+		{
+			ThisA_Array.push_back(0.0);
+		}
+#ifdef DEBUG
+		cout << "NOW POINT" << InnerPoint[i] << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+#endif // DEBUG
+
+		//Done Matrix===========================================================================================================================
+		for (MyMesh::VVIter VV = BeSelectModel.model.mesh.vv_begin(NowVertex); VV != BeSelectModel.model.mesh.vv_end(NowVertex); ++VV)
+		{
+			float ThisVertexWi = 0;
+			MyMesh::VertexHandle TargetVet = BeSelectModel.model.mesh.vertex_handle(VV->idx());
+
+			///Not Boundry
+			for (MyMesh::VEIter VE = BeSelectModel.model.mesh.ve_begin(NowVertex); VE != BeSelectModel.model.mesh.ve_end(NowVertex); ++VE)
+			{
+				MyMesh::EdgeHandle Eh = BeSelectModel.model.mesh.edge_handle(VE->idx());
+				MyMesh::HalfedgeHandle HeH1 = BeSelectModel.model.mesh.halfedge_handle(Eh, 0);
+				MyMesh::HalfedgeHandle HeH2 = BeSelectModel.model.mesh.halfedge_handle(Eh, 1);//?
+				MyMesh::VertexHandle HeH1_FromVetx = BeSelectModel.model.mesh.from_vertex_handle(HeH1);
+				MyMesh::VertexHandle HeH1_ToVetx = BeSelectModel.model.mesh.to_vertex_handle(HeH1);
+				if (BeSelectModel.model.mesh.is_boundary(TargetVet) == true)
+				{
+					//MyMesh::Point tempwi = BeSelectModel.model.mesh.property(Wi, Eh);
+					if ((HeH1_FromVetx.idx() == TargetVet.idx()) && (HeH1_ToVetx.idx() == NowVertex.idx()))
+					{
+						MyMesh::Point EdgeWi = BeSelectModel.model.mesh.property(Wi, Eh);
+						MyMesh::TexCoord2D tempT2D = BeSelectModel.model.mesh.texcoord2D(HeH1_FromVetx);
+						Bx[i] += EdgeWi[0] * tempT2D[0];//x
+						By[i] += EdgeWi[0] * tempT2D[1];//y
+						ThisVertexWi = EdgeWi[0];
+#ifdef DEBUG
+						cout << "wi Right1 " << EdgeWi[0] << " " << tempT2D[0] << endl;
+						cout << "wi Right2 " << EdgeWi[0] << " " << tempT2D[1] << endl;
+						cout << "wi Right3 " << Bx[i] << " " << By[i] << endl << endl;
+#endif // DEBUG
+						break;
+					}
+					else if ((HeH1_FromVetx.idx() == NowVertex.idx()) && (HeH1_ToVetx.idx() == TargetVet.idx()))
+					{
+						MyMesh::Point EdgeWi = BeSelectModel.model.mesh.property(Wi, Eh);
+						MyMesh::TexCoord2D tempT2D = BeSelectModel.model.mesh.texcoord2D(HeH1_ToVetx);
+						Bx[i] += EdgeWi[0] * tempT2D[0];//x
+						By[i] += EdgeWi[0] * tempT2D[1];//y
+						ThisVertexWi = EdgeWi[0];
+#ifdef DEBUG
+						cout << "wi Right1 " << EdgeWi[0] << " " << tempT2D[0] << endl;
+						cout << "wi Right2 " << EdgeWi[0] << " " << tempT2D[1] << endl;
+						cout << "wi Right3 " << Bx[i] << " " << By[i] << endl << endl;
+#endif // DEBUG
+						break;
+					}
+
+				}
+				else
+				{
+					if ((HeH1_FromVetx.idx() == TargetVet.idx()) && (HeH1_ToVetx.idx() == NowVertex.idx()))
+					{
+						MyMesh::Point EdgeWi = BeSelectModel.model.mesh.property(Wi, Eh);
+						ThisVertexWi = EdgeWi[0];
+#ifdef DEBUG
+						cout << "wi Left " << ThisVertexWi << endl << endl;
+#endif // DEBUG
+						for (int j = 0; j < InnerPoint.size(); j++)
+						{
+							if (InnerPoint[j] == TargetVet.idx())
+							{
+								ThisA_Array[j] = ThisVertexWi;
+								break;
+							}
+						}
+						break;
+					}
+					else if ((HeH1_FromVetx.idx() == NowVertex.idx()) && (HeH1_ToVetx.idx() == TargetVet.idx()))
+					{
+						MyMesh::Point EdgeWi = BeSelectModel.model.mesh.property(Wi, Eh);
+						ThisVertexWi = EdgeWi[0];
+#ifdef DEBUG
+						cout << "wi Left " << ThisVertexWi << endl << endl;
+#endif // DEBUG
+						for (int j = 0; j < InnerPoint.size(); j++)
+						{
+							if (InnerPoint[j] == TargetVet.idx())
+							{
+								ThisA_Array[j] = ThisVertexWi;
+								break;
+							}
+						}
+						break;
+					}
+					}
+			}
+			ABigWi += ThisVertexWi;
+		}
+		Bx[i] = Bx[i] / ABigWi;
+		By[i] = By[i] / ABigWi;
+		for (int j = 0; j < InnerPoint.size(); j++)
+		{
+			if (i != j)
+			{
+				A.insert(i, j) = ((-ThisA_Array[j]) / ABigWi);
+			}
+		}
+
+	}
+
+
+
+#ifdef DEBUG
+	cout << "A" << endl;
+	cout << A;
+	cout << "Bx" << endl;
+	cout << Bx;
+	cout << "By" << endl;
+	cout << By;
+#endif // DEBUG
+	A.makeCompressed();
+	linearSolver.compute(A);
+	VectorXd Xx = linearSolver.solve(Bx);
+	linearSolver.compute(A);
+	VectorXd Xy = linearSolver.solve(By);
+
+	for (int i = 0; i < InnerPoint.size(); i++)
+	{
+		MyMesh::TexCoord2D UV;
+		MyMesh::VertexHandle innerPoint = BeSelectModel.model.mesh.vertex_handle(InnerPoint[i]);
+		UV[0] = Xx[i];
+		UV[1] = Xy[i];
+		BeSelectModel.model.mesh.set_texcoord2D(innerPoint, UV);
+#ifdef DEBUG
+		cout << "InnerUV " << UV[0] << " " << UV[1] << endl;
+#endif // DEBUG
+
+		BeSelectModel.model.mesh.request_face_normals();
+		BeSelectModel.model.mesh.update_normals();
+		BeSelectModel.model.mesh.release_face_normals();
+
+		BeSelectModel.MY_LoadToShader();
+	}
+	}
+
+void magic_delete()
+{
+	model.selectedFace.clear();
+	model.selectedPoint.clear();
+	model.selectPoint_Seq.clear();
+	BeSelectModel.model.mesh.clear();
+	BeSelectModel.model.mesh.ClearMesh();
+	InnerPoint.clear();
+	OuterPoint.clear();
+	OuterLengh = 0;
 }

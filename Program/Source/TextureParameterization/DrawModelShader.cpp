@@ -66,6 +66,9 @@ bool DrawModelShader::Init()
 		return false;
 	}
 
+	TexcoordX = GetUniformLocation("TexX");
+	TexcoordY = GetUniformLocation("TexY");
+	TexcoordR = GetUniformLocation("TexR");
 	drawTexCoordLocation = GetUniformLocation("drawTexCoord");
 	if (drawTexCoordLocation == -1)
 	{
@@ -141,6 +144,13 @@ void DrawModelShader::SetFaceColor(const glm::vec4& faceColor)
 void DrawModelShader::SetWireColor(const glm::vec4& wireColor)
 {
 	glUniform4fv(wireColorLocation, 1, glm::value_ptr(wireColor));
+}
+
+void DrawModelShader::SetTexcoord(const float& Tx, const float& Ty, const float& R)
+{
+	glUniform1f(TexcoordX, Tx);
+	glUniform1f(TexcoordY, Ty);
+	glUniform1f(TexcoordR, R);
 }
 
 void DrawModelShader::UseLighting(bool use)

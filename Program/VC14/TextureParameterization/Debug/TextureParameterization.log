@@ -1,51 +1,58 @@
 ﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(377,5): warning MSB8004: Output 目錄結尾不是結尾斜線。這個建置執行個體將會加入此斜線，因為這樣才能正確評估 Output 目錄。
   TextureParameterization.cpp
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(472): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(474): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(487): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(499): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(543): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(573): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(591): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
-          with
-          [
-              Scalar=float
-          ]
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(600): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
-          with
-          [
-              Scalar=float
-          ]
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(611): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
-          with
-          [
-              Scalar=float
-          ]
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(620): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
-          with
-          [
-              Scalar=float
-          ]
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(634): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(305): warning C4101: 'Pointidx': 未參考的區域變數
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(540): warning C4305: '+=': 從 'double' 轉換為 'float'，是由較大的類型轉換為較小的類型，可能導致資料遺失
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(544): warning C4305: '-=': 從 'double' 轉換為 'float'，是由較大的類型轉換為較小的類型，可能導致資料遺失
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(548): warning C4305: '-=': 從 'double' 轉換為 'float'，是由較大的類型轉換為較小的類型，可能導致資料遺失
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(552): warning C4305: '+=': 從 'double' 轉換為 'float'，是由較大的類型轉換為較小的類型，可能導致資料遺失
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(556): warning C4305: '+=': 從 'double' 轉換為 'float'，是由較大的類型轉換為較小的類型，可能導致資料遺失
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(560): warning C4305: '-=': 從 'double' 轉換為 'float'，是由較大的類型轉換為較小的類型，可能導致資料遺失
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(650): warning C4018: '<': signed/unsigned 不相符
 c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(652): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(693): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(665): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(682): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(736): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(766): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(784): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
           with
           [
               Scalar=float
           ]
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(701): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(708): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(713): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(777): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(794): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(810): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(836): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(840): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(793): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
           with
           [
               Scalar=float
           ]
-c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(841): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(804): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
+          with
+          [
+              Scalar=float
+          ]
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(813): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
+          with
+          [
+              Scalar=float
+          ]
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(827): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(845): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(886): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
+          with
+          [
+              Scalar=float
+          ]
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(898): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(905): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(910): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(974): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(991): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(1007): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(1033): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(1037): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
+          with
+          [
+              Scalar=float
+          ]
+c:\users\user\desktop\meshuv\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(1038): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
           with
           [
               Scalar=float
