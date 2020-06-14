@@ -30,7 +30,7 @@ void main()
 		pos = vec4(vertex, 1.0);
 	}
 
-	vec4 newTexCoord = um4u * vec4(texCoord, 0.0, 1.0);
+	vec4 newTexCoord = vec4(texCoord, 0.0, 1.0);
 	vec4 viewModelPos = um4mv * vec4(vertex, 1.0);
 	vertexOut.vNormal = normalize(um3n * normal);
 	vertexOut.vViewPos = viewModelPos.xyz;

@@ -1,7 +1,7 @@
 #include "../Include/Common.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "../Include/STB/stb_image.h"
+//#define STB_IMAGE_IMPLEMENTATION
+//#include "../Include/STB/stb_image.h"
 
 #pragma comment (lib, "glew32.lib")
 #pragma comment(lib, "freeglut.lib")
@@ -135,33 +135,33 @@ void Common::PrintGLError()
 }
 
 
-
-TextureData Common::Load_png(const char* path, bool mirroredY)
-{
-	TextureData texture;
-	int n;
-	stbi_uc *data = stbi_load(path, &texture.width, &texture.height, &n, 4);
-	if (data != NULL)
-	{
-		texture.data = new unsigned char[texture.width * texture.height * 4 * sizeof(unsigned char)];
-		memcpy(texture.data, data, texture.width * texture.height * 4 * sizeof(unsigned char));
-		// vertical-mirror image data
-		if (mirroredY)
-		{
-			for (size_t i = 0; i < texture.width; i++)
-			{
-				for (size_t j = 0; j < texture.height / 2; j++)
-				{
-					for (size_t k = 0; k < 4; k++) {
-						std::swap(texture.data[(j * texture.width + i) * 4 + k], texture.data[((texture.height - j - 1) * texture.width + i) * 4 + k]);
-					}
-				}
-			}
-		}
-		stbi_image_free(data);
-	}
-	return texture;
-}
+//
+//TextureData Common::Load_png(const char* path, bool mirroredY)
+//{
+//	TextureData texture;
+//	int n;
+//	stbi_uc *data = stbi_load(path, &texture.width, &texture.height, &n, 4);
+//	if (data != NULL)
+//	{
+//		texture.data = new unsigned char[texture.width * texture.height * 4 * sizeof(unsigned char)];
+//		memcpy(texture.data, data, texture.width * texture.height * 4 * sizeof(unsigned char));
+//		// vertical-mirror image data
+//		if (mirroredY)
+//		{
+//			for (size_t i = 0; i < texture.width; i++)
+//			{
+//				for (size_t j = 0; j < texture.height / 2; j++)
+//				{
+//					for (size_t k = 0; k < 4; k++) {
+//						std::swap(texture.data[(j * texture.width + i) * 4 + k], texture.data[((texture.height - j - 1) * texture.width + i) * 4 + k]);
+//					}
+//				}
+//			}
+//		}
+//		stbi_image_free(data);
+//	}
+//	return texture;
+//}
 
 //Read shader file
 char** Common::LoadShaderSource(const char* file)

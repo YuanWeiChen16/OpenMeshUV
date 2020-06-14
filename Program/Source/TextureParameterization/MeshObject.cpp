@@ -70,7 +70,7 @@ bool GLMesh::Init(std::string fileName)
 {
 	if (LoadModel(fileName))
 	{
-		LoadToShader();
+		LoadToShader(false);
 		return true;
 	}
 	return false;
@@ -102,7 +102,7 @@ bool GLMesh::LoadModel(std::string fileName)
 	return false;
 }
 
-void GLMesh::LoadToShader()
+void GLMesh::LoadToShader(bool hasUv)
 {
 	std::vector<MyMesh::Point> vertices;
 	vertices.reserve(mesh.n_vertices());
@@ -119,7 +119,16 @@ void GLMesh::LoadToShader()
 	{
 		normals.push_back(mesh.normal(*v_it));
 	}
-
+	std::vector<MyMesh::TexCoord2D> texcoods;
+	if (hasUv == true)
+	{
+		texcoods.reserve(mesh.n_vertices());
+		for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
+		{
+			MyMesh::TexCoord2D Mytex = mesh.texcoord2D(*v_it);
+			texcoods.push_back(Mytex);
+		}
+	}
 	std::vector<unsigned int> indices;
 	indices.reserve(mesh.n_faces() * 3);
 	for (MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); ++f_it)
@@ -145,6 +154,14 @@ void GLMesh::LoadToShader()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
+	if (hasUv == true)
+	{
+		glGenBuffers(1, &vboTexcoord);
+		glBindBuffer(GL_ARRAY_BUFFER, vboTexcoord);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(MyMesh::TexCoord2D) * texcoods.size(), &texcoods[0], GL_STATIC_DRAW);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(2);
+	}
 	glGenBuffers(1, &ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(), &indices[0], GL_STATIC_DRAW);
@@ -157,7 +174,7 @@ void GLMesh::LoadToShader()
 
 MeshObject::MeshObject()
 {
-	
+
 }
 
 MeshObject::~MeshObject()
@@ -235,7 +252,7 @@ bool MeshObject::FindClosestPoint(unsigned int faceID, glm::vec3 worldPos, glm::
 	{
 		return false;
 	}
-	
+
 	double minDistance = 0.0;
 	MyMesh::Point p(worldPos.x, worldPos.y, worldPos.z);
 	MyMesh::FVIter fv_it = model.mesh.fv_iter(fh);
@@ -270,7 +287,7 @@ bool MeshObject::FaceToPoint()
 		{
 			return false;
 		}
-		
+
 		MyMesh::FVIter fv_it = model.mesh.fv_iter(fh);
 		MyMesh::VertexHandle VH = *fv_it;
 		for (; fv_it.is_valid(); ++fv_it)
@@ -289,5 +306,9 @@ bool MeshObject::FaceToPoint()
 
 void MeshObject::MY_LoadToShader()
 {
-	model.LoadToShader();
+	model.LoadToShader(true);
+
+
+
+
 }

@@ -29,10 +29,10 @@ public:
 	MyMesh mesh;
 	GLuint vao;
 	GLuint ebo;
-	GLuint vboVertices, vboNormal;
+	GLuint vboVertices, vboNormal,vboTexcoord;
 
 	bool LoadModel(std::string fileName);
-	void LoadToShader();
+	void LoadToShader(bool hasUv);
 };
 
 class MeshObject

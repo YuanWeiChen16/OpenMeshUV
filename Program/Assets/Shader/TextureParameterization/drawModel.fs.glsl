@@ -31,7 +31,10 @@ void main(void)
 	if (drawTexture)
 	{
 		vec4 texColor = texture(texImage, vertexIn.vTexCoord);
+		//vec4 texColor = vec4(vertexIn.vTexCoord.x,vertexIn.vTexCoord.y,0,1);//texture(texImage, vertexIn.vTexCoord);
 		newFaceColor = texColor;
+		fragColor = texColor;
+		return;
 	}
 
 	if (useLighting)
@@ -55,15 +58,12 @@ void main(void)
 		newFaceColor = vec4(vec3(1.0) * (ambient + specular) + newFaceColor.xyz * diffuse, newFaceColor.a);
 	}
 
-	
-
-	vec4 color = newFaceColor;
+	vec4 color = vec4(1.0, 0.0, 0.0, 1.0);
 	//vec4 color = faceColor;
 	if (drawWireframe)
 	{
 		float ef = edgeFactor();
 		color = mix(wireColor, newFaceColor, ef);
 	}
-
 	fragColor = color;
 }

@@ -14,8 +14,19 @@
 #include "DrawTextureShader.h"
 #include "DrawPointShader.h"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../../Include/STB/stb_image_write.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "../../Include/STB/stb_image.h"
+
+
+//#define STB_IMAGE_WRITE_IMPLEMENTATION
+//#include "../../Include/STB/stb_image_write.h"
+
+
+
+
+
+//ifdebug===============================================
+//#define DEBUG 
 
 using namespace glm;
 using namespace std;
@@ -44,7 +55,7 @@ vector<unsigned int> InnerPoint;
 
 float OuterLengh = 0;
 
-
+unsigned int textureID;
 
 // shaders
 DrawModelShader drawModelShader;
@@ -94,7 +105,7 @@ double PointAngle(MyMesh::Point P1, MyMesh::Point P2, MyMesh::Point VPoint)
 	angle = (angle*180.0) / 3.1415926;
 	return angle;
 }
-
+unsigned int loadTexture(std::string path, int imageType);
 void SetupGUI()
 {
 #ifdef _MSC_VER
@@ -148,8 +159,11 @@ void InitOpenGL()
 
 void InitData()
 {
+
 	ResourcePath::shaderPath = "./Shader/" + ProjectName + "/";
+	//ResourcePath::imagePath = "./Imgs/" + ProjectName + "/";
 	ResourcePath::imagePath = "./Imgs/" + ProjectName + "/";
+
 	ResourcePath::modelPath = "./Model/UnionSphere.obj";
 
 	//Initialize shaders
@@ -164,6 +178,9 @@ void InitData()
 
 	//Load model to shader program
 	My_LoadModel();
+
+	textureID = loadTexture("Imgs\\TextureParameterization\\checkerboard4.jpg", GL_RGB);
+
 }
 
 void Reshape(int width, int height)
@@ -199,10 +216,7 @@ void RenderMeshWindow()
 	pickingShader.SetMVMat(value_ptr(mvMat));
 	pickingShader.SetPMat(value_ptr(pMat));
 
-
 	model.Render();
-
-
 
 	pickingShader.Disable();
 	pickingTexture.Disable();
@@ -222,15 +236,23 @@ void RenderMeshWindow()
 	drawModelShader.SetNormalMat(normalMat);
 	drawModelShader.SetMVMat(mvMat);
 	drawModelShader.SetPMat(pMat);
-
 	model.Render();
 
 	if (model.selectedPoint.size() > 0)
 	{
-		drawModelShader.SetWireColor(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-		drawModelShader.SetFaceColor(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+		drawModelShader.SetWireColor(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+		drawModelShader.SetFaceColor(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
+		//drawModelShader.DrawTexCoord(true);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		drawModelShader.DrawTexture(true);
+		//BeSelectModel.Render();
+
+		//drawModelShader.DrawTexCoord(true);
 		BeSelectModel.Render();
+		drawModelShader.DrawTexture(false);
+		//drawModelShader.DrawTexCoord(false);
 
 	}
 	else
@@ -240,73 +262,6 @@ void RenderMeshWindow()
 	drawModelShader.Disable();
 
 
-	if (model.selectedPoint.size() > 0)
-	{
-
-
-		glColor3f(0, 0, 1);
-		glBegin(GL_LINES);
-		glLineWidth(5);
-
-
-		for (MyMesh::EdgeIter E = BeSelectModel.model.mesh.edges_begin(); E != BeSelectModel.model.mesh.edges_end(); ++E)
-		{
-			MyMesh::EdgeHandle EH = BeSelectModel.model.mesh.edge_handle(E->idx());
-			MyMesh::HalfedgeHandle HFH = BeSelectModel.model.mesh.halfedge_handle(EH, 0);
-			MyMesh::VHandle DrawPoint1 = BeSelectModel.model.mesh.from_vertex_handle(HFH);
-			MyMesh::VHandle DrawPoint2 = BeSelectModel.model.mesh.to_vertex_handle(HFH);
-			MyMesh::TexCoord2D outPoint1_p = BeSelectModel.model.mesh.texcoord2D(DrawPoint1);
-			MyMesh::TexCoord2D outPoint2_p = BeSelectModel.model.mesh.texcoord2D(DrawPoint2);
-			glVertex3f(outPoint1_p[0], outPoint1_p[1], 0);
-			glVertex3f(outPoint2_p[0], outPoint2_p[1], 0);
-
-		}
-
-		glEnd();
-
-		/*for (int i = 0; i < (OuterPoint.size() + 1); i++)
-		{
-			MyMesh::VHandle DrawPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[i%OuterPoint.size()]);
-			MyMesh::VHandle DrawPoint2 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i + 1) % OuterPoint.size()]);
-			MyMesh::TexCoord2D outPoint1_p = BeSelectModel.model.mesh.texcoord2D(DrawPoint1);
-			MyMesh::TexCoord2D outPoint2_p = BeSelectModel.model.mesh.texcoord2D(DrawPoint2);
-		}
-
-*/
-
-
-		glColor3f(0, 1, 0);
-
-		glBegin(GL_POINTS);
-
-		glPointSize(50);
-
-		for (MyMesh::VertexIter V = BeSelectModel.model.mesh.vertices_begin(); V != BeSelectModel.model.mesh.vertices_end(); ++V)
-		{
-			MyMesh::VHandle DrawPoint1 = BeSelectModel.model.mesh.vertex_handle(V->idx());
-			MyMesh::TexCoord2D outPoint1_p = BeSelectModel.model.mesh.texcoord2D(DrawPoint1);
-			glVertex3f(outPoint1_p[0], outPoint1_p[1], 0);
-		}
-		glEnd();
-
-
-
-
-
-
-
-	}
-
-
-
-
-
-
-
-
-
-
-
 
 	// render selected face
 	if (selectionMode == SelectionMode::ADD_FACE || selectionMode == SelectionMode::DEL_FACE)
@@ -314,7 +269,10 @@ void RenderMeshWindow()
 		drawPickingFaceShader.Enable();
 		drawPickingFaceShader.SetMVMat(value_ptr(mvMat));
 		drawPickingFaceShader.SetPMat(value_ptr(pMat));
-		model.RenderSelectedFace();
+		if (model.selectedPoint.size() <= 0)
+		{
+			model.RenderSelectedFace();
+		}
 		drawPickingFaceShader.Disable();
 	}
 
@@ -360,6 +318,67 @@ void RenderMeshWindow()
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	}
+
+	if (model.selectedPoint.size() > 0)
+	{
+
+		/*glColor3f(0, 1, 1);
+		glBegin(GL_TRIANGLES);
+		for (MyMesh::FaceIter F = BeSelectModel.model.mesh.faces_begin(); F != BeSelectModel.model.mesh.faces_end(); ++F)
+		{
+			for (MyMesh::FVIter FV = BeSelectModel.model.mesh.fv_begin(*F); FV != BeSelectModel.model.mesh.fv_end(*F); ++FV)
+			{
+				MyMesh::VHandle DrawPointVH = BeSelectModel.model.mesh.vertex_handle(FV->idx());
+				MyMesh::Point DrawPoint = BeSelectModel.model.mesh.point(DrawPointVH);
+				MyMesh::TexCoord2D DrawPoint_TEXUV = BeSelectModel.model.mesh.texcoord2D(DrawPointVH);
+				glVertex3f(DrawPoint[0], DrawPoint[1], DrawPoint[2]);
+
+				cout << "DRAW¡@TRI"<< DrawPoint <<endl;
+				glTexCoord2f(DrawPoint_TEXUV[0], DrawPoint_TEXUV[1]);
+			}
+		}
+		glEnd();*/
+
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glColor3f(1, 1, 1);
+		glBegin(GL_QUADS);
+		glTexCoord2d(0, 0); glVertex2d(0, 0);
+		glTexCoord2d(1, 0); glVertex2d(0, 1);
+		glTexCoord2d(1, 1); glVertex2d(1, 1);
+		glTexCoord2d(0, 1); glVertex2d(1, 0);
+		glEnd();
+
+
+		glColor3f(0, 1, 0);
+		glBegin(GL_POINTS);
+		glPointSize(50);
+
+		for (MyMesh::VertexIter V = BeSelectModel.model.mesh.vertices_begin(); V != BeSelectModel.model.mesh.vertices_end(); ++V)
+		{
+			MyMesh::VHandle DrawPoint1 = BeSelectModel.model.mesh.vertex_handle(V->idx());
+			MyMesh::TexCoord2D outPoint1_p = BeSelectModel.model.mesh.texcoord2D(DrawPoint1);
+			glVertex3f(outPoint1_p[0], outPoint1_p[1], 0);
+		}
+		glEnd();
+
+		glColor3f(1, 0, 0);
+		glBegin(GL_LINES);
+		glLineWidth(5);
+		for (MyMesh::EdgeIter E = BeSelectModel.model.mesh.edges_begin(); E != BeSelectModel.model.mesh.edges_end(); ++E)
+		{
+			MyMesh::EdgeHandle EH = BeSelectModel.model.mesh.edge_handle(E->idx());
+			MyMesh::HalfedgeHandle HFH = BeSelectModel.model.mesh.halfedge_handle(EH, 0);
+			MyMesh::VHandle DrawPoint1 = BeSelectModel.model.mesh.from_vertex_handle(HFH);
+			MyMesh::VHandle DrawPoint2 = BeSelectModel.model.mesh.to_vertex_handle(HFH);
+			MyMesh::TexCoord2D outPoint1_p = BeSelectModel.model.mesh.texcoord2D(DrawPoint1);
+			MyMesh::TexCoord2D outPoint2_p = BeSelectModel.model.mesh.texcoord2D(DrawPoint2);
+			glVertex3f(outPoint1_p[0], outPoint1_p[1], 0);
+			glVertex3f(outPoint2_p[0], outPoint2_p[1], 0);
+		}
+		glEnd();
+
+	}
+
 
 	TwDraw();
 	glutSwapBuffers();
@@ -446,11 +465,8 @@ void MyKeyboard(unsigned char key, int x, int y)
 		meshWindowCam.keyEvents(key);
 	}
 	cout << "Input : " << key << endl;
-	if (key == 'f')
+	if ((key == 'f') && (model.selectedFace.size() > 0))
 	{
-
-
-
 		model.FaceToPoint();
 
 		for (int i = 0; i < model.selectPoint_Seq.size(); i++)
@@ -473,7 +489,11 @@ void MyKeyboard(unsigned char key, int x, int y)
 			MyMesh::VertexHandle TempPoint = model.model.mesh.vertex_handle(model.selectedPoint[i]);
 			MyMesh::Point closestPoint = model.model.mesh.point(TempPoint);
 			vhandle.push_back(BeSelectModel.model.mesh.add_vertex(closestPoint));
+#ifdef DEBUG
 			cout << "X: " << closestPoint[0] << "Y: " << closestPoint[1] << "Z: " << closestPoint[2] << endl;
+#endif // DEBUG
+
+
 		}
 		std::vector<MyMesh::VertexHandle>  face_vhandles;
 		for (int i = 0; i < model.selectPoint_Seq.size() / 3; i++)
@@ -483,7 +503,11 @@ void MyKeyboard(unsigned char key, int x, int y)
 			face_vhandles.push_back(vhandle[model.selectPoint_Seq[(i * 3) + 1]]);
 			face_vhandles.push_back(vhandle[model.selectPoint_Seq[(i * 3) + 2]]);
 			BeSelectModel.model.mesh.add_face(face_vhandles);
+#ifdef DEBUG
 			cout << "FACE " << i << " Is be Rebuild" << endl;
+#endif // DEBUG
+
+
 		}
 
 		MyMesh::HalfedgeIter HFI = BeSelectModel.model.mesh.halfedges_begin();
@@ -515,7 +539,7 @@ void MyKeyboard(unsigned char key, int x, int y)
 
 
 
-		//caclu Outer lengh
+		//caclu Outer lengh===================================================================================================================
 		for (int i = 0; i < OuterPoint.size(); i++)
 		{
 			MyMesh::VertexHandle outPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i) % OuterPoint.size()]);
@@ -528,19 +552,24 @@ void MyKeyboard(unsigned char key, int x, int y)
 			dis = sqrt(dis*dis + disPoint[2] * disPoint[2]);
 			OuterLengh += dis;
 		}
+#ifdef DEBUG
 		cout << "Outer Lengh is " << OuterLengh << endl;
-		//Make UV
+#endif // DEBUG
+
+
+		//Make OuterSide UV=====================================================================================================
 		BeSelectModel.model.mesh.request_vertex_texcoords2D();// _vertex_texcoords2D();
 		float nowDis = 0;
-
-
 		MyMesh::VertexHandle tempoutPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(0) % OuterPoint.size()]);
 		MyMesh::TexCoord2D tempUV;
 		tempUV[0] = 0;
 		tempUV[1] = 0;
+#ifdef DEBUG
 		cout << "Point " << 0 << " UV " << tempUV[0] << " " << tempUV[1] << endl;
+#endif // DEBUG
 		BeSelectModel.model.mesh.set_texcoord2D(tempoutPoint1, tempUV);
 
+		//set Outter UV================================================================================================================
 		for (int i = 0; i < OuterPoint.size(); i++)
 		{
 			MyMesh::VertexHandle outPoint1 = BeSelectModel.model.mesh.vertex_handle(OuterPoint[(i) % OuterPoint.size()]);
@@ -551,7 +580,9 @@ void MyKeyboard(unsigned char key, int x, int y)
 			float dis = disPoint[0] * disPoint[0] + disPoint[1] * disPoint[1];
 			dis = sqrt(dis);
 			dis = sqrt(dis*dis + disPoint[2] * disPoint[2]);
+#ifdef DEBUG
 			cout << "Dis " << dis;
+#endif // DEBUG	
 			nowDis = nowDis + dis;
 			if (nowDis <= (OuterLengh / 4.0))
 			{
@@ -559,7 +590,9 @@ void MyKeyboard(unsigned char key, int x, int y)
 				UV[0] = 0;
 				UV[1] = nowDis / (OuterLengh / 4.0);
 				BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
+#ifdef DEBUG
 				cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
+#endif // DEBUG
 			}
 			else if ((nowDis <= ((OuterLengh / 4.0) * 2.0)) && (nowDis > ((OuterLengh / 4.0)*1.0)))
 			{
@@ -567,7 +600,9 @@ void MyKeyboard(unsigned char key, int x, int y)
 				UV[0] = ((nowDis - (OuterLengh / 4.0)*1.0) / (OuterLengh / 4.0));
 				UV[1] = 1;
 				BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
+#ifdef DEBUG
 				cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
+#endif // DEBUG
 			}
 			else if ((nowDis <= ((OuterLengh / 4.0) * 3.0)) && (nowDis > ((OuterLengh / 4.0)*2.0)))
 			{
@@ -575,7 +610,9 @@ void MyKeyboard(unsigned char key, int x, int y)
 				UV[0] = 1;
 				UV[1] = 1 - ((nowDis - (OuterLengh / 4.0)*2.0)) / (OuterLengh / 4.0);
 				BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
+#ifdef DEBUG
 				cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
+#endif // DEBUG
 			}
 			else if ((nowDis <= (OuterLengh)) && (nowDis > ((OuterLengh / 4.0)*3.0)))
 			{
@@ -583,10 +620,12 @@ void MyKeyboard(unsigned char key, int x, int y)
 				UV[0] = 1 - ((nowDis - (OuterLengh / 4.0)*3.0)) / (OuterLengh / 4.0);
 				UV[1] = 0;
 				BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
+#ifdef DEBUG
 				cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
+#endif // DEBUG
 			}
 		}
-
+		//select inner point================================================================================================================
 		MyMesh::VertexIter VI = BeSelectModel.model.mesh.vertices_begin();
 		for (; VI != BeSelectModel.model.mesh.vertices_end(); ++VI)
 		{
@@ -602,11 +641,12 @@ void MyKeyboard(unsigned char key, int x, int y)
 			if (ISOUT == false)
 			{
 				InnerPoint.push_back(SeachPoint.idx());
+#ifdef DEBUG
 				cout << "InnerPoint " << InnerPoint.size() << " ID: " << SeachPoint.idx() << endl;
+#endif // DEBUG
 			}
 		}
 
-		BeSelectModel.MY_LoadToShader();
 
 		SparseMatrix<double> A(InnerPoint.size(), InnerPoint.size());
 		for (int i = 0; i < InnerPoint.size(); i++)
@@ -619,7 +659,7 @@ void MyKeyboard(unsigned char key, int x, int y)
 
 		OpenMesh::EPropHandleT<MyMesh::Point> Wi;
 		BeSelectModel.model.mesh.add_property(Wi);
-
+		//Do wi==================================================================================================================================
 		for (MyMesh::EdgeIter EI = BeSelectModel.model.mesh.edges_begin(); EI != BeSelectModel.model.mesh.edges_end(); ++EI)
 		{
 			MyMesh::Point tmepWi;
@@ -639,16 +679,16 @@ void MyKeyboard(unsigned char key, int x, int y)
 				MyMesh::Point OppoOppoVertex = BeSelectModel.model.mesh.point(OppoOppoVertexH);
 
 				double Angle1, Angle2;
+
+				Angle1 = PointAngle(FromVertex, ToVertex, OppositeVertex);
+				Angle2 = PointAngle(FromVertex, ToVertex, OppoOppoVertex);
+#ifdef DEBUG
 				cout << "Tri1_1" << FromVertex[0] << " " << FromVertex[1] << " " << FromVertex[2] << endl;
 				cout << "Tri1_2" << ToVertex[0] << " " << ToVertex[1] << " " << ToVertex[2] << endl;
 				cout << "Tri1_3" << OppositeVertex[0] << " " << OppositeVertex[1] << " " << OppositeVertex[2] << endl;
 				cout << "Tri2_3" << OppoOppoVertex[0] << " " << OppoOppoVertex[1] << " " << OppoOppoVertex[2] << endl;
-
-				Angle1 = PointAngle(FromVertex, ToVertex, OppositeVertex);
-				Angle2 = PointAngle(FromVertex, ToVertex, OppoOppoVertex);
-
 				cout << "Angles 1 2 " << Angle1 << " " << Angle2 << endl;
-
+#endif // DEBUG
 
 				tmepWi[0] = ((1.0 / tan((Angle1*3.1415926) / 180.0)) + (1.0 / tan((Angle2*3.1415926) / 180.0)));
 				cout << tmepWi[0] << endl;
@@ -664,7 +704,7 @@ void MyKeyboard(unsigned char key, int x, int y)
 			By[j] = 0;
 		}
 
-		//make matrix
+		//make matrix================================================================================================================
 		for (int i = 0; i < InnerPoint.size(); i++)
 		{
 			float ABigWi = 0;
@@ -674,7 +714,11 @@ void MyKeyboard(unsigned char key, int x, int y)
 			{
 				ThisA_Array.push_back(0.0);
 			}
+#ifdef DEBUG
 			cout << "NOW POINT" << InnerPoint[i] << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+#endif // DEBUG
+
+			//Done Matrix===========================================================================================================================
 			for (MyMesh::VVIter VV = BeSelectModel.model.mesh.vv_begin(NowVertex); VV != BeSelectModel.model.mesh.vv_end(NowVertex); ++VV)
 			{
 				float ThisVertexWi = 0;
@@ -698,9 +742,11 @@ void MyKeyboard(unsigned char key, int x, int y)
 							Bx[i] += EdgeWi[0] * tempT2D[0];//x
 							By[i] += EdgeWi[0] * tempT2D[1];//y
 							ThisVertexWi = EdgeWi[0];
+#ifdef DEBUG
 							cout << "wi Right1 " << EdgeWi[0] << " " << tempT2D[0] << endl;
 							cout << "wi Right2 " << EdgeWi[0] << " " << tempT2D[1] << endl;
 							cout << "wi Right3 " << Bx[i] << " " << By[i] << endl << endl;
+#endif // DEBUG
 							break;
 						}
 						else if ((HeH1_FromVetx.idx() == NowVertex.idx()) && (HeH1_ToVetx.idx() == TargetVet.idx()))
@@ -710,9 +756,11 @@ void MyKeyboard(unsigned char key, int x, int y)
 							Bx[i] += EdgeWi[0] * tempT2D[0];//x
 							By[i] += EdgeWi[0] * tempT2D[1];//y
 							ThisVertexWi = EdgeWi[0];
+#ifdef DEBUG
 							cout << "wi Right1 " << EdgeWi[0] << " " << tempT2D[0] << endl;
 							cout << "wi Right2 " << EdgeWi[0] << " " << tempT2D[1] << endl;
 							cout << "wi Right3 " << Bx[i] << " " << By[i] << endl << endl;
+#endif // DEBUG
 							break;
 						}
 
@@ -723,7 +771,9 @@ void MyKeyboard(unsigned char key, int x, int y)
 						{
 							MyMesh::Point EdgeWi = BeSelectModel.model.mesh.property(Wi, Eh);
 							ThisVertexWi = EdgeWi[0];
+#ifdef DEBUG
 							cout << "wi Left " << ThisVertexWi << endl << endl;
+#endif // DEBUG
 							for (int j = 0; j < InnerPoint.size(); j++)
 							{
 								if (InnerPoint[j] == TargetVet.idx())
@@ -738,7 +788,9 @@ void MyKeyboard(unsigned char key, int x, int y)
 						{
 							MyMesh::Point EdgeWi = BeSelectModel.model.mesh.property(Wi, Eh);
 							ThisVertexWi = EdgeWi[0];
+#ifdef DEBUG
 							cout << "wi Left " << ThisVertexWi << endl << endl;
+#endif // DEBUG
 							for (int j = 0; j < InnerPoint.size(); j++)
 							{
 								if (InnerPoint[j] == TargetVet.idx())
@@ -753,10 +805,6 @@ void MyKeyboard(unsigned char key, int x, int y)
 				}
 				ABigWi += ThisVertexWi;
 			}
-			cout << "Bx" << endl;
-			cout << Bx;
-			cout << "By" << endl;
-			cout << By;
 			Bx[i] = Bx[i] / ABigWi;
 			By[i] = By[i] / ABigWi;
 			for (int j = 0; j < InnerPoint.size(); j++)
@@ -771,14 +819,14 @@ void MyKeyboard(unsigned char key, int x, int y)
 
 
 
-
+#ifdef DEBUG
 		cout << "A" << endl;
 		cout << A;
 		cout << "Bx" << endl;
 		cout << Bx;
 		cout << "By" << endl;
 		cout << By;
-
+#endif // DEBUG
 		A.makeCompressed();
 		linearSolver.compute(A);
 		VectorXd Xx = linearSolver.solve(Bx);
@@ -792,19 +840,25 @@ void MyKeyboard(unsigned char key, int x, int y)
 			UV[0] = Xx[i];
 			UV[1] = Xy[i];
 			BeSelectModel.model.mesh.set_texcoord2D(innerPoint, UV);
+#ifdef DEBUG
 			cout << "InnerUV " << UV[0] << " " << UV[1] << endl;
+#endif // DEBUG
+
+
+			BeSelectModel.MY_LoadToShader();
 		}
-
-
-
-
-
-
 
 	}
 	else if (key == 'g')
 	{
-
+		model.selectedFace.clear();
+		model.selectedPoint.clear();
+		model.selectPoint_Seq.clear();
+		BeSelectModel.model.mesh.clear();
+		BeSelectModel.model.mesh.ClearMesh();
+		InnerPoint.clear();
+		OuterPoint.clear();
+		OuterLengh = 0;
 	}
 }
 
@@ -864,3 +918,27 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
+unsigned int loadTexture(std::string path, int imageType)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	int width, height, nrComponents;
+	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, imageType, width, height, 0, imageType, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		stbi_image_free(data);
+	}
+	else
+	{
+		std::cout << "texture failed to load at path: " << path << std::endl;
+		stbi_image_free(data);
+	}
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+	return textureID;
+}
