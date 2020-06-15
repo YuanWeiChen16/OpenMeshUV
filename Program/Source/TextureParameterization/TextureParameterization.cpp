@@ -64,8 +64,6 @@ float TexRotate = 0;
 unsigned int textureID;
 unsigned int NormalID;
 
-
-
 // shaders
 DrawModelShader drawModelShader;
 DrawPickingFaceShader drawPickingFaceShader;
@@ -77,6 +75,8 @@ DrawPointShader drawPointShader;
 GLuint vboPoint;
 
 int mainWindow;
+TwBar* bar;
+
 enum SelectionMode
 {
 	ADD_FACE,
@@ -87,11 +87,28 @@ enum SelectionMode
 	ONE_RING
 };
 SelectionMode selectionMode = ADD_FACE;
-
-TwBar* bar;
 TwEnumVal SelectionModeEV[] = { {ADD_FACE, "Add face"}, {DEL_FACE, "Delete face"}, {SELECT_POINT, "Point"},{ADD_POINT,"Add point"},{DEL_POINT,"Delete point"},{ONE_RING,"One Ring"} };
 TwType SelectionModeType;
 
+enum choseModelID
+{
+	armadillo,
+	bear,
+	dancer,
+	dancing_children,
+	feline,
+	fertilty,
+	gargoyle,
+	neptune,
+	octopus,
+	screwdriver,
+	xyzrgb_dragon_100k
+};
+choseModelID chosemodel = bear;
+choseModelID choseNOWmodel = bear;
+TwEnumVal chosemodelEV[] = { {armadillo, "armadillo"}, {bear, "bear"}, {dancer, "dancer"},{dancing_children,"dancing_children"},{feline,"feline"},{fertilty,"fertilty"},{gargoyle,"gargoyle"},{neptune,"neptune"},{octopus,"octopus"},{screwdriver,"screwdriver"},{xyzrgb_dragon_100k,"xyzrgb_dragon_100k"} };
+TwType chosemodelType;
+std::vector<std::string> modelNames;
 
 //calu Angle 
 double PointAngle(MyMesh::Point P1, MyMesh::Point P2, MyMesh::Point VPoint)
@@ -132,9 +149,23 @@ void SetupGUI()
 	TwDefine(" 'Texture Parameter Setting' fontsize='3' color='96 216 224'");
 
 	// Defining season enum type
-	SelectionModeType = TwDefineEnum("SelectionModeType", SelectionModeEV, 3);
+	SelectionModeType = TwDefineEnum("SelectionModeType", SelectionModeEV, 6);
 	// Adding season to bar
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
+	modelNames.push_back("armadillo.obj");
+	modelNames.push_back("bear.obj");
+	modelNames.push_back("dancer.obj");
+	modelNames.push_back("dancing_children.obj");
+	modelNames.push_back("feline.obj");
+	modelNames.push_back("fertilty.obj");
+	modelNames.push_back("gargoyle.obj");
+	modelNames.push_back("neptune.obj");
+	modelNames.push_back("octopus.obj");
+	modelNames.push_back("screwdriver.obj");
+	modelNames.push_back("xyzrgb_dragon_100k.obj");
+	chosemodelType = TwDefineEnum("Model", chosemodelEV, 11);
+	// Adding season to bar
+	TwAddVarRW(bar, "Model", chosemodelType, &chosemodel, NULL);
 }
 
 void My_LoadModel()
@@ -177,7 +208,7 @@ void InitData()
 	//ResourcePath::imagePath = "./Imgs/" + ProjectName + "/";
 	ResourcePath::imagePath = "./Imgs/" + ProjectName + "/";
 
-	ResourcePath::modelPath = "./Model/bear.obj";
+	ResourcePath::modelPath = "./Model/" + modelNames[chosemodel];
 
 	//Initialize shaders
 	///////////////////////////	
@@ -300,7 +331,7 @@ void RenderMeshWindow()
 	glUseProgram(0);
 
 	// render closest point
-	if (selectionMode == SelectionMode::SELECT_POINT)
+	if ((selectionMode == SelectionMode::SELECT_POINT) || (selectionMode == SelectionMode::ADD_POINT) || (selectionMode == SelectionMode::DEL_POINT))
 	{
 		unsigned int Pointidx;
 		MyMesh::VertexHandle VH;
@@ -317,31 +348,68 @@ void RenderMeshWindow()
 			glm::vec3 windowPos(windowX, windowY, depthValue);
 			glm::vec3 wp = glm::unProject(windowPos, mvMat, pMat, viewport);
 			model.FindClosestPoint(currentFaceID - 1, wp, worldPos, VH);
-			magic_delete();
-			model.selectedFace.clear();
-
+			if (selectionMode == SelectionMode::SELECT_POINT)
+			{
+				magic_delete();
+				model.selectedFace.clear();
+			}
 			//MyMesh::Vertex Vthis = model.model.mesh.vertex(VH);
 
 			for (MyMesh::VFIter VF = model.model.mesh.vf_begin(VH); VF != model.model.mesh.vf_end(VH); ++VF)
 			{
 				MyMesh::FaceHandle Fh = model.model.mesh.face_handle(VF->idx());
-				model.AddSelectedFace(Fh.idx());
+				if ((selectionMode == SelectionMode::ADD_POINT)||(selectionMode == SelectionMode::SELECT_POINT))
+				{
+					model.AddSelectedFace(Fh.idx());
+				}
+				else if (selectionMode == SelectionMode::DEL_POINT)
+				{
+					model.DeleteSelectedFace(Fh.idx());
+				}
 				for (MyMesh::FFIter FF1 = model.model.mesh.ff_begin(Fh); FF1 != model.model.mesh.ff_end(Fh); ++FF1)
 				{
 					MyMesh::FaceHandle Fh1 = model.model.mesh.face_handle(FF1->idx());
-					model.AddSelectedFace(Fh1.idx());
+					if ((selectionMode == SelectionMode::ADD_POINT) || (selectionMode == SelectionMode::SELECT_POINT))
+					{
+						model.AddSelectedFace(Fh1.idx());
+					}
+					else if (selectionMode == SelectionMode::DEL_POINT)
+					{
+						model.DeleteSelectedFace(Fh1.idx());
+					}
 					for (MyMesh::FFIter FF2 = model.model.mesh.ff_begin(*FF1); FF2 != model.model.mesh.ff_end(*FF1); ++FF2)
 					{
 						MyMesh::FaceHandle Fh2 = model.model.mesh.face_handle(FF2->idx());
-						model.AddSelectedFace(Fh2.idx());
+						if ((selectionMode == SelectionMode::ADD_POINT) || (selectionMode == SelectionMode::SELECT_POINT))
+						{
+							model.AddSelectedFace(Fh2.idx());
+						}
+						else if (selectionMode == SelectionMode::DEL_POINT)
+						{
+							model.DeleteSelectedFace(Fh2.idx());
+						}
 						for (MyMesh::FFIter FF3 = model.model.mesh.ff_begin(*FF2); FF3 != model.model.mesh.ff_end(*FF2); ++FF3)
 						{
 							MyMesh::FaceHandle Fh3 = model.model.mesh.face_handle(FF3->idx());
-							model.AddSelectedFace(Fh3.idx());
+							if ((selectionMode == SelectionMode::ADD_POINT) || (selectionMode == SelectionMode::SELECT_POINT))
+							{
+								model.AddSelectedFace(Fh3.idx());
+							}
+							else if (selectionMode == SelectionMode::DEL_POINT)
+							{
+								model.DeleteSelectedFace(Fh3.idx());
+							}
 							for (MyMesh::FFIter FF4 = model.model.mesh.ff_begin(*FF3); FF4 != model.model.mesh.ff_end(*FF3); ++FF4)
 							{
 								MyMesh::FaceHandle Fh4 = model.model.mesh.face_handle(FF4->idx());
-								model.AddSelectedFace(Fh4.idx());
+								if ((selectionMode == SelectionMode::ADD_POINT) || (selectionMode == SelectionMode::SELECT_POINT))
+								{
+									model.AddSelectedFace(Fh4.idx());
+								}
+								else if (selectionMode == SelectionMode::DEL_POINT)
+								{
+									model.DeleteSelectedFace(Fh4.idx());
+								}
 								/*for (MyMesh::FFIter FF5 = model.model.mesh.ff_begin(*FF4); FF3 != model.model.mesh.ff_end(*FF4); ++FF3)
 								{
 									MyMesh::FaceHandle Fh5 = model.model.mesh.face_handle(FF5->idx());
@@ -355,8 +423,10 @@ void RenderMeshWindow()
 				}
 			}
 			///this who magic work
-			magic();
-
+			if (selectionMode == SelectionMode::SELECT_POINT)
+			{
+				magic();
+			}
 			updateFlag = false;
 		}
 		drawPickingFaceShader.Enable();
@@ -486,7 +556,7 @@ void SelectionHandler(unsigned int x, unsigned int y)
 			model.DeleteSelectedFace(faceID - 1);
 		}
 	}
-	else if (selectionMode == SELECT_POINT)
+	else if ((selectionMode == SELECT_POINT)|| (selectionMode == ADD_POINT)|| (selectionMode == DEL_POINT))
 	{
 		currentMouseX = x;
 		currentMouseY = y;
@@ -562,6 +632,14 @@ void MyKeyboard(unsigned char key, int x, int y)
 
 }
 
+void ReLoadModel()
+{
+	ResourcePath::modelPath = "./Model/" + modelNames[chosemodel];
+
+	My_LoadModel();
+
+}
+
 
 void MyMouseMoving(int x, int y) {
 	if (!TwEventMouseMotionGLUT(x, y))
@@ -571,6 +649,11 @@ void MyMouseMoving(int x, int y) {
 		if (isRightButtonPress)
 		{
 			SelectionHandler(x, y);
+		}
+		if (chosemodel != choseNOWmodel)
+		{
+			choseNOWmodel = chosemodel;
+			ReLoadModel();
 		}
 	}
 }
@@ -786,7 +869,7 @@ void magic()
 #ifdef DEBUG
 			cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
 #endif // DEBUG
-	}
+		}
 		else if ((nowDis <= ((OuterLengh / 4.0) * 2.0)) && (nowDis > ((OuterLengh / 4.0)*1.0)))
 		{
 			MyMesh::TexCoord2D UV;
@@ -796,7 +879,7 @@ void magic()
 #ifdef DEBUG
 			cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
 #endif // DEBUG
-}
+		}
 		else if ((nowDis <= ((OuterLengh / 4.0) * 3.0)) && (nowDis > ((OuterLengh / 4.0)*2.0)))
 		{
 			MyMesh::TexCoord2D UV;
@@ -806,7 +889,7 @@ void magic()
 #ifdef DEBUG
 			cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
 #endif // DEBUG
-	}
+		}
 		else if ((nowDis <= (OuterLengh)) && (nowDis > ((OuterLengh / 4.0)*3.0)))
 		{
 			MyMesh::TexCoord2D UV;
@@ -816,7 +899,7 @@ void magic()
 #ifdef DEBUG
 			cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
 #endif // DEBUG
-}
+		}
 	}
 	//select inner point================================================================================================================
 	MyMesh::VertexIter VI = BeSelectModel.model.mesh.vertices_begin();
@@ -838,7 +921,7 @@ void magic()
 			cout << "InnerPoint " << InnerPoint.size() << " ID: " << SeachPoint.idx() << endl;
 #endif // DEBUG
 		}
-			}
+	}
 
 
 	SparseMatrix<double> A(InnerPoint.size(), InnerPoint.size());
@@ -998,7 +1081,7 @@ void magic()
 						}
 						break;
 					}
-					}
+				}
 			}
 			ABigWi += ThisVertexWi;
 		}
@@ -1011,7 +1094,7 @@ void magic()
 				A.insert(i, j) = ((-ThisA_Array[j]) / ABigWi);
 			}
 		}
-
+		cout << "Line " << i << endl;
 	}
 
 
@@ -1029,7 +1112,7 @@ void magic()
 	VectorXd Xx = linearSolver.solve(Bx);
 	linearSolver.compute(A);
 	VectorXd Xy = linearSolver.solve(By);
-
+	cout << "liner Solve!!" << endl;
 	for (int i = 0; i < InnerPoint.size(); i++)
 	{
 		MyMesh::TexCoord2D UV;
@@ -1047,7 +1130,7 @@ void magic()
 
 		BeSelectModel.MY_LoadToShader();
 	}
-	}
+}
 
 void magic_delete()
 {
