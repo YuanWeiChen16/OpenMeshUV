@@ -1,4 +1,4 @@
-#version 410 core
+#version 430 core
 
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
@@ -8,7 +8,7 @@ in VertexData
 	vec3 vNormal;
 	vec3 vViewPos;
 	vec2 vTexCoord;
-	vec3 VRealPos;
+	vec4 VRealPos;
 	mat4 MV;
 } vertexIn[];
 

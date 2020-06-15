@@ -1,4 +1,4 @@
-#version 410 core
+#version 430 core
 
 out vec4 fragColor;
 
@@ -12,9 +12,9 @@ in VertexData
 	vec3 barycentric;
 } vertexIn;
 
-uniform sampler2D texImage;
+layout(binding=0) uniform sampler2D texImage;
 
-uniform sampler2D NortexImage;
+layout(binding=1) uniform sampler2D NortexImage;
 
 uniform bool useLighting;
 uniform bool drawWireframe;
@@ -48,7 +48,6 @@ void main(void)
 		vec3 viewVector = -vertexIn.vViewPos;
 		vec3 lightDir = vec3(0, 0, -1);
 
-
 		vec3 T = vertexIn.vTanget;
    		vec3 B = vertexIn.vBitanget;
 
@@ -57,12 +56,12 @@ void main(void)
 		vec3 MyN = normalize(vertexIn.vNormal);
 		mat3 TBN = mat3(T,B,MyN);
 
-		vec3 N = texture(NortexImage, Texxx).rbg;
+		vec3 N = texture(NortexImage, Texxx).rgb;
 		N = N * 2.0 - 1.0;
 		
 		N = normalize(TBN * N);
 
-		//RealNormal = vec3(N.x,N.y,N.z);
+		RealNormal = vec3(N.x,N.y,N.z);
 	}
 
 	if (useLighting)
