@@ -69,6 +69,7 @@ bool DrawModelShader::Init()
 	TexcoordX = GetUniformLocation("TexX");
 	TexcoordY = GetUniformLocation("TexY");
 	TexcoordR = GetUniformLocation("TexR");
+	NormalType = GetUniformLocation("NormalType");
 	drawTexCoordLocation = GetUniformLocation("drawTexCoord");
 	if (drawTexCoordLocation == -1)
 	{
@@ -152,6 +153,12 @@ void DrawModelShader::SetTexcoord(const float& Tx, const float& Ty, const float&
 	glUniform1f(TexcoordY, Ty);
 	glUniform1f(TexcoordR, R);
 }
+
+void  DrawModelShader::SetNormalType(bool draw)
+{
+	glUniform1i(NormalType,draw);
+}
+
 
 void DrawModelShader::UseLighting(bool use)
 {

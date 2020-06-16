@@ -62,6 +62,9 @@ float TexRotate = 0;
 
 
 unsigned int textureID;
+std::vector<unsigned int> TextureIDs;
+std::vector<unsigned int> NoramlIDs;
+
 unsigned int NormalID;
 
 // shaders
@@ -109,6 +112,35 @@ choseModelID choseNOWmodel = bear;
 TwEnumVal chosemodelEV[] = { {armadillo, "armadillo"}, {bear, "bear"}, {dancer, "dancer"},{dancing_children,"dancing_children"},{feline,"feline"},{fertilty,"fertilty"},{gargoyle,"gargoyle"},{neptune,"neptune"},{octopus,"octopus"},{screwdriver,"screwdriver"},{xyzrgb_dragon_100k,"xyzrgb_dragon_100k"} };
 TwType chosemodelType;
 std::vector<std::string> modelNames;
+
+enum choseTexture
+{
+	checkboard,
+	WoodWall,
+	Brickwall,
+	stonewall,
+	gears,
+	happyface,
+	NTUST_Logo
+};
+choseTexture chosetexture = checkboard;
+TwEnumVal chosetextureEV[] = { {checkboard, "checkboard"}, {WoodWall, "WoodWall"},{Brickwall,"Brickwall" },{stonewall,"stonewall" },{gears,"gears"},{happyface,"happyface"},{NTUST_Logo,"NTUST_Logo"} };
+TwType chosetextureType;
+std::vector<std::string> TextureNames;
+
+enum choseNormalName
+{
+	No_normal,
+	WoodWall_normal,
+	Brickwall_normal,
+	stonewall_normal,
+	water_normal,
+	some_normal
+};
+choseNormalName choseNormal = No_normal;
+TwEnumVal chosenormalEV[] = { {No_normal, "No_normal"}, {WoodWall_normal, "WoodWall_normal"},{Brickwall_normal,"Brickwall_normal" },{stonewall_normal,"stonewall_normal" },{water_normal,"water_normal"},{some_normal,"some_normal"} };
+TwType chosenormalType;
+std::vector<std::string> NoramlNames;
 
 //calu Angle 
 double PointAngle(MyMesh::Point P1, MyMesh::Point P2, MyMesh::Point VPoint)
@@ -163,9 +195,35 @@ void SetupGUI()
 	modelNames.push_back("octopus.obj");
 	modelNames.push_back("screwdriver.obj");
 	modelNames.push_back("xyzrgb_dragon_100k.obj");
+
+	TextureNames.push_back("checkerboard4.jpg");
+	TextureNames.push_back("176.jpg");
+	TextureNames.push_back("bricks2.jpg");
+	TextureNames.push_back("TexturesCom_albedo.jpg");
+	TextureNames.push_back("gears.jpg");
+	TextureNames.push_back("happyface.jpg");
+	TextureNames.push_back("NTUST.jpg");
+
+	NoramlNames.push_back("none.jpg");
+	NoramlNames.push_back("176_norm.jpg");
+	NoramlNames.push_back("bricks2_normal.jpg");
+	NoramlNames.push_back("TexturesCom_normal.jpg");
+	NoramlNames.push_back("normal123.jpg");
+	NoramlNames.push_back("normalmap.jpg");
+
+
 	chosemodelType = TwDefineEnum("Model", chosemodelEV, 11);
 	// Adding season to bar
 	TwAddVarRW(bar, "Model", chosemodelType, &chosemodel, NULL);
+
+	chosetextureType = TwDefineEnum("Texture", chosetextureEV, 7);
+	// Adding season to bar
+	TwAddVarRW(bar, "Texture", chosetextureType, &chosetexture, NULL);
+
+	chosenormalType = TwDefineEnum("Normal Texture", chosenormalEV, 6);
+	// Adding season to bar
+	TwAddVarRW(bar, "Normal Texture", chosenormalType, &choseNormal, NULL);
+
 }
 
 void My_LoadModel()
@@ -224,7 +282,14 @@ void InitData()
 	My_LoadModel();
 	textureID = loadTexture("Imgs\\TextureParameterization\\checkerboard4.jpg", GL_RGB);
 	NormalID = loadTexture("Imgs\\TextureParameterization\\normalmap.jpg", GL_RGB);
-
+	for (int i = 0; i < 7; i++)
+	{
+		TextureIDs.push_back(loadTexture("Imgs\\TextureParameterization\\" + TextureNames[i], GL_RGB));
+	}
+	for (int i = 0; i < 6; i++)
+	{
+		NoramlIDs.push_back(loadTexture("Imgs\\TextureParameterization\\" + NoramlNames[i], GL_RGB));
+	}
 }
 
 void Reshape(int width, int height)
@@ -279,6 +344,7 @@ void RenderMeshWindow()
 	drawModelShader.UseLighting(true);
 	drawModelShader.DrawWireframe(true);
 	drawModelShader.SetTexcoord(0, 0, 0);
+	drawModelShader.SetNormalType(false);
 	drawModelShader.SetNormalMat(normalMat);
 	drawModelShader.SetMVMat(mvMat);
 	drawModelShader.SetPMat(pMat);
@@ -291,21 +357,29 @@ void RenderMeshWindow()
 
 		//drawModelShader.DrawTexCoord(true);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textureID);
+		glBindTexture(GL_TEXTURE_2D, TextureIDs[chosetexture]);
 
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, NormalID);
+		glBindTexture(GL_TEXTURE_2D, NoramlIDs[choseNormal]);
 
 		drawModelShader.DrawTexture(true);
 		drawModelShader.DrawWireframe(false);
 		//BeSelectModel.Render();
 		drawModelShader.SetTexcoord(TextureX, TextureY, TexRotate);
+		if (chosemodel == No_normal)
+		{
+			drawModelShader.SetNormalType(false);
+		}
+		else
+		{
+			drawModelShader.SetNormalType(true);
+		}
 		//drawModelShader.DrawTexCoord(true);
 		BeSelectModel.Render();
 		drawModelShader.DrawTexture(false);
 		drawModelShader.DrawWireframe(true);
 		//drawModelShader.DrawTexCoord(false);
-
+		drawModelShader.SetNormalType(false);
 	}
 	else
 	{
@@ -358,7 +432,7 @@ void RenderMeshWindow()
 			for (MyMesh::VFIter VF = model.model.mesh.vf_begin(VH); VF != model.model.mesh.vf_end(VH); ++VF)
 			{
 				MyMesh::FaceHandle Fh = model.model.mesh.face_handle(VF->idx());
-				if ((selectionMode == SelectionMode::ADD_POINT)||(selectionMode == SelectionMode::SELECT_POINT))
+				if ((selectionMode == SelectionMode::ADD_POINT) || (selectionMode == SelectionMode::SELECT_POINT))
 				{
 					model.AddSelectedFace(Fh.idx());
 				}
@@ -456,6 +530,32 @@ void RenderMeshWindow()
 
 	}
 
+	glBindTexture(GL_TEXTURE_2D, TextureIDs[chosetexture]);
+	glColor3f(1, 1, 1);
+	glBegin(GL_QUADS);
+	float tempx = 0 - 0.5;
+	float tempy = 1 - 0.5;
+	float Nx = cos(-TexRotate)*tempx - sin(-TexRotate)*tempy + 0.5 - TextureX;
+	float Ny = sin(-TexRotate)*tempx + cos(-TexRotate)*tempy + 0.5 + TextureY;
+	glTexCoord2d(Nx, Ny); glVertex2d(0, -1);
+	tempx = 1 - 0.5;
+	tempy = 1 - 0.5;
+	Nx = cos(-TexRotate)*tempx - sin(-TexRotate)*tempy + 0.5 - TextureX;
+	Ny = sin(-TexRotate)*tempx + cos(-TexRotate)*tempy + 0.5 + TextureY;
+	glTexCoord2d(Nx, Ny); glVertex2d(1, -1);
+	tempx = 1 - 0.5;
+	tempy = 0 - 0.5;
+	Nx = cos(-TexRotate)*tempx - sin(-TexRotate)*tempy + 0.5 - TextureX;
+	Ny = sin(-TexRotate)*tempx + cos(-TexRotate)*tempy + 0.5 + TextureY;
+	glTexCoord2d(Nx, Ny); glVertex2d(1, 1);
+	tempx = 0 - 0.5;
+	tempy = 0 - 0.5;
+	Nx = cos(-TexRotate)*tempx - sin(-TexRotate)*tempy + 0.5 - TextureX;
+	Ny = sin(-TexRotate)*tempx + cos(-TexRotate)*tempy + 0.5 + TextureY;
+	glTexCoord2d(Nx, Ny); glVertex2d(0, 1);
+	glEnd();
+
+
 	if (model.selectedPoint.size() > 0)
 	{
 
@@ -476,14 +576,6 @@ void RenderMeshWindow()
 		}
 		glEnd();*/
 
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		glColor3f(1, 1, 1);
-		glBegin(GL_QUADS);
-		glTexCoord2d(0, 0); glVertex2d(0, 0);
-		glTexCoord2d(1, 0); glVertex2d(0, 1);
-		glTexCoord2d(1, 1); glVertex2d(1, 1);
-		glTexCoord2d(0, 1); glVertex2d(1, 0);
-		glEnd();
 
 
 		glColor3f(0, 1, 0);
@@ -494,7 +586,7 @@ void RenderMeshWindow()
 		{
 			MyMesh::VHandle DrawPoint1 = BeSelectModel.model.mesh.vertex_handle(V->idx());
 			MyMesh::TexCoord2D outPoint1_p = BeSelectModel.model.mesh.texcoord2D(DrawPoint1);
-			glVertex3f(outPoint1_p[0], outPoint1_p[1], 0);
+			glVertex3f(outPoint1_p[0], outPoint1_p[1] * 2 - 1, 0);
 		}
 		glEnd();
 
@@ -509,8 +601,8 @@ void RenderMeshWindow()
 			MyMesh::VHandle DrawPoint2 = BeSelectModel.model.mesh.to_vertex_handle(HFH);
 			MyMesh::TexCoord2D outPoint1_p = BeSelectModel.model.mesh.texcoord2D(DrawPoint1);
 			MyMesh::TexCoord2D outPoint2_p = BeSelectModel.model.mesh.texcoord2D(DrawPoint2);
-			glVertex3f(outPoint1_p[0], outPoint1_p[1], 0);
-			glVertex3f(outPoint2_p[0], outPoint2_p[1], 0);
+			glVertex3f(outPoint1_p[0], outPoint1_p[1] * 2 - 1, 0);
+			glVertex3f(outPoint2_p[0], outPoint2_p[1] * 2 - 1, 0);
 		}
 		glEnd();
 
@@ -556,7 +648,7 @@ void SelectionHandler(unsigned int x, unsigned int y)
 			model.DeleteSelectedFace(faceID - 1);
 		}
 	}
-	else if ((selectionMode == SELECT_POINT)|| (selectionMode == ADD_POINT)|| (selectionMode == DEL_POINT))
+	else if ((selectionMode == SELECT_POINT) || (selectionMode == ADD_POINT) || (selectionMode == DEL_POINT))
 	{
 		currentMouseX = x;
 		currentMouseY = y;

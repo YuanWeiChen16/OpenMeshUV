@@ -24,6 +24,7 @@ uniform vec4 wireColor;
 uniform float TexX;
 uniform float TexY;
 uniform float TexR;
+uniform bool NormalType;
 float edgeFactor()
 {
 	vec3 d = fwidth(vertexIn.barycentric);
@@ -44,24 +45,19 @@ void main(void)
 		Texxx.y = (sin(TexR)*temptex.x+ cos(TexR)*temptex.y)+0.5+TexY;
 		vec4 texColor = texture(texImage, Texxx);
 		newFaceColor = texColor;
+
+		if(NormalType)
+		{
+			vec3 T = vertexIn.vTanget;
+   			vec3 B = vertexIn.vBitanget;
+			vec3 MyN = normalize(vertexIn.vNormal);
+			mat3 TBN = mat3(T,B,MyN);
+			vec3 N = texture(NortexImage, Texxx).rgb;
+			N = N * 2.0 - 1.0;
+			N = normalize(TBN * N);
+			RealNormal = vec3(N.x,N.y,N.z);
+		}
 		
-		vec3 viewVector = -vertexIn.vViewPos;
-		vec3 lightDir = vec3(0, 0, -1);
-
-		vec3 T = vertexIn.vTanget;
-   		vec3 B = vertexIn.vBitanget;
-
-		vec3 L = -lightDir;
-		vec3 V = normalize(viewVector);
-		vec3 MyN = normalize(vertexIn.vNormal);
-		mat3 TBN = mat3(T,B,MyN);
-
-		vec3 N = texture(NortexImage, Texxx).rgb;
-		N = N * 2.0 - 1.0;
-		
-		N = normalize(TBN * N);
-
-		RealNormal = vec3(N.x,N.y,N.z);
 	}
 
 	if (useLighting)
