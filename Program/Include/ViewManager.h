@@ -28,7 +28,7 @@ public:
     void mouseMoveEvent(int x,int y);
 	void keyEvents(unsigned char key);
     void wheelEvent(int direction);
-	void Translate(glm::vec2 vec);
+	void Translate(glm::vec3 vec);
 
 	glm::mat4 GetModelMatrix();
 	glm::mat4 GetViewMatrix();

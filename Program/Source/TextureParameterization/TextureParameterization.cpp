@@ -38,7 +38,7 @@ bool isRightButtonPress = false;
 GLuint currentFaceID = 0;
 int currentMouseX = 0;
 int currentMouseY = 0;
-int windowWidth = 1200;
+int windowWidth = 600;
 int windowHeight = 600;
 const std::string ProjectName = "TextureParameterization";
 
@@ -59,6 +59,13 @@ float OuterLengh = 0;
 float TextureX = 0;
 float TextureY = 0;
 float TexRotate = 0;
+
+vector<vector<int>> adjmatrix;
+map<int, int > ClusterList;
+int NowShow = 0;
+int RealShow = 0;
+vector <vector<int>> ffconnect;
+double** colormap = new double* [600];
 
 
 unsigned int textureID;
@@ -154,12 +161,12 @@ double PointAngle(MyMesh::Point P1, MyMesh::Point P2, MyMesh::Point VPoint)
 	double V2z = (P2[2] - VPoint[2]);
 
 	double A_B = V1x * V2x + V1y * V2y + V1z * V2z;
-	double lAl = sqrt(V1x*V1x + V1y * V1y + V1z * V1z);
-	double lBl = sqrt(V2x*V2x + V2y * V2y + V2z * V2z);
+	double lAl = sqrt(V1x * V1x + V1y * V1y + V1z * V1z);
+	double lBl = sqrt(V2x * V2x + V2y * V2y + V2z * V2z);
 
-	double angle = acos(A_B / (lAl*lBl));
+	double angle = acos(A_B / (lAl * lBl));
 
-	angle = (angle*180.0) / 3.1415926;
+	angle = (angle * 180.0) / 3.1415926;
 	return angle;
 }
 unsigned int loadTexture(std::string path, int imageType);
@@ -184,16 +191,26 @@ void SetupGUI()
 	SelectionModeType = TwDefineEnum("SelectionModeType", SelectionModeEV, 6);
 	// Adding season to bar
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
-	modelNames.push_back("armadillo.obj");
-	modelNames.push_back("bear.obj");
-	modelNames.push_back("dancer.obj");
-	modelNames.push_back("dancing_children.obj");
-	modelNames.push_back("feline.obj");
-	modelNames.push_back("fertilty.obj");
-	modelNames.push_back("gargoyle.obj");
-	modelNames.push_back("neptune.obj");
-	modelNames.push_back("octopus.obj");
-	modelNames.push_back("screwdriver.obj");
+
+	
+
+	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
+	modelNames.push_back("Imposter13_Res_Building_Corner_12x8_016_001.obj");
+	modelNames.push_back("Imposter11_Res_Building_8x8_046_001_root (1).obj");
+	modelNames.push_back("gta05_dt1_20_build_high_fill.obj");
+	modelNames.push_back("WorldBuilding02_french_Arc_de_Triomphe.obj");
+	modelNames.push_back("WorldBuilding01_EmpireState_lp.obj");
+	modelNames.push_back("Imposter07_Res_Building_6x8_004_004_root (1).obj");
+	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
+	modelNames.push_back("Res_Building_8x8_038_001_root.obj");
+
+
+	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
+
+	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
+	
+	
+
 	modelNames.push_back("xyzrgb_dragon_100k.obj");
 
 	TextureNames.push_back("checkerboard4.jpg");
@@ -237,7 +254,8 @@ void My_LoadModel()
 		}
 		model.Parameterization();
 		drawTexture = true;*/
-
+		model.model.mesh.request_face_normals();
+		model.model.mesh.update_normals();
 		puts("Load Model");
 	}
 	else
@@ -261,6 +279,16 @@ void InitOpenGL()
 
 void InitData()
 {
+
+	for (int i = 0; i < 600; i++)
+	{
+		colormap[i] = new double[3];
+		for (int j = 0; j < 3; j++)
+		{
+			colormap[i][j] = (double)rand() / (RAND_MAX + 1.0);
+		}
+	}
+
 
 	ResourcePath::shaderPath = "./Shader/" + ProjectName + "/";
 	//ResourcePath::imagePath = "./Imgs/" + ProjectName + "/";
@@ -350,6 +378,7 @@ void RenderMeshWindow()
 	drawModelShader.SetPMat(pMat);
 	model.Render();
 
+//#ifdef OneRing
 	if (model.selectedPoint.size() > 0)
 	{
 		drawModelShader.SetWireColor(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
@@ -361,9 +390,10 @@ void RenderMeshWindow()
 
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, NoramlIDs[choseNormal]);
-
-		drawModelShader.DrawTexture(true);
+		drawModelShader.UseLighting(false);
+		drawModelShader.DrawTexture(false);
 		drawModelShader.DrawWireframe(false);
+
 		//BeSelectModel.Render();
 		drawModelShader.SetTexcoord(TextureX, TextureY, TexRotate);
 		if (chosemodel == No_normal)
@@ -385,6 +415,8 @@ void RenderMeshWindow()
 	{
 
 	}
+
+	//#endif // OneRing
 	drawModelShader.Disable();
 
 
@@ -395,10 +427,10 @@ void RenderMeshWindow()
 		drawPickingFaceShader.Enable();
 		drawPickingFaceShader.SetMVMat(value_ptr(mvMat));
 		drawPickingFaceShader.SetPMat(value_ptr(pMat));
-		if (model.selectedPoint.size() <= 0)
-		{
+		//if (model.selectedPoint.size() <= 0)
+		//{
 			model.RenderSelectedFace();
-		}
+		//}
 		drawPickingFaceShader.Disable();
 	}
 
@@ -428,6 +460,244 @@ void RenderMeshWindow()
 				model.selectedFace.clear();
 			}
 			//MyMesh::Vertex Vthis = model.model.mesh.vertex(VH);
+
+
+			//找出每個屋頂的邊界並向下延伸
+			// 
+			//找面normal向上的面
+			for (MyMesh::FIter F = model.model.mesh.faces_begin(); F != model.model.mesh.faces_end(); ++F)
+			{
+				MyMesh::FaceHandle Fh = model.model.mesh.face_handle(F->idx());
+				MyMesh::Normal FN = model.model.mesh.normal(Fh);
+				//避免normal誤差
+				if (FN[1] > 0.5)
+				{
+					cout << "Find face" << F->idx() << endl;
+					model.AddSelectedFace(F->idx());
+				}
+			}
+
+//#ifdef OneRing
+
+
+			//One Ring分析 分析有幾個屋頂與
+			//屋頂拆出來重建
+			//依照面順序產生點的list
+			model.FaceToPoint();
+			//重新排序point index
+			for (int i = 0; i < model.selectPoint_Seq.size(); i++)
+			{
+				for (int j = 0; j < model.selectedPoint.size(); j++)
+				{
+					if (model.selectedPoint[j] == model.selectPoint_Seq[i])
+					{
+						model.selectPoint_Seq[i] = j;
+					}
+				}
+			}
+			std::vector < MyMesh::VertexHandle> vhandle;
+			//Add point to beselectModel===================================================================================
+			for (int i = 0; i < model.selectedPoint.size(); i++)
+			{
+				MyMesh::VertexHandle TempPoint = model.model.mesh.vertex_handle(model.selectedPoint[i]);
+				MyMesh::Point closestPoint = model.model.mesh.point(TempPoint);
+				vhandle.push_back(BeSelectModel.model.mesh.add_vertex(closestPoint));
+				//#ifdef DEBUG
+								//cout << "X: " << closestPoint[0] << "Y: " << closestPoint[1] << "Z: " << closestPoint[2] << endl;
+				//endif // DEBUG
+			}
+			//connect point to face to beselectModel===================================================================================
+			std::vector<MyMesh::VertexHandle>  face_vhandles;
+			for (int i = 0; i < model.selectPoint_Seq.size() / 3; i++)
+			{
+				face_vhandles.clear();
+				face_vhandles.push_back(vhandle[model.selectPoint_Seq[i * 3]]);
+				face_vhandles.push_back(vhandle[model.selectPoint_Seq[(i * 3) + 1]]);
+				face_vhandles.push_back(vhandle[model.selectPoint_Seq[(i * 3 + 2)]]);
+				BeSelectModel.model.mesh.add_face(face_vhandles);
+				//#ifdef DEBUG
+				cout << "FACE " << i << " Is be Rebuild" << endl;
+				//#endif // DEBUG
+			}
+
+
+			//one ring 找屋頂
+			bool Find_ALL_DONE = false;
+			vector<bool> IsFound;
+			vector<int>partition;
+			//init 
+			ClusterList.clear();
+
+			//
+			int faceSize = model.selectPoint_Seq.size() / 3;
+			for (int i = 0; i < model.selectPoint_Seq.size() / 3; i++)
+			{
+				ClusterList[i] = i;
+			}
+			//共用對應matrix
+			adjmatrix.clear();
+			adjmatrix.resize(faceSize);
+
+
+			//建立共用對應matrix (adjmatrix)
+			for (MyMesh::FIter F1 = BeSelectModel.model.mesh.faces_begin(); F1 != BeSelectModel.model.mesh.faces_end(); ++F1)
+			{
+				for (MyMesh::FIter F2 = BeSelectModel.model.mesh.faces_begin(); F2 != BeSelectModel.model.mesh.faces_end(); ++F2)
+				{
+					if (F1->idx() != F2->idx()) //檢查是否有共用邊(用face 的vertx id 直接對照)
+					{
+						int count = 0;
+						MyMesh::FHandle FH1 = BeSelectModel.model.mesh.face_handle(F1->idx());
+						MyMesh::FHandle FH2 = BeSelectModel.model.mesh.face_handle(F2->idx());
+
+						for (MyMesh::FVIter FV1 = BeSelectModel.model.mesh.fv_begin(FH1); FV1 != BeSelectModel.model.mesh.fv_end(FH1); ++FV1)
+						{
+							for (MyMesh::FVIter FV2 = BeSelectModel.model.mesh.fv_begin(FH2); FV2 != BeSelectModel.model.mesh.fv_end(FH2); ++FV2)
+							{
+								if (FV1->idx() == FV2->idx())
+								{
+									count++;
+								}
+							}
+						}
+						if (count == 2)
+						{
+							adjmatrix[F1->idx()].push_back(F2->idx());//如果是有共用邊
+						}
+					}
+				}
+				std::cout << "check materix" << F1->idx() << endl;
+			}
+			std::cout << "check materix" << endl;
+			//建立(ClusterList)
+			for (int i = 0; i < adjmatrix.size(); i++)
+			{
+				for (int j = 0; j < adjmatrix[i].size(); j++)
+				{
+					//Union(i, adjmatrix[i][j]);//根據adj圖合併
+					int x = i;
+					int y = adjmatrix[i][j];
+
+					int op1 = ClusterList[x];
+					int op2 = ClusterList[y];
+
+					if (ClusterList[x] != ClusterList[y])
+					{
+						for (int i = 0; i < adjmatrix.size(); i++)
+						{
+							if (x > y && ClusterList[i] == op1)
+							{
+								ClusterList[i] = op2;
+							}
+							else if (x < y && ClusterList[i] == op2)
+							{
+								ClusterList[i] = op1;
+							}
+						}
+					}
+				}
+				cout << "adjmatrix" << i << endl;
+			}
+			int count = 0;
+			//建立與計算 獨立面list (partition)
+			for (int i = 0; i < ClusterList.size(); i++)
+			{
+				std::vector<int>::iterator it = find(partition.begin(), partition.end(), ClusterList[i]);//找出 不連接的部分有多少個
+				if (it == partition.end())
+				{
+					partition.push_back(ClusterList[i]);
+					count++;
+				}
+			}
+
+			//面與面連接關系 分類
+			ffconnect.resize(count);
+			for (int i = 0; i < ClusterList.size(); i++)
+			{
+				for (int j = 0; j < partition.size(); j++)
+				{
+					if (ClusterList[i] == partition[j])
+					{
+						ffconnect[j].push_back(i);
+					}
+				}
+			}
+			cout << "class" << ffconnect.size() << endl;
+			cout << "Mywork Done" << endl;
+			BeSelectModel.model.mesh.request_vertex_texcoords2D();
+
+#ifdef DEBUG
+			cout << "InnerUV " << UV[0] << " " << UV[1] << endl;
+#endif // DEBUG
+
+			int mycount = 0;
+			//上顏色
+			for (int i = 0; i < ffconnect.size(); i++)
+			{
+				for (int j = 0; j < ffconnect[i].size(); j++)
+				{
+					MyMesh::FHandle FH = BeSelectModel.model.mesh.face_handle(ffconnect[i][j]);
+					for (MyMesh::FVIter FVI = BeSelectModel.model.mesh.fv_begin(FH); FVI != BeSelectModel.model.mesh.fv_end(FH); ++FVI)
+					{
+						MyMesh::VHandle VH = BeSelectModel.model.mesh.vertex_handle(FVI->idx());
+						MyMesh::TexCoord2D TC;
+
+						//float R = (float)((int)(i * 13 + 10) % 7) / 7.0;
+						//float G = (float)((int)((i + 12)) * 19 % 5) / 5.0;
+						//float B = (float)((int)((i + 5)) * 3 % 7) / 7.0;
+
+						TC[0] = colormap[i][0];
+						TC[1] = colormap[i][1];
+
+						BeSelectModel.model.mesh.set_texcoord2D(VH, TC);
+
+					}
+					cout << "R G B " << mycount << " COLOR " << colormap[i][0] << "   " << colormap[i][1] << endl;
+					mycount++;
+				}
+			}
+			//find height roof  create bounding mesh
+
+
+
+
+			//BeSelectModel.model.mesh.request_face_normals();
+			//BeSelectModel.model.mesh.update_normals();
+			//BeSelectModel.model.mesh.release_face_normals();
+
+			BeSelectModel.MY_LoadToShader();
+
+//#endif // OneRing
+			////Find First Boundary Point===================================================================================================================
+			//MyMesh::HalfedgeIter HFI = BeSelectModel.model.mesh.halfedges_begin();
+			//MyMesh::HalfedgeHandle HFh;
+			//for (; HFI != BeSelectModel.model.mesh.halfedges_end(); ++HFI)
+			//{
+			//	HFh = BeSelectModel.model.mesh.halfedge_handle(HFI->idx());
+
+			//	bool ISBOUND = BeSelectModel.model.mesh.is_boundary(HFh);
+			//	if (ISBOUND)
+			//	{
+			//		MyMesh::VertexHandle outPoint = BeSelectModel.model.mesh.from_vertex_handle(HFh);
+			//		OuterPoint.push_back(outPoint.idx());
+			//		break;
+			//	}
+			//}
+			////travel all bundary Point===================================================================================================================
+			//HFh = BeSelectModel.model.mesh.next_halfedge_handle(HFh);
+			//for (;;)
+			//{
+			//	MyMesh::VertexHandle outPoint = BeSelectModel.model.mesh.from_vertex_handle(HFh);
+			//	if (outPoint.idx() == OuterPoint[0])
+			//	{
+			//		break;
+			//	}
+			//	OuterPoint.push_back(outPoint.idx());
+			//	HFh = BeSelectModel.model.mesh.next_halfedge_handle(HFh);
+			//}
+
+#ifdef OneRingSelect
+
 
 			for (MyMesh::VFIter VF = model.model.mesh.vf_begin(VH); VF != model.model.mesh.vf_end(VH); ++VF)
 			{
@@ -500,9 +770,52 @@ void RenderMeshWindow()
 			if (selectionMode == SelectionMode::SELECT_POINT)
 			{
 				magic();
-			}
-			updateFlag = false;
 		}
+#endif // OneRingSelect
+			updateFlag = false;
+	}
+
+
+		//if (RealShow != NowShow)
+		//{
+		//	if (NowShow >= ffconnect.size())
+		//	{
+		//		NowShow = 0;
+		//	}
+		//	RealShow = NowShow;
+		//	cout << "RealShow" << RealShow << endl;
+		//	for (int i = 0; i < ffconnect.size(); i++)
+		//	{
+
+		//		for (int j = 0; j < ffconnect[i].size(); j++)
+		//		{
+		//			MyMesh::FHandle FH = BeSelectModel.model.mesh.face_handle(j);
+		//			for (MyMesh::FVIter FVI = BeSelectModel.model.mesh.fv_begin(FH); FVI != BeSelectModel.model.mesh.fv_end(FH); ++FVI)
+		//			{
+		//				MyMesh::VHandle VH = BeSelectModel.model.mesh.vertex_handle(FVI->idx());
+		//				MyMesh::TexCoord2D TC;
+
+		//				//float R = (float)((int)(i * 13 + 10) % 7) / 7.0;
+		//				//float G = (float)((int)((i + 12)) * 19 % 5) / 5.0;
+		//				//float B = (float)((int)((i + 5)) * 3 % 7) / 7.0;
+		//				if (RealShow == i)
+		//				{
+		//					TC[0] = 1;
+		//					TC[1] = 0;
+		//				}
+		//				else
+		//				{
+		//					TC[0] = 0.5;
+		//					TC[1] = 0.5;
+		//				}
+		//				BeSelectModel.model.mesh.set_texcoord2D(VH, TC);
+		//			}
+		//		}
+
+		//	}
+
+		//}
+
 		drawPickingFaceShader.Enable();
 		drawPickingFaceShader.SetMVMat(value_ptr(mvMat));
 		drawPickingFaceShader.SetPMat(value_ptr(pMat));
@@ -511,7 +824,6 @@ void RenderMeshWindow()
 			model.RenderSelectedFace();
 		}
 		drawPickingFaceShader.Disable();
-
 
 		glBindBuffer(GL_ARRAY_BUFFER, vboPoint);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3), glm::value_ptr(worldPos), GL_STATIC_DRAW);
@@ -527,35 +839,91 @@ void RenderMeshWindow()
 		drawPointShader.Disable();
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+}
 
+
+#ifdef givecolor
+
+	if (ffconnect.size() > 0)
+	{
+		glColor3f(1, 1, 1);
+		glBegin(GL_TRIANGLES);
+		for (MyMesh::FIter FI = model.model.mesh.faces_begin(); FI != model.model.mesh.faces_end(); ++FI)
+		{
+			MyMesh::FHandle FH = model.model.mesh.face_handle(FI->idx());
+			for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); ++FVI)
+			{
+				MyMesh::VHandle VH = model.model.mesh.vertex_handle(FVI->idx());
+				MyMesh::Point P = model.model.mesh.point(VH);
+				glm::vec4 point = vec4(P[0] * 0.1, P[1] * 0.1, P[2] * 0.1, 1.0);
+				point = pMat * mvMat * point;
+				glVertex2d(point[0], point[1]);
+			}
+		}
+		glEnd();
+
+		glColor3f(1, 1, 1);
+		glBegin(GL_TRIANGLES);
+
+		glVertex2d(0, -1);
+		glVertex2d(1, -1);
+		glVertex2d(0, 0);
+		for (int i = 0; i < ffconnect.size(); i++)
+		{
+			glColor3f(colormap[i][0], colormap[i][1], colormap[i][2]);
+			for (int j = 0; j < ffconnect[i].size(); j++)
+			{
+				MyMesh::FHandle FH = BeSelectModel.model.mesh.face_handle(j);
+				for (MyMesh::FVIter FVI = BeSelectModel.model.mesh.fv_begin(FH); FVI != BeSelectModel.model.mesh.fv_end(FH); ++FVI)
+				{
+					MyMesh::VHandle VH = BeSelectModel.model.mesh.vertex_handle(FVI->idx());
+					MyMesh::Point P = BeSelectModel.model.mesh.point(VH);
+					glm::vec4 point = vec4(P[0] * 0.1, P[1] * 0.1, P[2] * 0.1, 1.0);
+
+					point = pMat * mvMat * point;
+
+					glVertex2d(point[0], point[1]);
+				}
+			}
+		}
+		glEnd();
 	}
 
+#endif // givecolor
+
+	//貼圖參數化區域
+#ifdef Parameter
+//右邊貼圖
+#pragma region RightSiedTexture
 	glBindTexture(GL_TEXTURE_2D, TextureIDs[chosetexture]);
 	glColor3f(1, 1, 1);
 	glBegin(GL_QUADS);
 	float tempx = 0 - 0.5;
 	float tempy = 1 - 0.5;
-	float Nx = cos(-TexRotate)*tempx - sin(-TexRotate)*tempy + 0.5 - TextureX;
-	float Ny = sin(-TexRotate)*tempx + cos(-TexRotate)*tempy + 0.5 + TextureY;
+	float Nx = cos(-TexRotate) * tempx - sin(-TexRotate) * tempy + 0.5 - TextureX;
+	float Ny = sin(-TexRotate) * tempx + cos(-TexRotate) * tempy + 0.5 + TextureY;
 	glTexCoord2d(Nx, Ny); glVertex2d(0, -1);
 	tempx = 1 - 0.5;
 	tempy = 1 - 0.5;
-	Nx = cos(-TexRotate)*tempx - sin(-TexRotate)*tempy + 0.5 - TextureX;
-	Ny = sin(-TexRotate)*tempx + cos(-TexRotate)*tempy + 0.5 + TextureY;
+	Nx = cos(-TexRotate) * tempx - sin(-TexRotate) * tempy + 0.5 - TextureX;
+	Ny = sin(-TexRotate) * tempx + cos(-TexRotate) * tempy + 0.5 + TextureY;
 	glTexCoord2d(Nx, Ny); glVertex2d(1, -1);
 	tempx = 1 - 0.5;
 	tempy = 0 - 0.5;
-	Nx = cos(-TexRotate)*tempx - sin(-TexRotate)*tempy + 0.5 - TextureX;
-	Ny = sin(-TexRotate)*tempx + cos(-TexRotate)*tempy + 0.5 + TextureY;
+	Nx = cos(-TexRotate) * tempx - sin(-TexRotate) * tempy + 0.5 - TextureX;
+	Ny = sin(-TexRotate) * tempx + cos(-TexRotate) * tempy + 0.5 + TextureY;
 	glTexCoord2d(Nx, Ny); glVertex2d(1, 1);
 	tempx = 0 - 0.5;
 	tempy = 0 - 0.5;
-	Nx = cos(-TexRotate)*tempx - sin(-TexRotate)*tempy + 0.5 - TextureX;
-	Ny = sin(-TexRotate)*tempx + cos(-TexRotate)*tempy + 0.5 + TextureY;
+	Nx = cos(-TexRotate) * tempx - sin(-TexRotate) * tempy + 0.5 - TextureX;
+	Ny = sin(-TexRotate) * tempx + cos(-TexRotate) * tempy + 0.5 + TextureY;
 	glTexCoord2d(Nx, Ny); glVertex2d(0, 1);
 	glEnd();
 
 
+#pragma endregion
+	//畫線部分
+#pragma region Reight Side MeshLine
 	if (model.selectedPoint.size() > 0)
 	{
 
@@ -607,7 +975,9 @@ void RenderMeshWindow()
 		glEnd();
 
 	}
+#pragma endregion
 
+#endif // Parameter
 
 	TwDraw();
 	glutSwapBuffers();
@@ -720,6 +1090,10 @@ void MyKeyboard(unsigned char key, int x, int y)
 	else if (key == 'y')
 	{
 		TexRotate -= 0.01;
+	}
+	else if (key == 'n')
+	{
+		NowShow++;
 	}
 
 }
@@ -837,6 +1211,7 @@ void magic()
 	//std::vector < MyMesh::Normal> ThisNormal;
 	//vhandle = new MyMesh::VertexHandle[model.selectedPoint.size()];
 
+	//Add point to beselectModel===================================================================================
 	for (int i = 0; i < model.selectedPoint.size(); i++)
 	{
 		MyMesh::VertexHandle TempPoint = model.model.mesh.vertex_handle(model.selectedPoint[i]);
@@ -846,13 +1221,12 @@ void magic()
 
 		vhandle.push_back(BeSelectModel.model.mesh.add_vertex(closestPoint));
 		//BeSelectModel.model.mesh.normal(vhandle[vhandle.size()-1]) = closestNor;
-
 #ifdef DEBUG
 		cout << "X: " << closestPoint[0] << "Y: " << closestPoint[1] << "Z: " << closestPoint[2] << endl;
 #endif // DEBUG
-
-
 	}
+
+	//connect point to face to beselectModel===================================================================================
 	std::vector<MyMesh::VertexHandle>  face_vhandles;
 	for (int i = 0; i < model.selectPoint_Seq.size() / 3; i++)
 	{
@@ -874,10 +1248,9 @@ void magic()
 			normals.push_back(temp);
 		}
 */
-
-
 	}
 
+	//Find First Boundary Point===================================================================================================================
 	MyMesh::HalfedgeIter HFI = BeSelectModel.model.mesh.halfedges_begin();
 	MyMesh::HalfedgeHandle HFh;
 	for (; HFI != BeSelectModel.model.mesh.halfedges_end(); ++HFI)
@@ -892,7 +1265,7 @@ void magic()
 			break;
 		}
 	}
-
+	//travel all bundary Point===================================================================================================================
 	HFh = BeSelectModel.model.mesh.next_halfedge_handle(HFh);
 	for (;;)
 	{
@@ -917,7 +1290,7 @@ void magic()
 		MyMesh::Point disPoint = outPoint1_p - outPoint2_p;
 		float dis = disPoint[0] * disPoint[0] + disPoint[1] * disPoint[1];
 		dis = sqrt(dis);
-		dis = sqrt(dis*dis + disPoint[2] * disPoint[2]);
+		dis = sqrt(dis * dis + disPoint[2] * disPoint[2]);
 		OuterLengh += dis;
 	}
 #ifdef DEBUG
@@ -947,7 +1320,7 @@ void magic()
 		MyMesh::Point disPoint = outPoint1_p - outPoint2_p;
 		float dis = disPoint[0] * disPoint[0] + disPoint[1] * disPoint[1];
 		dis = sqrt(dis);
-		dis = sqrt(dis*dis + disPoint[2] * disPoint[2]);
+		dis = sqrt(dis * dis + disPoint[2] * disPoint[2]);
 #ifdef DEBUG
 		cout << "Dis " << dis;
 #endif // DEBUG	
@@ -962,30 +1335,30 @@ void magic()
 			cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
 #endif // DEBUG
 		}
-		else if ((nowDis <= ((OuterLengh / 4.0) * 2.0)) && (nowDis > ((OuterLengh / 4.0)*1.0)))
+		else if ((nowDis <= ((OuterLengh / 4.0) * 2.0)) && (nowDis > ((OuterLengh / 4.0) * 1.0)))
 		{
 			MyMesh::TexCoord2D UV;
-			UV[0] = ((nowDis - (OuterLengh / 4.0)*1.0) / (OuterLengh / 4.0));
+			UV[0] = ((nowDis - (OuterLengh / 4.0) * 1.0) / (OuterLengh / 4.0));
 			UV[1] = 1;
 			BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
 #ifdef DEBUG
 			cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
 #endif // DEBUG
 		}
-		else if ((nowDis <= ((OuterLengh / 4.0) * 3.0)) && (nowDis > ((OuterLengh / 4.0)*2.0)))
+		else if ((nowDis <= ((OuterLengh / 4.0) * 3.0)) && (nowDis > ((OuterLengh / 4.0) * 2.0)))
 		{
 			MyMesh::TexCoord2D UV;
 			UV[0] = 1;
-			UV[1] = 1 - ((nowDis - (OuterLengh / 4.0)*2.0)) / (OuterLengh / 4.0);
+			UV[1] = 1 - ((nowDis - (OuterLengh / 4.0) * 2.0)) / (OuterLengh / 4.0);
 			BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
 #ifdef DEBUG
 			cout << "Point " << i + 1 << " UV " << UV[0] << " " << UV[1] << endl;
 #endif // DEBUG
 		}
-		else if ((nowDis <= (OuterLengh)) && (nowDis > ((OuterLengh / 4.0)*3.0)))
+		else if ((nowDis <= (OuterLengh)) && (nowDis > ((OuterLengh / 4.0) * 3.0)))
 		{
 			MyMesh::TexCoord2D UV;
-			UV[0] = 1 - ((nowDis - (OuterLengh / 4.0)*3.0)) / (OuterLengh / 4.0);
+			UV[0] = 1 - ((nowDis - (OuterLengh / 4.0) * 3.0)) / (OuterLengh / 4.0);
 			UV[1] = 0;
 			BeSelectModel.model.mesh.set_texcoord2D(outPoint2, UV);
 #ifdef DEBUG
@@ -1058,7 +1431,7 @@ void magic()
 			cout << "Angles 1 2 " << Angle1 << " " << Angle2 << endl;
 #endif // DEBUG
 
-			tmepWi[0] = ((1.0 / tan((Angle1*3.1415926) / 180.0)) + (1.0 / tan((Angle2*3.1415926) / 180.0)));
+			tmepWi[0] = ((1.0 / tan((Angle1 * 3.1415926) / 180.0)) + (1.0 / tan((Angle2 * 3.1415926) / 180.0)));
 #ifdef DEBUG
 			cout << tmepWi[0] << endl;
 #endif // DEBUG
@@ -1187,7 +1560,7 @@ void magic()
 			}
 		}
 		cout << "Line " << i << endl;
-	}
+		}
 
 
 
@@ -1222,7 +1595,7 @@ void magic()
 
 		BeSelectModel.MY_LoadToShader();
 	}
-}
+	}
 
 void magic_delete()
 {

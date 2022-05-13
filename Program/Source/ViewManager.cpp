@@ -12,11 +12,11 @@ ViewManager::ViewManager()
 	moveSpeed = 5.0f;
 	lmbDown = false;
 	midDown = false;
-    eyePosition = vec3(0.0f, 0.0f, 10.0f);
-    eyeLookPosition = vec3(0.0f, 0.0f, 0.0f);
-    vec3 up = vec3(0, 1, 0);
-    viewMatrix = lookAt(eyePosition, eyeLookPosition, up);
-    viewVector = eyePosition - eyeLookPosition;
+	eyePosition = vec3(0.0f, 0.0f, 10.0f);
+	eyeLookPosition = vec3(0.0f, 0.0f, 0.0f);
+	vec3 up = vec3(0, 1, 0);
+	viewMatrix = lookAt(eyePosition, eyeLookPosition, up);
+	viewVector = eyePosition - eyeLookPosition;
 	viewVector = normalize(viewVector);
 }
 
@@ -32,7 +32,7 @@ mat4 ViewManager::GetModelMatrix() {
 */
 mat4 ViewManager::GetViewMatrix()
 {
-    return viewMatrix;
+	return viewMatrix;
 }
 
 /**
@@ -41,18 +41,18 @@ mat4 ViewManager::GetViewMatrix()
 */
 mat4 ViewManager::GetProjectionMatrix(float aspect)
 {
-    float nearVal;
-    float farVal;
-    nearVal = 0.1f;
-    farVal = 1000.0f;
-    if(ortho) {
-        float size = 1.5f * zoom;
-        projMatrix = glm::ortho(-aspect * size, aspect * size, -size, size, nearVal, farVal);
-    } 
+	float nearVal;
+	float farVal;
+	nearVal = 0.1f;
+	farVal = 1000.0f;
+	if (ortho) {
+		float size = 1.5f * zoom;
+		projMatrix = glm::ortho(-aspect * size, aspect * size, -size, size, nearVal, farVal);
+	}
 	else {
-        projMatrix = perspective(radians(30.0f * zoom), aspect, nearVal, farVal);
-    }
-    return projMatrix;
+		projMatrix = perspective(radians(30.0f * zoom), aspect, nearVal, farVal);
+	}
+	return projMatrix;
 }
 
 /**
@@ -70,7 +70,7 @@ mat4 ViewManager::GetProjectionMatrix()
 */
 mat4 ViewManager::GetViewProjectionMatrix(float aspect)
 {
-    return GetProjectionMatrix(aspect) * viewMatrix;
+	return GetProjectionMatrix(aspect) * viewMatrix;
 }
 
 /**
@@ -79,7 +79,7 @@ mat4 ViewManager::GetViewProjectionMatrix(float aspect)
 */
 mat4 ViewManager::GetModelViewProjectionMatrix(float aspect)
 {
-    return GetViewProjectionMatrix(aspect) * GetModelMatrix();
+	return GetViewProjectionMatrix(aspect) * GetModelMatrix();
 }
 
 /**
@@ -105,36 +105,46 @@ vec3 ViewManager::GetWorldViewVector() {
 void ViewManager::keyEvents(unsigned char key) {
 	switch (key)
 	{
-	//向上移動。
-	case 'w': 
+		//向上移動。
+	case 'w':
 	case 'W':
-		Translate(vec2(0, moveSpeed));
+		Translate(vec3(0, moveSpeed, 0));
 		break;
 
-	//向左移動。
+		//向左移動。
 	case 'a':
 	case 'A':
-		Translate(vec2(moveSpeed, 0));
+		Translate(vec3(moveSpeed, 0, 0));
 		break;
 
-	//向下移動。
+		//向下移動。
 	case 's':
 	case 'S':
-		Translate(vec2(0, -moveSpeed));
+		Translate(vec3(0, -moveSpeed, 0));
 		break;
 
-	//向右移動。
+		//向右移動。
 	case 'd':
 	case 'D':
-		Translate(vec2(-moveSpeed, 0));
+		Translate(vec3(-moveSpeed, 0, 0));
 		break;
 
-	//放大。
+		//向前移動
+	case 'q':
+	case 'Q':
+		Translate(vec3(0, 0, moveSpeed));
+		break;
+		//向前移動
+	case 'e':
+	case 'E':
+		Translate(vec3(0, 0, -moveSpeed));
+		break;
+		//放大。
 	case '+':
 		wheelEvent(-moveSpeed);
 		break;
 
-	//縮小。
+		//縮小。
 	case '-':
 		wheelEvent(moveSpeed);
 		break;
@@ -156,13 +166,13 @@ void ViewManager::mouseEvents(int button, int state, int x, int y) {
 	{
 		mouseReleaseEvent(button, x, y);
 	}
-	else if (state == GLUT_DOWN) 
+	else if (state == GLUT_DOWN)
 	{
 		mousePressEvent(button, x, y);
 	}
 
 	//處理滑鼠中鍵向上滾動時
-	if (button == 4) 
+	if (button == 4)
 	{
 		wheelEvent(1);
 	}
@@ -181,21 +191,21 @@ void ViewManager::mouseEvents(int button, int state, int x, int y) {
 */
 void ViewManager::mousePressEvent(int button, int x, int y)
 {
-    if( button == GLUT_LEFT_BUTTON)
+	if (button == GLUT_LEFT_BUTTON)
 	{
 		//紀錄現在左鍵被按住
-        lmbDown = true;
-        lmbDownCoord = vec2(x,y);
-        mat4 invrtRot = inverse(rotationMatrix);
-        rotateYAxis = (invrtRot * vec4(0, 1, 0, 0)).xyz();
-        rotateXAxis = (invrtRot * vec4(1, 0, 0, 0)).xyz();
-    } 
-	else if(button == GLUT_MIDDLE_BUTTON)
+		lmbDown = true;
+		lmbDownCoord = vec2(x, y);
+		mat4 invrtRot = inverse(rotationMatrix);
+		rotateYAxis = (invrtRot * vec4(0, 1, 0, 0)).xyz();
+		rotateXAxis = (invrtRot * vec4(1, 0, 0, 0)).xyz();
+	}
+	else if (button == GLUT_MIDDLE_BUTTON)
 	{
 		//紀錄現在中鍵被按住
-        midDown = true;
-        midDownCoord = vec2(x, y);
-    }
+		midDown = true;
+		midDownCoord = vec2(x, y);
+	}
 }
 
 /**
@@ -206,13 +216,13 @@ void ViewManager::mousePressEvent(int button, int x, int y)
 */
 void ViewManager::mouseReleaseEvent(int button, int x, int y)
 {
-    if( button == GLUT_LEFT_BUTTON)
+	if (button == GLUT_LEFT_BUTTON)
 	{
-        lmbDown = false;
-    }
-	else if(button == GLUT_MIDDLE_BUTTON || button == 3 || button == 4) {
-        midDown = false;
-    }
+		lmbDown = false;
+	}
+	else if (button == GLUT_MIDDLE_BUTTON || button == 3 || button == 4) {
+		midDown = false;
+	}
 }
 
 /**
@@ -220,24 +230,24 @@ void ViewManager::mouseReleaseEvent(int button, int x, int y)
 * @param x 滑鼠在畫面的x座標值。
 * @param y 滑鼠在畫面的y座標值。
 */
-void ViewManager::mouseMoveEvent(int x,int y)
+void ViewManager::mouseMoveEvent(int x, int y)
 {
-    if(lmbDown)
+	if (lmbDown)
 	{
 		/*
 		* 當滑鼠左鍵按住,進行拖曳時的時候
 		* 計算移動的向量,進行相機的旋轉
 		*/
-        vec2 coord = vec2(x, y);
+		vec2 coord = vec2(x, y);
 		vec2 diff = coord - lmbDownCoord;
-        float factor = 0.002f;
-        rotationMatrix = rotate(rotationMatrix,diff.x * factor, rotateYAxis);
-        rotationMatrix = rotate(rotationMatrix,diff.y * factor, rotateXAxis);
-        lmbDownCoord = coord;
-    }
-	else if(midDown)
+		float factor = 0.002f;
+		rotationMatrix = rotate(rotationMatrix, diff.x * factor, rotateYAxis);
+		rotationMatrix = rotate(rotationMatrix, diff.y * factor, rotateXAxis);
+		lmbDownCoord = coord;
+	}
+	else if (midDown)
 	{
-		vec2 coord = vec2(x,y);
+		vec2 coord = vec2(x, y);
 		vec2 diff = coord - midDownCoord;
 
 		vec4 up = vec4(0, 1, 0, 0);
@@ -246,9 +256,9 @@ void ViewManager::mouseMoveEvent(int x,int y)
 		vec3 diffUp = up.xyz() * diff.y / (float)w_height;
 		vec3 diffRight = right.xyz() * diff.x / (float)w_width;
 
-        translationMatrix = translate(translationMatrix, (-diffUp + diffRight) * zoom * 3.0f);
-        midDownCoord = coord;
-    }
+		translationMatrix = translate(translationMatrix, (-diffUp + diffRight) * zoom * 3.0f);
+		midDownCoord = coord;
+	}
 }
 
 /**
@@ -258,7 +268,7 @@ void ViewManager::mouseMoveEvent(int x,int y)
 void ViewManager::wheelEvent(int direction)
 {
 	wheel_val = direction * 15.0f;
-    Zoom(wheel_val / 120.0f);
+	Zoom(wheel_val / 120.0f);
 }
 
 /**
@@ -267,8 +277,8 @@ void ViewManager::wheelEvent(int direction)
 */
 void ViewManager::Zoom(float distance)
 {
-    zoom *= (1.0f + 0.05f * distance);
-    zoom = clamp(0.1f, zoom, 3.0f);
+	zoom *= (1.0f + 0.05f * distance);
+	zoom = clamp(0.1f, zoom, 3.0f);
 }
 
 /**
@@ -276,7 +286,7 @@ void ViewManager::Zoom(float distance)
 * @param width 螢幕的寬。
 * @param height 螢幕的高。
 */
-void ViewManager::SetWindowSize(int width,int height) {
+void ViewManager::SetWindowSize(int width, int height) {
 	w_width = width;
 	w_height = height;
 	projMatrix = GetProjectionMatrix();
@@ -291,9 +301,9 @@ void ViewManager::SetWindowSize(int width,int height) {
 */
 void ViewManager::SetRotation(float theta, float phi)
 {
-    rotationMatrix = mat4(1.0);
-    rotationMatrix = rotate(rotationMatrix, theta, vec3(0, 1, 0));
-    rotationMatrix = rotate(rotationMatrix, phi, vec3(1, 0, 0));
+	rotationMatrix = mat4(1.0);
+	rotationMatrix = rotate(rotationMatrix, theta, vec3(0, 1, 0));
+	rotationMatrix = rotate(rotationMatrix, phi, vec3(1, 0, 0));
 }
 
 /**
@@ -305,11 +315,11 @@ void ViewManager::SetRotation(float theta, float phi)
 void ViewManager::SetRotation(float x, float y, float z)
 {
 	vec3 v(x, y, z);
-    v = normalize(v);
+	v = normalize(v);
 	vec3 o(0, 0, 1);
-    double angle = acos(dot(v, o));
-    rotationMatrix = mat4(1.0);
-    rotationMatrix = rotate(rotationMatrix, (float)angle, cross(o, v));
+	double angle = acos(dot(v, o));
+	rotationMatrix = mat4(1.0);
+	rotationMatrix = rotate(rotationMatrix, (float)angle, cross(o, v));
 }
 
 /**
@@ -318,23 +328,26 @@ void ViewManager::SetRotation(float x, float y, float z)
 void ViewManager::Reset()
 {
 	wheel_val = 0.0f;
-    zoom = 1.0f;
-    translationMatrix = mat4(1.0);
-    rotationMatrix = mat4(1.0);
+	zoom = 1.0f;
+	translationMatrix = mat4(1.0);
+	rotationMatrix = mat4(1.0);
 }
 
 /**
 * 使相機移動。
 * @param vec 使相機移動vec單位。
 */
-void ViewManager::Translate(vec2 vec) {
-	vec2 diff = vec;
+void ViewManager::Translate(vec3 vec) {
+	vec3 diff = vec;
 
 	vec4 up = vec4(0, 1, 0, 0);
 	vec4 right = vec4(1, 0, 0, 0);
+	vec4 front = vec4(0, 0, -1, 0);
 
 	vec3 diffUp = up.xyz() * diff.y / (float)w_height;
 	vec3 diffRight = right.xyz() * diff.x / (float)w_width;
 
-	translationMatrix = translate(translationMatrix, (-diffUp + diffRight) * zoom * 3.0f);
+	vec3 difffront = front.xyz() * diff.z / (float)10;
+
+	translationMatrix = translate(translationMatrix, (-diffUp + diffRight + difffront) * zoom * 3.0f);
 }

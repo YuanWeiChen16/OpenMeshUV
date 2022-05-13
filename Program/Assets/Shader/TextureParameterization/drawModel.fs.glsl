@@ -44,8 +44,10 @@ void main(void)
 		Texxx.x = (cos(TexR)*temptex.x- sin(TexR)*temptex.y)+0.5+TexX;
 		Texxx.y = (sin(TexR)*temptex.x+ cos(TexR)*temptex.y)+0.5+TexY;
 		vec4 texColor = texture(texImage, Texxx);
-		newFaceColor = texColor;
+		//newFaceColor = texColor;
 
+		newFaceColor = vec4(0, vertexIn.vTexCoord.x,1,0);
+		
 		if(NormalType)
 		{
 			vec3 T = vertexIn.vTanget;
@@ -80,13 +82,21 @@ void main(void)
 
 		newFaceColor = vec4(vec3(1.0) * (ambient + specular) + newFaceColor.xyz * diffuse, newFaceColor.a);
 	}
+	else
+	{
+		float R = vertexIn.vTexCoord.x;
+		float G = vertexIn.vTexCoord.y;
 
+		newFaceColor = vec4(G, R, 0, 1);
+	}
 	vec4 color = newFaceColor;
+	//vec4 color = vec4(0,0.5,0,1);
 	//vec4 color = faceColor;
 	if(drawWireframe)
 	{
 		float ef = edgeFactor();
 		color = mix(wireColor, newFaceColor, ef);
 	}
+
 	fragColor = color;
 }
