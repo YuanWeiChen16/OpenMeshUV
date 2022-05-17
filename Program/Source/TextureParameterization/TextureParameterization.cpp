@@ -1720,11 +1720,34 @@ void NewDetectRoof()
 	stbi_image_free(data);
 	stbi_image_free(Colordata);
 
+	//找底
+	double DeepY = 100000000000000;
+	for (MyMesh::FIter FI = model.model.mesh.faces_begin(); FI != model.model.mesh.faces_end(); FI++)
+	{
+		MyMesh::FHandle FH = model.model.mesh.face_handle(FI->idx());
+		for (MyMesh::FVIter FV1 = BeSelectModel.model.mesh.fv_begin(FH); FV1 != BeSelectModel.model.mesh.fv_end(FH); ++FV1)
+		{
+			MyMesh::VHandle VH = model.model.mesh.vertex_handle(FV1->idx());
+			MyMesh::Point P = model.model.mesh.point(VH);
+			if (P[1] < DeepY)
+			{
+				DeepY = P[1];
+			}
+		}
+	}
+	cout << "DeepY " << DeepY << "\n";
 	//mesh TopDown
-	//直接建每一個看到的面，考慮合併
+
+	//直接連接依照每個面，建造向下bounding box
 	for (map<int, int>::iterator ID = Idx.begin(); ID != Idx.end(); ID++)
 	{
-		
+		MyMesh::FHandle FH = model.model.mesh.face_handle(ID->first);
+		for (MyMesh::FVIter FV1 = BeSelectModel.model.mesh.fv_begin(FH); FV1 != BeSelectModel.model.mesh.fv_end(FH); ++FV1)
+		{
+			MyMesh::VHandle VH = model.model.mesh.vertex_handle(FV1->idx());
+			MyMesh::Point P = model.model.mesh.point(VH);
+			
+		}
 	}
 
 
