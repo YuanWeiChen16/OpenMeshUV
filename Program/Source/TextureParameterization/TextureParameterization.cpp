@@ -2,6 +2,8 @@
 #include <ViewManager.h>
 #include <AntTweakBar/AntTweakBar.h>
 #include <ResourcePath.h>
+#include <fstream>
+#include<map>
 
 #include <Eigen/Sparse>
 
@@ -18,8 +20,8 @@
 #include "../../Include/STB/stb_image.h"
 
 
-//#define STB_IMAGE_WRITE_IMPLEMENTATION
-//#include "../../Include/STB/stb_image_write.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "../../Include/STB/stb_image_write.h"
 
 
 
@@ -65,7 +67,8 @@ map<int, int > ClusterList;
 int NowShow = 0;
 int RealShow = 0;
 vector <vector<int>> ffconnect;
-double** colormap = new double* [600];
+#define COLORMAP_SIZE  60000
+double** colormap = new double* [COLORMAP_SIZE];
 
 
 unsigned int textureID;
@@ -173,7 +176,9 @@ unsigned int loadTexture(std::string path, int imageType);
 void magic();
 void magic_delete();
 
-
+void detectRoof();
+void caluBoundary();
+void NewDetectRoof();
 
 void SetupGUI()
 {
@@ -280,7 +285,7 @@ void InitOpenGL()
 void InitData()
 {
 
-	for (int i = 0; i < 600; i++)
+	for (int i = 0; i < COLORMAP_SIZE; i++)
 	{
 		colormap[i] = new double[3];
 		for (int j = 0; j < 3; j++)
@@ -450,10 +455,13 @@ void RenderMeshWindow()
 
 			GLint _viewport[4];
 			glGetIntegerv(GL_VIEWPORT, _viewport);
+			
 			glm::vec4 viewport(_viewport[0], _viewport[1], _viewport[2], _viewport[3]);
 			glm::vec3 windowPos(windowX, windowY, depthValue);
 			glm::vec3 wp = glm::unProject(windowPos, mvMat, pMat, viewport);
+			
 			model.FindClosestPoint(currentFaceID - 1, wp, worldPos, VH);
+
 			if (selectionMode == SelectionMode::SELECT_POINT)
 			{
 				magic_delete();
@@ -1066,7 +1074,6 @@ void MyKeyboard(unsigned char key, int x, int y)
 	{
 		magic_delete();
 	}
-
 	else if (key == 'u')
 	{
 		TextureY += 0.01;
@@ -1093,9 +1100,12 @@ void MyKeyboard(unsigned char key, int x, int y)
 	}
 	else if (key == 'n')
 	{
-		NowShow++;
+		NewDetectRoof();
 	}
+	else
+	{
 
+	}
 }
 
 void ReLoadModel()
@@ -1607,4 +1617,115 @@ void magic_delete()
 	InnerPoint.clear();
 	OuterPoint.clear();
 	OuterLengh = 0;
+}
+
+void detectRoof()
+{
+	
+}
+void caluBoundary()
+{
+	//for all vertex find convel
+}
+
+void NewDetectRoof()
+{
+	/*float DepthMap[600][600] = { 0 };
+	float IDMap[600][600] = {0 };*/
+	unsigned char* data = new unsigned char[360000];
+	float* Rawdata = new float[360000];
+
+
+	unsigned char* Colordata = new unsigned char[360000*3];
+	int* RawIdxdata = new int[360000];
+
+
+
+	map<int, int> Idx;
+
+	map<int, double> IdxDepth;
+
+	std::fstream DepthFile;
+	std::fstream IdxFile;
+	glm::mat4 mvMat = meshWindowCam.GetViewMatrix() * meshWindowCam.GetModelMatrix();
+	glm::mat4 pMat = meshWindowCam.GetProjectionMatrix(aspect);
+	float depthValue = 0;
+	IdxFile.open("./Dfile/IdxFile.txt", ios::out);
+	DepthFile.open("./Dfile/DepthFile.txt", ios::out);
+
+	float MaxDepth = -1100000;
+	float MinDepth = 1100000;
+
+	//depthFile << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
+	for (int i = 0; i < 600; i++)
+	{
+		for (int j = 0; j < 600; j++)
+		{
+			//depth map
+			glReadPixels(i, j, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depthValue);
+			float D = pickingTexture.ReadTexture(i,j);
+			//cout << D << " ";
+			if (depthValue < MinDepth)
+			{
+				MinDepth = depthValue;
+			}
+			if (depthValue > MaxDepth)
+			{
+				MaxDepth = depthValue;
+			}
+			IdxFile << depthValue << " ";
+			DepthFile << D << " ";
+			Rawdata[(i)+(599 - j) * 600] = depthValue;
+			RawIdxdata[(i) + (599-j) * 600] = D;
+
+			if (Idx.find(D) == Idx.end())
+			{
+				Idx[D] = 1;
+			}
+			else
+			{
+				Idx[D] ++;
+			}
+		}
+		//cout << "\n";
+		IdxFile << "\n";
+		DepthFile << "\n";
+		if (i % 60 == 0)
+		{
+			cout << i / 60 <<"/10" << "\n";
+		}
+	}
+
+	IdxFile.close();
+	DepthFile.close();
+
+	double diff = MaxDepth - MinDepth;
+	for (int i = 0; i < 360000; i++)
+	{
+		double tmp = Rawdata[i] - MinDepth;
+		data[i]= (char)((tmp / diff) * 256.0);
+		Colordata[i * 3 + 0] = (char)(colormap[RawIdxdata[i]][0]*256.0);
+		Colordata[i * 3 + 1] = (char)(colormap[RawIdxdata[i]][1]*256.0);
+		Colordata[i * 3 + 2] = (char)(colormap[RawIdxdata[i]][2]*256.0);
+	}
+	//stbi_flip_vertically_on_write(true);
+	stbi_write_png("Fileeee.png", 600, 600, 1, data, 0);
+	stbi_write_png("Fileeee_Color.png", 600, 600, 3, Colordata, 0);
+
+	for (map<int, int>::iterator ID = Idx.begin(); ID != Idx.end(); ID++)
+	{
+		cout << ID->first << " " << ID->second << "\n";
+	}
+	stbi_image_free(data);
+	stbi_image_free(Colordata);
+
+	//mesh TopDown
+	//直接建每一個看到的面，考慮合併
+	for (map<int, int>::iterator ID = Idx.begin(); ID != Idx.end(); ID++)
+	{
+		
+	}
+
+
 }
