@@ -54,6 +54,8 @@ MeshObject BeSelectModel;
 
 std::vector<MeshObject> ALLModel;
 
+std::vector<MeshObject> SomeEdgeModel;
+
 vector<unsigned int> OuterPoint;
 vector<unsigned int> InnerPoint;
 
@@ -204,8 +206,8 @@ void SetupGUI()
 
 
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
+	modelNames.push_back("Ahole.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
-	modelNames.push_back("untitled.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("gta04_dt1_20_build2_high.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
@@ -455,7 +457,7 @@ void RenderMeshWindow()
 			drawModelShader.DrawWireframe(true);
 			ALLModel[i].Render();
 		}*/
-		
+
 		BeSelectModel.Render();
 		drawModelShader.DrawWireframe(true);
 		BeSelectModel.Render();
@@ -1678,9 +1680,68 @@ void detectRoof()
 {
 
 }
+
+
+
 void caluBoundary()
 {
 	//for all vertex find convel
+	std::vector<std::vector<MyMesh::HalfedgeHandle>> BoundaryHalfEdgeHandler;
+	std::vector<MyMesh::HalfedgeHandle> NOToundary;
+
+	for (MyMesh::HIter HI = BeSelectModel.model.mesh.halfedges_begin(); HI != BeSelectModel.model.mesh.halfedges_end(); HI++)
+	{
+		MyMesh::HalfedgeHandle HFH = BeSelectModel.model.mesh.halfedge_handle(HI->idx());
+
+		//確認halfedge是不是 已經在不是Boundary
+		std::vector<MyMesh::HalfedgeHandle>::iterator it = std::find(NOToundary.begin(), NOToundary.end(), HFH);
+		if (it != NOToundary.end())
+		{
+			continue;
+		}
+		//確認halfedge是不是 已經在Boundary列表裡
+		bool isFoundinBoundaryHalfEdgeHandler = false;
+		for (int i = 0; i < BoundaryHalfEdgeHandler.size(); i++)
+		{
+			std::vector<MyMesh::HalfedgeHandle>::iterator it = std::find(BoundaryHalfEdgeHandler[i].begin(), BoundaryHalfEdgeHandler[i].end(), HFH);
+			if (it != BoundaryHalfEdgeHandler[i].end())
+			{
+				isFoundinBoundaryHalfEdgeHandler = true;
+				continue;
+			}
+		}
+		if (isFoundinBoundaryHalfEdgeHandler)
+		{
+			continue;
+		}
+		//從來沒找過的halfedge
+		if (BeSelectModel.model.mesh.is_boundary(HFH))
+		{
+			//找到第一個邊界
+			std::vector<MyMesh::HalfedgeHandle> VhEH;
+			VhEH.push_back(HFH);
+			BoundaryHalfEdgeHandler.push_back(VhEH);
+			HFH = BeSelectModel.model.mesh.next_halfedge_handle(HFH);
+			//直接找出一串邊界
+			for (;;)
+			{
+				if (HFH == BoundaryHalfEdgeHandler[BoundaryHalfEdgeHandler.size() - 1][0])
+				{
+					break;
+				}
+				BoundaryHalfEdgeHandler[BoundaryHalfEdgeHandler.size() - 1].push_back(HFH);
+				HFH = BeSelectModel.model.mesh.next_halfedge_handle(HFH);
+			}
+		}
+		else
+		{
+			NOToundary.push_back(HFH);
+		}
+	}
+
+	//HowToDraw
+
+
 }
 
 void NewDetectRoof()
@@ -1868,11 +1929,11 @@ void NewDetectRoof()
 	//	vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
 	//	BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
 	//}
-	
+
 	//產生vertex handler
 	//需要產生兩倍的vertex 屋頂與牆壁
 	//===========================================================================================//地板高度
-	
+
 	//屋頂===================================================================================
 	//地板===================================================================================
 //#ifdef GENERATE_FLOOR
@@ -2164,7 +2225,7 @@ void NewDetectRoof()
 		}
 		ObjFile << ("f " + std::to_string(FVIndex[0]) + " " + std::to_string(FVIndex[1]) + " " + std::to_string(FVIndex[2]) + "\n");
 	}
-	
+
 	ObjFile.close();
 
 	Showwwwwwwwww = 1000;
