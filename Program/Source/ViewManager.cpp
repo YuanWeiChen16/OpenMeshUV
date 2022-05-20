@@ -143,11 +143,17 @@ void ViewManager::keyEvents(unsigned char key) {
 	case '+':
 		wheelEvent(-moveSpeed);
 		break;
-
 		//縮小。
 	case '-':
 		wheelEvent(moveSpeed);
 		break;
+
+	case 'p':
+	case 'P':
+		SetDown();
+		break;
+
+
 	default:
 		break;
 	}
@@ -321,6 +327,22 @@ void ViewManager::SetRotation(float x, float y, float z)
 	rotationMatrix = mat4(1.0);
 	rotationMatrix = rotate(rotationMatrix, (float)angle, cross(o, v));
 }
+
+void ViewManager::SetDown()
+{
+	rotationMatrix = mat4(1.0);
+	double angle = -3.1415926535/2.0;
+	vec3 v(0, 1, 0);
+	v = normalize(v);
+	vec3 o(0, 0, 1);
+	rotationMatrix = rotate(rotationMatrix, (float)angle, cross(o, v));
+}
+
+
+
+
+
+
 
 /**
 * 重設相機的設定。

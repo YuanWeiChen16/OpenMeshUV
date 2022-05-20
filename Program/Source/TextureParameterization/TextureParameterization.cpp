@@ -205,6 +205,8 @@ void SetupGUI()
 
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
+	modelNames.push_back("untitled.obj");
+	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("gta04_dt1_20_build2_high.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
@@ -213,14 +215,8 @@ void SetupGUI()
 
 
 
-	modelNames.push_back("gta05_dt1_20_build_high_fill.obj");
 	modelNames.push_back("WorldBuilding01_EmpireState_lp.obj");
 	modelNames.push_back("Res_Building_8x8_038_001_root.obj");
-
-
-	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
-
-
 
 
 	modelNames.push_back("xyzrgb_dragon_100k.obj");
@@ -388,9 +384,8 @@ void RenderMeshWindow()
 	drawModelShader.SetNormalMat(normalMat);
 	drawModelShader.SetMVMat(mvMat);
 	drawModelShader.SetPMat(pMat);
-	//model.Render();
-
-//#ifdef OneRing
+	model.Render();
+	//#ifdef OneRing
 	if (model.selectedPoint.size() > 0)
 	{
 		drawModelShader.SetWireColor(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
@@ -454,16 +449,16 @@ void RenderMeshWindow()
 			drawModelShader.SetNormalType(true);
 		}
 
-		for (int i = 0; i < ALLModel.size(); i++)
+		/*for (int i = 0; i < ALLModel.size(); i++)
 		{
 			ALLModel[i].Render();
 			drawModelShader.DrawWireframe(true);
 			ALLModel[i].Render();
-		}
-		//drawModelShader.DrawTexCoord(true);
-		//BeSelectModel.Render();
-		//drawModelShader.DrawWireframe(true);
-		//BeSelectModel.Render();
+		}*/
+		
+		BeSelectModel.Render();
+		drawModelShader.DrawWireframe(true);
+		BeSelectModel.Render();
 
 
 		drawModelShader.DrawTexture(false);
@@ -473,9 +468,8 @@ void RenderMeshWindow()
 	}
 	else
 	{
-		model.Render();
+		//model.Render();
 	}
-
 
 	//#endif // OneRing
 	drawModelShader.Disable();
@@ -1696,7 +1690,6 @@ void NewDetectRoof()
 	unsigned char* data = new unsigned char[360000];
 	float* Rawdata = new float[360000];
 
-
 	unsigned char* Colordata = new unsigned char[360000 * 3];
 	int* RawIdxdata = new int[360000];
 
@@ -1787,7 +1780,8 @@ void NewDetectRoof()
 	stbi_image_free(Colordata);
 	Idx.erase(0);
 	ALL_Idx_Depth.erase(0);
-	//
+
+	//平均深度
 	for (map<int, std::vector<double>>::iterator ID = ALL_Idx_Depth.begin(); ID != ALL_Idx_Depth.end(); ID++)
 	{
 		double totalDepth = 0;
@@ -1812,8 +1806,8 @@ void NewDetectRoof()
 			model.AddSelectedFace(ID->first - 1);
 		}
 	}
-	//找底
-	double DeepY = 100000000000000;
+	//找最高與最低
+	double DeepY = 1000000000000000;
 	double HeightY = -10000000000000000;
 	for (MyMesh::FIter FI = model.model.mesh.faces_begin(); FI != model.model.mesh.faces_end(); FI++)
 	{
@@ -1836,8 +1830,14 @@ void NewDetectRoof()
 	//mesh TopDown
 
 	//舊vertex 與 新vertex對應
+	//給舊vertex Index回傳新vertex Index
 	//排除重複點
 	std::map<int, int> VectorSerise;
+	std::vector <MyMesh::VertexHandle> vhandle;
+	MyMesh::TexCoord2D TC;
+	TC[0] = 1;
+	TC[1] = 0;
+	BeSelectModel.model.mesh.request_vertex_texcoords2D();
 	//直接連接依照每個面，建造向下bounding box
 	for (map<int, int>::iterator ID = Idx.begin(); ID != Idx.end(); ID++)
 	{
@@ -1845,32 +1845,39 @@ void NewDetectRoof()
 		std::vector<MyMesh::VertexHandle> VHV;
 		for (MyMesh::FVIter FV1 = model.model.mesh.fv_begin(FH); FV1 != model.model.mesh.fv_end(FH); ++FV1)
 		{
-			MyMesh::VHandle VH = model.model.mesh.vertex_handle(FV1->idx());
-			//MyMesh::Point P = model.model.mesh.point(VH);
 			if (VectorSerise.find(FV1->idx()) == VectorSerise.end())
 			{
+				MyMesh::VHandle VH = model.model.mesh.vertex_handle(FV1->idx());
+				MyMesh::Point P = model.model.mesh.point(VH);
 				int Size = VectorSerise.size();
 				VectorSerise[FV1->idx()] = Size;
+				vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
+				BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
 			}
 		}
 	}
-	BeSelectModel.model.mesh.request_vertex_texcoords2D();
-	MyMesh::TexCoord2D TC;
 	TC[0] = 1;
-	TC[1] = 0;
+	TC[1] = 1;
+
+	//int VSize = vhandle.size();
+	//for (int i = 0; i < VSize; i++)
+	//{
+	//	MyMesh::VHandle VH = model.model.mesh.vertex_handle(vhandle[i].idx());
+	//	MyMesh::Point P = model.model.mesh.point(VH);
+	//	P[1] = DeepY;
+	//	vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
+	//	BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
+	//}
+	
 	//產生vertex handler
 	//需要產生兩倍的vertex 屋頂與牆壁
 	//===========================================================================================//地板高度
-	std::vector <MyMesh::VertexHandle> vhandle;
+	
 	//屋頂===================================================================================
-	for (map<int, int>::iterator VIS = VectorSerise.begin(); VIS != VectorSerise.end(); VIS++)
-	{
-		MyMesh::VertexHandle VH = model.model.mesh.vertex_handle(VIS->first);
-		MyMesh::Point P = model.model.mesh.point(VH);
-		vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
-		BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
-	}
 	//地板===================================================================================
+//#ifdef GENERATE_FLOOR
+	/*TC[0] = 1;
+	TC[1] = 1;
 	for (map<int, int>::iterator VIS = VectorSerise.begin(); VIS != VectorSerise.end(); VIS++)
 	{
 		MyMesh::VertexHandle VH = model.model.mesh.vertex_handle(VIS->first);
@@ -1878,13 +1885,11 @@ void NewDetectRoof()
 		P[1] = DeepY;
 		vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
 		BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
-	}
-	TC[0] = 1;
-	TC[1] = 1;
-	//連接面產生小box===================================================================================
-	//connect point to face to beselectModel===================================================================================
+	}*/
+	//#endif // GENERATE_FLOOR
+		//連接面產生小box===================================================================================
+		//connect point to face to beselectModel===================================================================================
 	std::vector<MyMesh::VertexHandle>  face_vhandles;
-	int HalfSize = VectorSerise.size();
 	int count = 0;
 
 	for (map<int, int>::iterator ID = Idx.begin(); ID != Idx.end(); ID++)
@@ -1894,64 +1899,65 @@ void NewDetectRoof()
 			//舊三角面對應點id
 			std::vector<int> Face_vertex_index;
 			MyMesh::FHandle FH = model.model.mesh.face_handle(ID->first - 1);
-			std::vector <MyMesh::VertexHandle> All_Vhandle;
-			TC[0] = 1;
-			TC[1] = 0;
-			double AvgDepth = 0;
-			//Find Avg Depth
-			for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); FVI++)
-			{
-				MyMesh::VertexHandle VH = model.model.mesh.vertex_handle(FVI->idx());
-				MyMesh::Point P = model.model.mesh.point(VH);
-				AvgDepth += P[1];
-			}
-			AvgDepth /= 3;
-			int ClusterSize = 5;
-			double ClusterDeep = (HeightY - DeepY) / (double)ClusterSize;
-			int Custer = 0;
-			for (int i = 0; i < ClusterSize; i++)
-			{
-				if (((ClusterDeep * (i + 1) + DeepY) > AvgDepth) && (AvgDepth > (ClusterDeep * i + DeepY)))
-				{
-					AvgDepth = (ClusterDeep * (i + 0.5)) + DeepY;
-					Custer = i;
-					break;
-				}
-			}
-			TC[0] = colormap[Custer][0];
-			TC[1] = colormap[Custer][1];
+			//std::vector <MyMesh::VertexHandle> All_Vhandle;
+			//TC[0] = 1;
+			//TC[1] = 0;
+			//double AvgDepth = 0;
+			////Find Avg Depth
+			//for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); FVI++)
+			//{
+			//	MyMesh::VertexHandle VH = model.model.mesh.vertex_handle(FVI->idx());
+			//	MyMesh::Point P = model.model.mesh.point(VH);
+			//	AvgDepth += P[1];
+			//}
+			//AvgDepth /= 3;
+			//int ClusterSize = 5;
+			//double ClusterDeep = (HeightY - DeepY) / (double)ClusterSize;
+			//int Custer = 0;
+			//for (int i = 0; i < ClusterSize; i++)
+			//{
+			//	if (((ClusterDeep * (i + 1) + DeepY) > AvgDepth) && (AvgDepth > (ClusterDeep * i + DeepY)))
+			//	{
+			//		AvgDepth = (ClusterDeep * (i + 0.5)) + DeepY;
+			//		Custer = i;
+			//		break;
+			//	}
+			//}
+			//TC[0] = colormap[Custer][0];
+			//TC[1] = colormap[Custer][1];
 
 			for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); FVI++)
 			{
 				Face_vertex_index.push_back(FVI->idx());
-				MyMesh::VertexHandle VH = model.model.mesh.vertex_handle(FVI->idx());
-				MyMesh::Point P = model.model.mesh.point(VH);
-				int ClusterSize = 5;
-				double ClusterDeep = (HeightY - DeepY) / (double)ClusterSize;
-				//int Custer = 0;
-				for (int i = 0; i < ClusterSize; i++)
-				{
-					if (((ClusterDeep * (i + 1) + DeepY) > P[1]) && (P[1] > (ClusterDeep * i + DeepY)))
-					{
-						//P[1] = (ClusterDeep * (i + 0.5)) + DeepY;
-						//Custer = i;
-						break;
-					}
-				}
-				//P[1] = AvgDepth;
-				All_Vhandle.push_back(ALLModel[count].model.mesh.add_vertex(P));
-				ALLModel[count].model.mesh.set_texcoord2D(All_Vhandle[All_Vhandle.size() - 1], TC);
+
+				//MyMesh::VertexHandle VH = model.model.mesh.vertex_handle(FVI->idx());
+				//MyMesh::Point P = model.model.mesh.point(VH);
+				//int ClusterSize = 5;
+				//double ClusterDeep = (HeightY - DeepY) / (double)ClusterSize;
+				////int Custer = 0;
+				//for (int i = 0; i < ClusterSize; i++)
+				//{
+				//	if (((ClusterDeep * (i + 1) + DeepY) > P[1]) && (P[1] > (ClusterDeep * i + DeepY)))
+				//	{
+				//		P[1] = (ClusterDeep * (i + 0.5)) + DeepY;
+				//		Custer = i;
+				//		break;
+				//	}
+				//}
+				////P[1] = AvgDepth;
+				//All_Vhandle.push_back(ALLModel[count].model.mesh.add_vertex(P));
+				//ALLModel[count].model.mesh.set_texcoord2D(All_Vhandle[All_Vhandle.size() - 1], TC);
 			}
 			//TC[0] = 1;
 			//TC[1] = 1;
-			for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); FVI++)
+		/*	for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); FVI++)
 			{
 				MyMesh::VertexHandle VH = model.model.mesh.vertex_handle(FVI->idx());
 				MyMesh::Point P = model.model.mesh.point(VH);
 				P[1] = DeepY;
 				All_Vhandle.push_back(ALLModel[count].model.mesh.add_vertex(P));
 				ALLModel[count].model.mesh.set_texcoord2D(All_Vhandle[All_Vhandle.size() - 1], TC);
-			}
+			}*/
 #pragma region box
 			//top
 			face_vhandles.clear();
@@ -1959,6 +1965,14 @@ void NewDetectRoof()
 			face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[1]]]);
 			face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[2]]]);
 			BeSelectModel.model.mesh.add_face(face_vhandles);
+
+			//cout << "Index " << Face_vertex_index[0] << " " << VectorSerise[Face_vertex_index[0]] << "\n";
+			//cout << "Index " << Face_vertex_index[1] << " " << VectorSerise[Face_vertex_index[1]] << "\n";
+			//cout << "Index " << Face_vertex_index[2] << " " << VectorSerise[Face_vertex_index[2]] << "\n";
+
+
+
+
 #ifdef CREATE_FACE_DEBUG
 			cout << "FACE " << ID->first - 1 << "TOP Is be Rebuild" << endl;
 #endif // CREATE_FACE_DEBUG
@@ -1977,7 +1991,6 @@ void NewDetectRoof()
 			//face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[1]] + HalfSize]);
 			//BeSelectModel.model.mesh.add_face(face_vhandles);
 			//cout << "FACE " << ID->first-1 << "FACE0 UP Is be Rebuild" << endl;
-
 			////face 1 down
 			//face_vhandles.clear();
 			//face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[2]]]);
@@ -2009,90 +2022,90 @@ void NewDetectRoof()
 			//cout << "FACE " << ID->first-1 << "FACE2 UP Is be Rebuild" << endl;
 
 			//top
-			face_vhandles.clear();
-			face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[0]] + HalfSize]);
-			face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[2]] + HalfSize]);
-			face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[1]] + HalfSize]);
-			BeSelectModel.model.mesh.add_face(face_vhandles);
+			/*face_vhandles.clear();
+			face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[0]] + VSize]);
+			face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[1]] + VSize]);
+			face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[2]] + VSize]);
+			BeSelectModel.model.mesh.add_face(face_vhandles);*/
 #pragma endregion
 
 #pragma region newbox
-			int NHS = 3;
-			//top
-			face_vhandles.clear();
-			face_vhandles.push_back(All_Vhandle[0]);
-			face_vhandles.push_back(All_Vhandle[1]);
-			face_vhandles.push_back(All_Vhandle[2]);
-			ALLModel[count].model.mesh.add_face(face_vhandles);
-#ifdef CREATE_FACE_DEBUG
-			cout << "FACE " << ID->first - 1 << "TOP Is be Rebuild" << endl;
-#endif // CREATE_FACE_DEBUG
-			//for loop
-			//face 0 down
-			face_vhandles.clear();
-			face_vhandles.push_back(All_Vhandle[1]);
-			face_vhandles.push_back(All_Vhandle[0]);
-			face_vhandles.push_back(All_Vhandle[0 + NHS]);
-			ALLModel[count].model.mesh.add_face(face_vhandles);
-#ifdef CREATE_FACE_DEBUG
-			cout << "FACE " << ID->first - 1 << "FACE0 Down Is be Rebuild" << endl;
-#endif // CREATE_FACE_DEBUG
-			//face 0 up
-			face_vhandles.clear();
-			face_vhandles.push_back(All_Vhandle[1]);
-			face_vhandles.push_back(All_Vhandle[0 + NHS]);
-			face_vhandles.push_back(All_Vhandle[1 + NHS]);
-			ALLModel[count].model.mesh.add_face(face_vhandles);
-#ifdef CREATE_FACE_DEBUG
-			cout << "FACE " << ID->first - 1 << "FACE0 UP Is be Rebuild" << endl;
-#endif // CREATE_FACE_DEBUG
-			//face 1 down
-			face_vhandles.clear();
-			face_vhandles.push_back(All_Vhandle[2]);
-			face_vhandles.push_back(All_Vhandle[1]);
-			face_vhandles.push_back(All_Vhandle[1 + NHS]);
-			ALLModel[count].model.mesh.add_face(face_vhandles);
-#ifdef CREATE_FACE_DEBUG
-			cout << "FACE " << ID->first - 1 << "FACE1 Down Is be Rebuild" << endl;
-#endif // CREATE_FACE_DEBUG
-			//face 1 up
-			face_vhandles.clear();
-			face_vhandles.push_back(All_Vhandle[2]);
-			face_vhandles.push_back(All_Vhandle[1 + NHS]);
-			face_vhandles.push_back(All_Vhandle[2 + NHS]);
-			ALLModel[count].model.mesh.add_face(face_vhandles);
-#ifdef CREATE_FACE_DEBUG
-			cout << "FACE " << ID->first - 1 << "FACE1 UP Down Is be Rebuild" << endl;
-#endif // CREATE_FACE_DEBUG
-			//face 2 down
-			face_vhandles.clear();
-			face_vhandles.push_back(All_Vhandle[0]);
-			face_vhandles.push_back(All_Vhandle[2]);
-			face_vhandles.push_back(All_Vhandle[2 + NHS]);
-			ALLModel[count].model.mesh.add_face(face_vhandles);
-#ifdef CREATE_FACE_DEBUG
-			cout << "FACE " << ID->first - 1 << "FACE2 Down Is be Rebuild" << endl;
-#endif // CREATE_FACE_DEBUG
-			//face 2 up
-			face_vhandles.clear();
-			face_vhandles.push_back(All_Vhandle[0]);
-			face_vhandles.push_back(All_Vhandle[2 + NHS]);
-			face_vhandles.push_back(All_Vhandle[0 + NHS]);
-			ALLModel[count].model.mesh.add_face(face_vhandles);
-#ifdef CREATE_FACE_DEBUG
-			cout << "FACE " << ID->first - 1 << "FACE2 UP Is be Rebuild" << endl;
-#endif // CREATE_FACE_DEBUG
-			//top
-			face_vhandles.clear();
-			face_vhandles.push_back(All_Vhandle[0 + NHS]);
-			face_vhandles.push_back(All_Vhandle[2 + NHS]);
-			face_vhandles.push_back(All_Vhandle[1 + NHS]);
-			ALLModel[count].model.mesh.add_face(face_vhandles);
-#pragma endregion
-#ifdef CREATE_FACE_DEBUG
-			cout << "FACE " << ID->first - 1 << " Is be Rebuild" << endl;
-#endif // CREATE_FACE_DEBUG
-			count++;
+			//			int NHS = 3;
+			//			//top
+			//			face_vhandles.clear();
+			//			face_vhandles.push_back(All_Vhandle[0]);
+			//			face_vhandles.push_back(All_Vhandle[1]);
+			//			face_vhandles.push_back(All_Vhandle[2]);
+			//			ALLModel[count].model.mesh.add_face(face_vhandles);
+			//#ifdef CREATE_FACE_DEBUG
+			//			cout << "FACE " << ID->first - 1 << "TOP Is be Rebuild" << endl;
+			//#endif // CREATE_FACE_DEBUG
+			//			//for loop
+			//			//face 0 down
+			//			face_vhandles.clear();
+			//			face_vhandles.push_back(All_Vhandle[1]);
+			//			face_vhandles.push_back(All_Vhandle[0]);
+			//			face_vhandles.push_back(All_Vhandle[0 + NHS]);
+			//			ALLModel[count].model.mesh.add_face(face_vhandles);
+			//#ifdef CREATE_FACE_DEBUG
+			//			cout << "FACE " << ID->first - 1 << "FACE0 Down Is be Rebuild" << endl;
+			//#endif // CREATE_FACE_DEBUG
+			//			//face 0 up
+			//			face_vhandles.clear();
+			//			face_vhandles.push_back(All_Vhandle[1]);
+			//			face_vhandles.push_back(All_Vhandle[0 + NHS]);
+			//			face_vhandles.push_back(All_Vhandle[1 + NHS]);
+			//			ALLModel[count].model.mesh.add_face(face_vhandles);
+			//#ifdef CREATE_FACE_DEBUG
+			//			cout << "FACE " << ID->first - 1 << "FACE0 UP Is be Rebuild" << endl;
+			//#endif // CREATE_FACE_DEBUG
+			//			//face 1 down
+			//			face_vhandles.clear();
+			//			face_vhandles.push_back(All_Vhandle[2]);
+			//			face_vhandles.push_back(All_Vhandle[1]);
+			//			face_vhandles.push_back(All_Vhandle[1 + NHS]);
+			//			ALLModel[count].model.mesh.add_face(face_vhandles);
+			//#ifdef CREATE_FACE_DEBUG
+			//			cout << "FACE " << ID->first - 1 << "FACE1 Down Is be Rebuild" << endl;
+			//#endif // CREATE_FACE_DEBUG
+			//			//face 1 up
+			//			face_vhandles.clear();
+			//			face_vhandles.push_back(All_Vhandle[2]);
+			//			face_vhandles.push_back(All_Vhandle[1 + NHS]);
+			//			face_vhandles.push_back(All_Vhandle[2 + NHS]);
+			//			ALLModel[count].model.mesh.add_face(face_vhandles);
+			//#ifdef CREATE_FACE_DEBUG
+			//			cout << "FACE " << ID->first - 1 << "FACE1 UP Down Is be Rebuild" << endl;
+			//#endif // CREATE_FACE_DEBUG
+			//			//face 2 down
+			//			face_vhandles.clear();
+			//			face_vhandles.push_back(All_Vhandle[0]);
+			//			face_vhandles.push_back(All_Vhandle[2]);
+			//			face_vhandles.push_back(All_Vhandle[2 + NHS]);
+			//			ALLModel[count].model.mesh.add_face(face_vhandles);
+			//#ifdef CREATE_FACE_DEBUG
+			//			cout << "FACE " << ID->first - 1 << "FACE2 Down Is be Rebuild" << endl;
+			//#endif // CREATE_FACE_DEBUG
+			//			//face 2 up
+			//			face_vhandles.clear();
+			//			face_vhandles.push_back(All_Vhandle[0]);
+			//			face_vhandles.push_back(All_Vhandle[2 + NHS]);
+			//			face_vhandles.push_back(All_Vhandle[0 + NHS]);
+			//			ALLModel[count].model.mesh.add_face(face_vhandles);
+			//#ifdef CREATE_FACE_DEBUG
+			//			cout << "FACE " << ID->first - 1 << "FACE2 UP Is be Rebuild" << endl;
+			//#endif // CREATE_FACE_DEBUG
+			//			//top
+			//			face_vhandles.clear();
+			//			face_vhandles.push_back(All_Vhandle[0 + NHS]);
+			//			face_vhandles.push_back(All_Vhandle[2 + NHS]);
+			//			face_vhandles.push_back(All_Vhandle[1 + NHS]);
+			//			ALLModel[count].model.mesh.add_face(face_vhandles);
+			//#pragma endregion
+			//#ifdef CREATE_FACE_DEBUG
+			//			cout << "FACE " << ID->first - 1 << " Is be Rebuild" << endl;
+			//#endif // CREATE_FACE_DEBUG
+			//			count++;
 		}
 	}
 
@@ -2103,6 +2116,7 @@ void NewDetectRoof()
 
 	int NowVerticesCount = 1;
 
+#ifdef MultiOBJ
 	for (int i = 0; i < ALLModel.size(); i++)
 	{
 		ALLModel[i].model.mesh.request_face_normals();
@@ -2129,10 +2143,30 @@ void NewDetectRoof()
 			NowVerticesCount++;
 		}
 	}
-
 	ObjFile << Face_index;
-
 	ObjFile.close();
+#endif // MultiOBJ
+
+	for (MyMesh::VIter VI = BeSelectModel.model.mesh.vertices_begin(); VI != BeSelectModel.model.mesh.vertices_end(); VI++)
+	{
+		MyMesh::VHandle VH = BeSelectModel.model.mesh.vertex_handle(VI->idx());
+		MyMesh::Point P = BeSelectModel.model.mesh.point(VH);
+		ObjFile << "v " << P[0] << " " << P[1] << " " << P[2] << "\n";
+	}
+
+	for (MyMesh::FIter FI = BeSelectModel.model.mesh.faces_begin(); FI != BeSelectModel.model.mesh.faces_end(); FI++)
+	{
+		std::vector<int> FVIndex;
+		MyMesh::FHandle FH = BeSelectModel.model.mesh.face_handle(FI->idx());
+		for (MyMesh::FVIter FVI = BeSelectModel.model.mesh.fv_begin(FH); FVI != BeSelectModel.model.mesh.fv_end(FH); FVI++)
+		{
+			FVIndex.push_back(FVI->idx() + 1);
+		}
+		ObjFile << ("f " + std::to_string(FVIndex[0]) + " " + std::to_string(FVIndex[1]) + " " + std::to_string(FVIndex[2]) + "\n");
+	}
+	
+	ObjFile.close();
+
 	Showwwwwwwwww = 1000;
 	//model.AddSelectedFace(0);
 }

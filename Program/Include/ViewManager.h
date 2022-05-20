@@ -48,6 +48,9 @@ public:
     void SetRotation(float x, float y, float z);
 	void SetWindowSize(int width, int height);
 
+	void SetDown();
+
+
     bool ToggleOrtho() { return ortho = !ortho; }
     void Zoom(float distance);
     void Reset();

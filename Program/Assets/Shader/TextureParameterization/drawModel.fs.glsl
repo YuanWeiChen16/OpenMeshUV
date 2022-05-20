@@ -87,7 +87,7 @@ void main(void)
 		float R = vertexIn.vTexCoord.x;
 		float G = vertexIn.vTexCoord.y;
 
-		newFaceColor = vec4(G, R, 0, 1);
+		newFaceColor = vec4(0, 1, 0, 1);
 	}
 	vec4 color = newFaceColor;
 	//vec4 color = vec4(0,0.5,0,1);
