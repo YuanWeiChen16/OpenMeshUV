@@ -43,6 +43,7 @@ public:
 
 	bool Init(std::string fileName);
 	void Render();
+	void LineRender();
 	void RenderSelectedFace();
 	bool AddSelectedFace(unsigned int faceID);
 	void DeleteSelectedFace(unsigned int faceID);
@@ -65,6 +66,5 @@ public:
 
 	std::vector<unsigned int*> fvIDsPtr;
 	std::vector<int> elemCount;
-
 };
 

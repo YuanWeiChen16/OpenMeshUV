@@ -29,6 +29,7 @@ float edgeFactor()
 {
 	vec3 d = fwidth(vertexIn.barycentric);
 	vec3 a3 = smoothstep(vec3(0.0), d * 1.5, vertexIn.barycentric);
+	//vec3 a3 = smoothstep(vec3(0.0), d * 5, vertexIn.barycentric);
 	return min(min(a3.x, a3.y), a3.z);
 }
 

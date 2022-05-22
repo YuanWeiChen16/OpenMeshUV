@@ -75,6 +75,9 @@ vector <vector<int>> ffconnect;
 double** colormap = new double* [COLORMAP_SIZE];
 int Showwwwwwwwww = 0;
 
+double DeepY = 1000000000000000;
+double HeightY = -10000000000000000;
+bool ShowOModel = true;
 
 
 unsigned int textureID;
@@ -205,13 +208,13 @@ void SetupGUI()
 
 
 
-	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
-	modelNames.push_back("Ahole.obj");
-	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
-	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
-	modelNames.push_back("gta04_dt1_20_build2_high.obj");
-	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
+	modelNames.push_back("Ahole.obj");
+	modelNames.push_back("gta04_dt1_20_build2_high.obj");
+	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
+	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
+	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
+	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("WorldBuilding02_french_Arc_de_Triomphe.obj");
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
 
@@ -362,9 +365,7 @@ void RenderMeshWindow()
 	pickingShader.Enable();
 	pickingShader.SetMVMat(value_ptr(mvMat));
 	pickingShader.SetPMat(value_ptr(pMat));
-
 	model.Render();
-
 	pickingShader.Disable();
 	pickingTexture.Disable();
 
@@ -386,45 +387,48 @@ void RenderMeshWindow()
 	drawModelShader.SetNormalMat(normalMat);
 	drawModelShader.SetMVMat(mvMat);
 	drawModelShader.SetPMat(pMat);
-	model.Render();
-	//#ifdef OneRing
-	if (model.selectedPoint.size() > 0)
+	if (ShowOModel)
 	{
-		drawModelShader.SetWireColor(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-		drawModelShader.SetFaceColor(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-
-		//drawModelShader.DrawTexCoord(true);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, TextureIDs[chosetexture]);
-
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, NoramlIDs[choseNormal]);
-		drawModelShader.UseLighting(false);
-		drawModelShader.DrawTexture(false);
-		drawModelShader.DrawWireframe(false);
-
-		//BeSelectModel.Render();
-		drawModelShader.SetTexcoord(TextureX, TextureY, TexRotate);
-		if (chosemodel == No_normal)
-		{
-			drawModelShader.SetNormalType(false);
-		}
-		else
-		{
-			drawModelShader.SetNormalType(true);
-		}
-		//drawModelShader.DrawTexCoord(true);
-		BeSelectModel.Render();
-		drawModelShader.DrawTexture(false);
-		drawModelShader.DrawWireframe(true);
-		//drawModelShader.DrawTexCoord(false);
-		drawModelShader.SetNormalType(false);
+		model.Render();
 	}
-	else
-	{
+#ifdef OneRing
+	//if (model.selectedPoint.size() > 0)
+	//{
+	//	drawModelShader.SetWireColor(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+	//	drawModelShader.SetFaceColor(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
-	}
+	//	//drawModelShader.DrawTexCoord(true);
+	//	glActiveTexture(GL_TEXTURE0);
+	//	glBindTexture(GL_TEXTURE_2D, TextureIDs[chosetexture]);
 
+	//	glActiveTexture(GL_TEXTURE1);
+	//	glBindTexture(GL_TEXTURE_2D, NoramlIDs[choseNormal]);
+	//	drawModelShader.UseLighting(false);
+	//	drawModelShader.DrawTexture(false);
+	//	drawModelShader.DrawWireframe(false);
+
+	//	//BeSelectModel.Render();
+	//	drawModelShader.SetTexcoord(TextureX, TextureY, TexRotate);
+	//	if (chosemodel == No_normal)
+	//	{
+	//		drawModelShader.SetNormalType(false);
+	//	}
+	//	else
+	//	{
+	//		drawModelShader.SetNormalType(true);
+	//	}
+	//	//drawModelShader.DrawTexCoord(true);
+	//	BeSelectModel.Render();
+	//	drawModelShader.DrawTexture(false);
+	//	drawModelShader.DrawWireframe(true);
+	//	//drawModelShader.DrawTexCoord(false);
+	//	drawModelShader.SetNormalType(false);
+	//}
+	//else
+	//{
+
+	//}
+#endif // OneRing
 	if (Showwwwwwwwww != 0)
 	{
 		drawModelShader.SetWireColor(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
@@ -451,29 +455,88 @@ void RenderMeshWindow()
 			drawModelShader.SetNormalType(true);
 		}
 
-		/*for (int i = 0; i < ALLModel.size(); i++)
+		drawModelShader.DrawWireframe(false);
+		BeSelectModel.Render();
+		if (ShowOModel)
 		{
-			ALLModel[i].Render();
 			drawModelShader.DrawWireframe(true);
-			ALLModel[i].Render();
-		}*/
-
-		BeSelectModel.Render();
-		drawModelShader.DrawWireframe(true);
-		BeSelectModel.Render();
-
-
+			BeSelectModel.Render();
+		}
 		drawModelShader.DrawTexture(false);
 		drawModelShader.DrawWireframe(true);
 		//drawModelShader.DrawTexCoord(false);
 		drawModelShader.SetNormalType(false);
+
+		for (int i = 0; i < ALLModel.size(); i++)
+		{
+			ALLModel[i].Render();
+
+			glBindBuffer(GL_ARRAY_BUFFER, vboPoint);
+			std::vector<MyMesh::Point> vertices;
+			vertices.reserve(ALLModel[i].model.mesh.n_vertices());
+			for (MyMesh::VertexIter v_it = ALLModel[i].model.mesh.vertices_begin(); v_it != ALLModel[i].model.mesh.vertices_end(); ++v_it)
+			{
+				vertices.push_back(ALLModel[i].model.mesh.point(*v_it));
+			}
+
+			glBufferData(GL_ARRAY_BUFFER, sizeof(MyMesh::Point) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
+			//glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3), glm::value_ptr(worldPos), GL_STATIC_DRAW);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(0);
+			glm::vec4 pointColor(1.0, 0.0, 1.0, 1.0);
+			drawPointShader.Enable();
+			drawPointShader.SetMVMat(mvMat);
+			drawPointShader.SetPMat(pMat);
+			drawPointShader.SetPointColor(pointColor);
+			//drawPointShader.SetPointSize(15.0);
+			glLineWidth(2);
+			//glDrawElements(GL_TRIANGLES, model.mesh.n_faces() * 3, GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_LINE_LOOP, 0, vertices.size());
+			drawPointShader.Disable();
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+			//Down Ray
+			glBindBuffer(GL_ARRAY_BUFFER, vboPoint);
+			std::vector<MyMesh::Point> verticesTD;
+			verticesTD.reserve(ALLModel[i].model.mesh.n_vertices() * 2);
+			for (MyMesh::VertexIter v_it = ALLModel[i].model.mesh.vertices_begin(); v_it != ALLModel[i].model.mesh.vertices_end(); ++v_it)
+			{
+				verticesTD.push_back(ALLModel[i].model.mesh.point(*v_it));
+
+				MyMesh::Point p = ALLModel[i].model.mesh.point(*v_it);
+				p[1] = DeepY;
+				verticesTD.push_back(p);
+			}
+
+			glBufferData(GL_ARRAY_BUFFER, sizeof(MyMesh::Point) * verticesTD.size(), &verticesTD[0], GL_STATIC_DRAW);
+			//glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3), glm::value_ptr(worldPos), GL_STATIC_DRAW);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(0);
+			glm::vec4 lineColor(1.0, 0.0, 0.0, 1.0);
+			drawPointShader.Enable();
+			drawPointShader.SetMVMat(mvMat);
+			drawPointShader.SetPMat(pMat);
+			drawPointShader.SetPointColor(lineColor);
+			//drawPointShader.SetPointSize(15.0);
+			glLineWidth(2);
+			//glDrawElements(GL_TRIANGLES, model.mesh.n_faces() * 3, GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_LINES, 0, verticesTD.size());
+			drawPointShader.Disable();
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+		}
+
+
+
 	}
 	else
 	{
 		//model.Render();
 	}
 
-	//#endif // OneRing
+
 	drawModelShader.Disable();
 
 
@@ -886,19 +949,19 @@ void RenderMeshWindow()
 
 		drawPickingFaceShader.Disable();
 
-		glBindBuffer(GL_ARRAY_BUFFER, vboPoint);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3), glm::value_ptr(worldPos), GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(0);
-		glm::vec4 pointColor(1.0, 0.0, 1.0, 1.0);
-		drawPointShader.Enable();
-		drawPointShader.SetMVMat(mvMat);
-		drawPointShader.SetPMat(pMat);
-		drawPointShader.SetPointColor(pointColor);
-		drawPointShader.SetPointSize(15.0);
-		glDrawArrays(GL_POINTS, 0, 1);
-		drawPointShader.Disable();
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		//glBindBuffer(GL_ARRAY_BUFFER, vboPoint);
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3), glm::value_ptr(worldPos), GL_STATIC_DRAW);
+		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		//glEnableVertexAttribArray(0);
+		//glm::vec4 pointColor(1.0, 0.0, 1.0, 1.0);
+		//drawPointShader.Enable();
+		//drawPointShader.SetMVMat(mvMat);
+		//drawPointShader.SetPMat(pMat);
+		//drawPointShader.SetPointColor(pointColor);
+		//drawPointShader.SetPointSize(15.0);
+		//glDrawArrays(GL_POINTS, 0, 1);
+		//drawPointShader.Disable();
+		//glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	}
 
@@ -1154,10 +1217,19 @@ void MyKeyboard(unsigned char key, int x, int y)
 	else if (key == 'n')
 	{
 		NewDetectRoof();
+		caluBoundary();
 	}
 	else if (key == 'o')
 	{
 		meshWindowCam.ToggleOrtho();
+	}
+	else if (key == 'm')
+	{
+		ShowOModel = !ShowOModel;
+	}
+	else if (key == 'l')
+	{
+
 	}
 	else
 	{
@@ -1681,7 +1753,10 @@ void detectRoof()
 
 }
 
+void MergeBoundary()
+{
 
+}
 
 void caluBoundary()
 {
@@ -1739,7 +1814,108 @@ void caluBoundary()
 		}
 	}
 
+	//直接給出點的陣列
+	//刪掉直線上的點
+	//依照角度計算
+	std::vector < std::vector<MyMesh::Point> > EdgePointSet;
+	for (int i = 0; i < BoundaryHalfEdgeHandler.size(); i++)
+	{
+		EdgePointSet.push_back(std::vector<MyMesh::Point>());
+		for (int j = 0; j < BoundaryHalfEdgeHandler[i].size(); j++)
+		{
+			MyMesh::VHandle VH_Last = BeSelectModel.model.mesh.from_vertex_handle(BoundaryHalfEdgeHandler[i][j % BoundaryHalfEdgeHandler[i].size()]);
+			MyMesh::VHandle VH_This = BeSelectModel.model.mesh.from_vertex_handle(BoundaryHalfEdgeHandler[i][(j + 1) % BoundaryHalfEdgeHandler[i].size()]);
+			MyMesh::VHandle VH_Next = BeSelectModel.model.mesh.from_vertex_handle(BoundaryHalfEdgeHandler[i][(j + 2) % BoundaryHalfEdgeHandler[i].size()]);
+
+			MyMesh::Point P_Last = BeSelectModel.model.mesh.point(VH_Last);
+			MyMesh::Point P_This = BeSelectModel.model.mesh.point(VH_This);
+			MyMesh::Point P_Next = BeSelectModel.model.mesh.point(VH_Next);
+			//是轉角
+			if (PointAngle(P_Last, P_Next, P_This) < 175)
+			{
+				EdgePointSet[i].push_back(P_This);
+			}
+		}
+	}
+
 	//HowToDraw
+	//產生一系列 只有邊界的mesh
+	for (int i = 0; i < BoundaryHalfEdgeHandler.size(); i++)
+	{
+		ALLModel.push_back(MeshObject());
+		ALLModel[i].model.mesh.clear();
+		ALLModel[i].model.mesh.ClearMesh();
+		ALLModel[i].model.mesh.request_vertex_texcoords2D();
+	}
+
+	for (int i = 0; i < BoundaryHalfEdgeHandler.size(); i++)
+	{
+		//set vertex
+		MyMesh::TexCoord2D TC;
+		TC[0] = 0.5;
+		TC[1] = 0.1;
+		std::vector<MyMesh::VertexHandle> VHnadleVector;
+
+		//全部點的線
+		/*for (int j = 0; j < BoundaryHalfEdgeHandler[i].size(); j++)
+		{
+			MyMesh::VHandle VH = BeSelectModel.model.mesh.from_vertex_handle(BoundaryHalfEdgeHandler[i][j]);
+			MyMesh::Point P = BeSelectModel.model.mesh.point(VH);
+			VHnadleVector.push_back(ALLModel[i].model.mesh.add_vertex(P));
+		}*/
+
+		//篩選出來的點
+		for (int j = 0; j < EdgePointSet[i].size(); j++)
+		{
+			MyMesh::Point P = EdgePointSet[i][j];
+			VHnadleVector.push_back(ALLModel[i].model.mesh.add_vertex(P));
+		}
+	}
+
+	//	std::vector<MyMesh::VertexHandle>  edge_vhandles;
+	//for (int i = 0; i < BoundaryHalfEdgeHandler.size(); i++)
+	//{
+	//	ALLModel[i].model.mesh.request_face_normals();
+	//	ALLModel[i].model.mesh.update_normals();
+	//	ALLModel[i].model.mesh.release_face_normals();
+	//	ALLModel[i].MY_LoadToShader();
+	//}
+
+
+	//saving File
+
+	//std::fstream EdgeObj;
+	//EdgeObj.open("./Dfile/EdgeModel.obj", ios::out);
+	//string Face_index = "";
+	//int NowVerticesCount = 1;
+	//for (int i = 0; i < ALLModel.size(); i++)
+	//{
+	//	/*ALLModel[i].model.mesh.request_face_normals();
+	//	ALLModel[i].model.mesh.update_normals();
+	//	ALLModel[i].model.mesh.release_face_normals();
+	//	ALLModel[i].MY_LoadToShader();*/
+
+	//	for (MyMesh::FIter FI = ALLModel[i].model.mesh.faces_begin(); FI != ALLModel[i].model.mesh.faces_end(); FI++)
+	//	{
+	//		std::vector<int> FVIndex;
+	//		MyMesh::FHandle FH = ALLModel[i].model.mesh.face_handle(FI->idx());
+	//		for (MyMesh::FVIter FVI = ALLModel[i].model.mesh.fv_begin(FH); FVI != ALLModel[i].model.mesh.fv_end(FH); FVI++)
+	//		{
+	//			FVIndex.push_back(FVI->idx() + NowVerticesCount);
+	//		}
+	//		Face_index += ("f " + std::to_string(FVIndex[0]) + " " + std::to_string(FVIndex[1]) + " " + std::to_string(FVIndex[2]) + "\n");
+	//	}
+
+	//	for (MyMesh::VIter VI = ALLModel[i].model.mesh.vertices_begin(); VI != ALLModel[i].model.mesh.vertices_end(); VI++)
+	//	{
+	//		MyMesh::VHandle VH = ALLModel[i].model.mesh.vertex_handle(VI->idx());
+	//		MyMesh::Point P = ALLModel[i].model.mesh.point(VH);
+	//		EdgeObj << "v " << P[0] << " " << P[1] << " " << P[2] << "\n";
+	//		NowVerticesCount++;
+	//	}
+	//}
+	//EdgeObj << Face_index;
+	//EdgeObj.close();
 
 
 }
@@ -1753,7 +1929,8 @@ void NewDetectRoof()
 
 	unsigned char* Colordata = new unsigned char[360000 * 3];
 	int* RawIdxdata = new int[360000];
-
+	float MaxDepth = -1100000;
+	float MinDepth = 1100000;
 	map<int, int> Idx;
 	map<int, double> IdxDepth;
 	std::map<int, std::vector<double>> ALL_Idx_Depth;
@@ -1766,8 +1943,6 @@ void NewDetectRoof()
 	ObjFile.open("./Dfile/NewModel.obj", ios::out);
 	//DepthFile.open("./Dfile/DepthFile.txt", ios::out);
 
-	float MaxDepth = -1100000;
-	float MinDepth = 1100000;
 
 	//depthFile << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
@@ -1860,16 +2035,15 @@ void NewDetectRoof()
 #endif // CREATE_FACE_DEBUG
 		if (ID->first != 0)
 		{
-			ALLModel.push_back(MeshObject());
-			ALLModel[ALLModel.size() - 1].model.mesh.clear();
-			ALLModel[ALLModel.size() - 1].model.mesh.ClearMesh();
-			ALLModel[ALLModel.size() - 1].model.mesh.request_vertex_texcoords2D();// _vertex_texcoords2D
+			//ALLModel.push_back(MeshObject());
+			//ALLModel[ALLModel.size() - 1].model.mesh.clear();
+			//ALLModel[ALLModel.size() - 1].model.mesh.ClearMesh();
+			//ALLModel[ALLModel.size() - 1].model.mesh.request_vertex_texcoords2D();// _vertex_texcoords2D
 			model.AddSelectedFace(ID->first - 1);
 		}
 	}
 	//找最高與最低
-	double DeepY = 1000000000000000;
-	double HeightY = -10000000000000000;
+
 	for (MyMesh::FIter FI = model.model.mesh.faces_begin(); FI != model.model.mesh.faces_end(); FI++)
 	{
 		MyMesh::FHandle FH = model.model.mesh.face_handle(FI->idx());
@@ -2202,8 +2376,8 @@ void NewDetectRoof()
 			MyMesh::Point P = ALLModel[i].model.mesh.point(VH);
 			ObjFile << "v " << P[0] << " " << P[1] << " " << P[2] << "\n";
 			NowVerticesCount++;
-		}
 	}
+}
 	ObjFile << Face_index;
 	ObjFile.close();
 #endif // MultiOBJ

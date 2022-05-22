@@ -204,7 +204,14 @@ void MeshObject::Render()
 {
 	glBindVertexArray(model.vao);
 	glDrawElements(GL_TRIANGLES, model.mesh.n_faces() * 3, GL_UNSIGNED_INT, 0);
+	//glDrawElements(GL_LINE_STRIP, model.mesh.n_faces() * 3, GL_UNSIGNED_INT, 0);
+
 	glBindVertexArray(0);
+}
+
+void MeshObject::LineRender()
+{
+
 }
 
 void MeshObject::RenderSelectedFace()
@@ -320,8 +327,5 @@ bool MeshObject::FaceToPoint()
 void MeshObject::MY_LoadToShader()
 {
 	model.LoadToShader(true);
-
-
-
 
 }
