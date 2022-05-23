@@ -53,8 +53,7 @@ MeshObject model;
 MeshObject BeSelectModel;
 
 std::vector<MeshObject> ALLModel;
-
-std::vector<MeshObject> SomeEdgeModel;
+std::vector<MeshObject> ClusterModel;
 
 vector<unsigned int> OuterPoint;
 vector<unsigned int> InnerPoint;
@@ -1918,6 +1917,42 @@ void caluBoundary()
 	//EdgeObj.close();
 
 
+}
+
+
+int FriendCount = 0;
+
+std::vector<std::vector<int>> FriendZone;
+
+void DFS(std::vector<std::vector<int>>& M, std::vector<bool>& visited, int i)
+{
+	visited[i] = true;
+	FriendZone[i].push_back(FriendCount);
+	for (int j = 0; j < M.size(); j++)
+	{
+		if (M[i][j] == 0 || visited[j] == true) continue;
+		DFS(M, visited, j);
+	}
+}
+
+int FindFriend(std::vector<std::vector<int>>& M)
+{
+	int n = M.size();
+	if (n == 0) return -1;
+	for (int i = 0; i < n; i++)
+	{
+		FriendZone.push_back(std::vector<int>());
+	}
+
+	std::vector<bool> visited(n, false);
+	for (int i = 0; i < n; i++)
+	{
+		if (visited[i] == true) continue;
+		DFS(M, visited, i);
+		FriendCount++;
+	}
+
+	return FriendCount;
 }
 
 void NewDetectRoof()

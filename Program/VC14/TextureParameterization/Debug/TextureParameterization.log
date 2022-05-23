@@ -105,4 +105,14 @@ c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\t
 c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(1987): warning C4244: '引數': 將 'float' 轉換為 'const int'，由於類型不同，可能導致資料遺失
 c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(1988): warning C4244: '引數': 將 'float' 轉換為 'const int'，由於類型不同，可能導致資料遺失
 c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(2024): warning C4018: '<': signed/unsigned 不相符
-  TextureParameterization.vcxproj -> C:\Users\User\Desktop\Mymesh\OpenMeshUV\Program\VC14\TextureParameterization\..\..\Assets\TextureParameterization.exe
+c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(2081): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
+          with
+          [
+              Scalar=float
+          ]
+c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(2082): warning C4244: '=': 將 'double' 轉換為 'Scalar'，由於類型不同，可能導致資料遺失
+          with
+          [
+              Scalar=float
+          ]
+  TextureParameterization.vcxproj -> C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\VC14\TextureParameterization\..\..\Assets\TextureParameterization.exe
