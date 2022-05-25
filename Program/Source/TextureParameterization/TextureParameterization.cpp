@@ -65,6 +65,9 @@ float TextureX = 0;
 float TextureY = 0;
 float TexRotate = 0;
 
+
+
+// use by Roof thing============================================
 vector<vector<int>> adjmatrix;
 map<int, int > ClusterList;
 int NowShow = 0;
@@ -74,9 +77,14 @@ vector <vector<int>> ffconnect;
 double** colormap = new double* [COLORMAP_SIZE];
 int Showwwwwwwwww = 0;
 
+int FriendCount = 0;
+std::vector<std::vector<int>> FriendZone;
+std::map<int, int> Idx;
+
 double DeepY = 1000000000000000;
 double HeightY = -10000000000000000;
 bool ShowOModel = true;
+// use by Roof thing============================================
 
 
 unsigned int textureID;
@@ -184,6 +192,10 @@ unsigned int loadTexture(std::string path, int imageType);
 void magic();
 void magic_delete();
 
+
+
+void DFS(std::vector<std::vector<int>>& M, std::vector<bool>& visited, int i);
+int FindFriend(std::vector<std::vector<int>>& M);
 void detectRoof();
 void caluBoundary();
 void NewDetectRoof();
@@ -208,11 +220,11 @@ void SetupGUI()
 
 
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
-	modelNames.push_back("Ahole.obj");
 	modelNames.push_back("gta04_dt1_20_build2_high.obj");
+	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
+	modelNames.push_back("Ahole.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
-	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("WorldBuilding02_french_Arc_de_Triomphe.obj");
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
@@ -1747,16 +1759,100 @@ void magic_delete()
 	OuterLengh = 0;
 }
 
+
+void DFS(std::vector<std::vector<int>>& M, std::vector<bool>& visited, int i)
+{
+	visited[i] = true;
+	FriendZone[i].push_back(FriendCount);
+	for (int j = 0; j < M.size(); j++)
+	{
+		if (M[i][j] == 0 || visited[j] == true) continue;
+		DFS(M, visited, j);
+	}
+}
+int FindFriend(std::vector<std::vector<int>>& M)
+{
+	int n = M.size();
+	if (n == 0) return -1;
+	for (int i = 0; i < n; i++)
+	{
+		FriendZone.push_back(std::vector<int>());
+	}
+
+	std::vector<bool> visited(n, false);
+	for (int i = 0; i < n; i++)
+	{
+		if (visited[i] == true) continue;
+		DFS(M, visited, i);
+		FriendCount++;
+	}
+
+	return FriendCount;
+}
+
 void detectRoof()
 {
 
 }
 
+//針對兩個面，直接對應點的ID
+bool IsFaceConnect(int ID_X, int ID_Y)
+{
+	MyMesh::FHandle FH_X = BeSelectModel.model.mesh.face_handle(ID_X);
+	MyMesh::FHandle FH_Y = BeSelectModel.model.mesh.face_handle(ID_Y);
+	int ConnectPointCount = 0;
+	for (MyMesh::FVIter FVI_X = BeSelectModel.model.mesh.fv_begin(FH_X); FVI_X != BeSelectModel.model.mesh.fv_end(FH_X); ++FVI_X)
+	{
+		for (MyMesh::FVIter FVI_Y = BeSelectModel.model.mesh.fv_begin(FH_Y); FVI_Y != BeSelectModel.model.mesh.fv_end(FH_Y); ++FVI_Y)
+		{
+			if (FVI_X->idx() == FVI_Y->idx())
+			{
+				ConnectPointCount++;
+			}
+			if (ConnectPointCount == 2)
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+//use Find friend algothim
 void MergeBoundary()
 {
+	//產生朋友矩陣
+	//用ID產生
+	std::vector<std::vector<int>> M;
+
+	for (map<int, int>::iterator ID_X = Idx.begin(); ID_X != Idx.end(); ID_X++)
+	{
+		M.push_back(std::vector<int>(Idx.size()));
+		for (map<int, int>::iterator ID_Y = Idx.begin(); ID_Y != Idx.end(); ID_Y++)
+		{
+			//如果兩個有相連
+			if (ID_X->first != ID_Y->first && IsFaceConnect(ID_X->first, ID_Y->first))
+			{
+				M[ID_X->first][ID_Y->first] = 1;
+				M[ID_Y->first][ID_X->first] = 1;
+			}
+			else
+			{
+				M[ID_X->first][ID_Y->first] = 0;
+				M[ID_Y->first][ID_X->first] = 0;
+			}
+		}
+
+	}
+
+	//產生完矩陣
+
+
+
 
 }
 
+//use halfedge find bounding
 void caluBoundary()
 {
 	//for all vertex find convel
@@ -1919,42 +2015,6 @@ void caluBoundary()
 
 }
 
-
-int FriendCount = 0;
-
-std::vector<std::vector<int>> FriendZone;
-
-void DFS(std::vector<std::vector<int>>& M, std::vector<bool>& visited, int i)
-{
-	visited[i] = true;
-	FriendZone[i].push_back(FriendCount);
-	for (int j = 0; j < M.size(); j++)
-	{
-		if (M[i][j] == 0 || visited[j] == true) continue;
-		DFS(M, visited, j);
-	}
-}
-
-int FindFriend(std::vector<std::vector<int>>& M)
-{
-	int n = M.size();
-	if (n == 0) return -1;
-	for (int i = 0; i < n; i++)
-	{
-		FriendZone.push_back(std::vector<int>());
-	}
-
-	std::vector<bool> visited(n, false);
-	for (int i = 0; i < n; i++)
-	{
-		if (visited[i] == true) continue;
-		DFS(M, visited, i);
-		FriendCount++;
-	}
-
-	return FriendCount;
-}
-
 void NewDetectRoof()
 {
 	/*float DepthMap[600][600] = { 0 };
@@ -1966,7 +2026,6 @@ void NewDetectRoof()
 	int* RawIdxdata = new int[360000];
 	float MaxDepth = -1100000;
 	float MinDepth = 1100000;
-	map<int, int> Idx;
 	map<int, double> IdxDepth;
 	std::map<int, std::vector<double>> ALL_Idx_Depth;
 	std::fstream ObjFile;
@@ -2105,8 +2164,8 @@ void NewDetectRoof()
 	std::map<int, int> VectorSerise;
 	std::vector <MyMesh::VertexHandle> vhandle;
 	MyMesh::TexCoord2D TC;
-	TC[0] = 1;
-	TC[1] = 0;
+	TC[0] = 0;
+	TC[1] = 1;
 	BeSelectModel.model.mesh.request_vertex_texcoords2D();
 	//直接連接依照每個面，建造向下bounding box
 	for (map<int, int>::iterator ID = Idx.begin(); ID != Idx.end(); ID++)
