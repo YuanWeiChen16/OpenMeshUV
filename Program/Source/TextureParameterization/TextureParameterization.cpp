@@ -81,6 +81,10 @@ int FriendCount = 0;
 std::vector<std::vector<int>> FriendZone;
 std::map<int, int> Idx;
 
+
+std::vector<std::vector<MyMesh::Point>> BoundingPoint;
+std::vector<std::vector<double>> BoundingPointheight;
+
 double DeepY = 1000000000000000;
 double HeightY = -10000000000000000;
 bool ShowOModel = true;
@@ -192,10 +196,9 @@ unsigned int loadTexture(std::string path, int imageType);
 void magic();
 void magic_delete();
 
-
-
 void DFS(std::vector<std::vector<int>>& M, std::vector<bool>& visited, int i);
 int FindFriend(std::vector<std::vector<int>>& M);
+void MergeBoundary();
 void detectRoof();
 void caluBoundary();
 void NewDetectRoof();
@@ -220,8 +223,8 @@ void SetupGUI()
 
 
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
-	modelNames.push_back("gta04_dt1_20_build2_high.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
+	modelNames.push_back("gta04_dt1_20_build2_high.obj");
 	modelNames.push_back("Ahole.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
@@ -511,13 +514,21 @@ void RenderMeshWindow()
 			glBindBuffer(GL_ARRAY_BUFFER, vboPoint);
 			std::vector<MyMesh::Point> verticesTD;
 			verticesTD.reserve(ALLModel[i].model.mesh.n_vertices() * 2);
+			int PCount = 0;
 			for (MyMesh::VertexIter v_it = ALLModel[i].model.mesh.vertices_begin(); v_it != ALLModel[i].model.mesh.vertices_end(); ++v_it)
 			{
 				verticesTD.push_back(ALLModel[i].model.mesh.point(*v_it));
 
 				MyMesh::Point p = ALLModel[i].model.mesh.point(*v_it);
-				p[1] = DeepY;
+
+				if (BoundingPointheight[i][PCount] < 199)
+				{
+					p[1] = BoundingPointheight[i][PCount];
+				}
+
+
 				verticesTD.push_back(p);
+				PCount++;
 			}
 
 			glBufferData(GL_ARRAY_BUFFER, sizeof(MyMesh::Point) * verticesTD.size(), &verticesTD[0], GL_STATIC_DRAW);
@@ -1229,6 +1240,7 @@ void MyKeyboard(unsigned char key, int x, int y)
 	{
 		NewDetectRoof();
 		caluBoundary();
+		MergeBoundary();
 	}
 	else if (key == 'o')
 	{
@@ -1759,42 +1771,6 @@ void magic_delete()
 	OuterLengh = 0;
 }
 
-
-void DFS(std::vector<std::vector<int>>& M, std::vector<bool>& visited, int i)
-{
-	visited[i] = true;
-	FriendZone[i].push_back(FriendCount);
-	for (int j = 0; j < M.size(); j++)
-	{
-		if (M[i][j] == 0 || visited[j] == true) continue;
-		DFS(M, visited, j);
-	}
-}
-int FindFriend(std::vector<std::vector<int>>& M)
-{
-	int n = M.size();
-	if (n == 0) return -1;
-	for (int i = 0; i < n; i++)
-	{
-		FriendZone.push_back(std::vector<int>());
-	}
-
-	std::vector<bool> visited(n, false);
-	for (int i = 0; i < n; i++)
-	{
-		if (visited[i] == true) continue;
-		DFS(M, visited, i);
-		FriendCount++;
-	}
-
-	return FriendCount;
-}
-
-void detectRoof()
-{
-
-}
-
 //針對兩個面，直接對應點的ID
 bool IsFaceConnect(int ID_X, int ID_Y)
 {
@@ -1817,39 +1793,99 @@ bool IsFaceConnect(int ID_X, int ID_Y)
 	}
 	return false;
 }
+//DFS尋找
+void DFS(std::vector<std::vector<int>>& M, std::vector<bool>& visited, int i)
+{
+	visited[i] = true;
+	FriendZone[FriendCount].push_back(i);
+	//尋找這個人的朋友
+	for (int j = 0;j<M.size();j++)
+	{
+		//沒有交集或已經被找過
+		if (M[i][j] == 0 || visited[j] == true) continue;
+		//繼續尋找
+		DFS(M, visited, j);
+	}
+}
+//分類
+int FindFriend(std::vector<std::vector<int>>& M)
+{
+	int n = M.size();
+	if (n == 0) return -1;
+
+	//有沒有被找過
+	std::vector<bool> visited(n,false);
+	//
+	for (int i=0;i<n;i++)
+	{
+		FriendZone.push_back(std::vector<int>());
+		//如果被找過
+		if (visited[i] == true) continue;
+		//沒被找過
+		DFS(M, visited,i);
+		FriendCount++;
+	}
+
+	return FriendCount;
+}
+//無
+void detectRoof()
+{
+
+}
 
 //use Find friend algothim
 void MergeBoundary()
 {
 	//產生朋友矩陣
 	//用ID產生
+	int n_faces = BeSelectModel.model.mesh.n_faces();
 	std::vector<std::vector<int>> M;
+	M.resize(n_faces);
 
-	for (map<int, int>::iterator ID_X = Idx.begin(); ID_X != Idx.end(); ID_X++)
+	for (int i = 0; i < Idx.size(); i++)
 	{
-		M.push_back(std::vector<int>(Idx.size()));
-		for (map<int, int>::iterator ID_Y = Idx.begin(); ID_Y != Idx.end(); ID_Y++)
+		M[i].resize(Idx.size());
+	}
+	for (int i=0;i< n_faces;i++)
+	{
+		for (int j = 0; j < n_faces; j++)
 		{
 			//如果兩個有相連
-			if (ID_X->first != ID_Y->first && IsFaceConnect(ID_X->first, ID_Y->first))
+			if (i != j && IsFaceConnect(i, j))
 			{
-				M[ID_X->first][ID_Y->first] = 1;
-				M[ID_Y->first][ID_X->first] = 1;
+				M[i][j] = 1;
+				M[j][i] = 1;
 			}
 			else
 			{
-				M[ID_X->first][ID_Y->first] = 0;
-				M[ID_Y->first][ID_X->first] = 0;
+				M[i][j] = 0;
+				M[j][i] = 0;
 			}
 		}
-
 	}
 
 	//產生完矩陣
+	int ClusterCount = FindFriend(M);
+	cout <<"Cluster "<< ClusterCount << "\n";
+	//重新填色
+	for (int i = 0; i < FriendZone.size(); i++)
+	{
+		MyMesh::TexCoord2D TC;
+		TC[0] = colormap[i][0];
+		TC[1] = colormap[i][1];
+		for (int j = 0; j < FriendZone[i].size(); j++)
+		{
+			MyMesh::FHandle FH = BeSelectModel.model.mesh.face_handle(FriendZone[i][j]);
+			for (MyMesh::FVIter FVI = BeSelectModel.model.mesh.fv_begin(FH);FVI!= BeSelectModel.model.mesh.fv_end(FH);FVI++)
+			{
+				MyMesh::VHandle VH = BeSelectModel.model.mesh.vertex_handle(FVI->idx());
+				BeSelectModel.model.mesh.set_texcoord2D(VH,TC);
+			}
+		}
+	}
 
-
-
-
+	BeSelectModel.MY_LoadToShader();
 }
 
 //use halfedge find bounding
@@ -1933,6 +1969,58 @@ void caluBoundary()
 		}
 	}
 
+	//找每個點的深度
+	//尋找點座標範圍內 xz相近  的點
+	//找出內群裡最高的
+	double diff = 0.01;
+
+
+	BoundingPointheight.resize(EdgePointSet.size());
+	for (int i = 0; i < EdgePointSet.size(); i++)
+	{
+		BoundingPointheight[i].resize(EdgePointSet[i].size());
+		for (int j = 0; j < EdgePointSet[i].size(); j++)
+		{
+			BoundingPointheight[i][j] = DeepY;
+		}
+	}
+
+	for (int i = 0; i < EdgePointSet.size(); i++)
+	{
+		for (int j = 0; j < EdgePointSet[i].size(); j++)
+		{
+			//已經找過
+			if (BoundingPointheight[i][j] > 199)
+			{
+				continue;
+			}
+			MyMesh::Point P_Mid = EdgePointSet[i][j];
+
+			for (int k = 0; k < EdgePointSet.size(); k++)
+			{
+				for (int LL = 0; LL < EdgePointSet[k].size(); LL++)
+				{
+					if (i != k)
+					{
+						MyMesh::Point P_Compare = EdgePointSet[k][LL];
+						double Distence = sqrt(pow(P_Compare[0] - P_Mid[0], 2) + pow(P_Compare[2] - P_Mid[2], 2));
+						if (Distence < diff)
+						{
+							if (P_Compare[1] < P_Mid[1])
+							{
+								if (P_Compare[1] > BoundingPointheight[i][j])
+								{
+									BoundingPointheight[i][j] = P_Compare[1];
+									BoundingPointheight[k][LL] = 200;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	//HowToDraw
 	//產生一系列 只有邊界的mesh
 	for (int i = 0; i < BoundaryHalfEdgeHandler.size(); i++)
@@ -1966,52 +2054,6 @@ void caluBoundary()
 			VHnadleVector.push_back(ALLModel[i].model.mesh.add_vertex(P));
 		}
 	}
-
-	//	std::vector<MyMesh::VertexHandle>  edge_vhandles;
-	//for (int i = 0; i < BoundaryHalfEdgeHandler.size(); i++)
-	//{
-	//	ALLModel[i].model.mesh.request_face_normals();
-	//	ALLModel[i].model.mesh.update_normals();
-	//	ALLModel[i].model.mesh.release_face_normals();
-	//	ALLModel[i].MY_LoadToShader();
-	//}
-
-
-	//saving File
-
-	//std::fstream EdgeObj;
-	//EdgeObj.open("./Dfile/EdgeModel.obj", ios::out);
-	//string Face_index = "";
-	//int NowVerticesCount = 1;
-	//for (int i = 0; i < ALLModel.size(); i++)
-	//{
-	//	/*ALLModel[i].model.mesh.request_face_normals();
-	//	ALLModel[i].model.mesh.update_normals();
-	//	ALLModel[i].model.mesh.release_face_normals();
-	//	ALLModel[i].MY_LoadToShader();*/
-
-	//	for (MyMesh::FIter FI = ALLModel[i].model.mesh.faces_begin(); FI != ALLModel[i].model.mesh.faces_end(); FI++)
-	//	{
-	//		std::vector<int> FVIndex;
-	//		MyMesh::FHandle FH = ALLModel[i].model.mesh.face_handle(FI->idx());
-	//		for (MyMesh::FVIter FVI = ALLModel[i].model.mesh.fv_begin(FH); FVI != ALLModel[i].model.mesh.fv_end(FH); FVI++)
-	//		{
-	//			FVIndex.push_back(FVI->idx() + NowVerticesCount);
-	//		}
-	//		Face_index += ("f " + std::to_string(FVIndex[0]) + " " + std::to_string(FVIndex[1]) + " " + std::to_string(FVIndex[2]) + "\n");
-	//	}
-
-	//	for (MyMesh::VIter VI = ALLModel[i].model.mesh.vertices_begin(); VI != ALLModel[i].model.mesh.vertices_end(); VI++)
-	//	{
-	//		MyMesh::VHandle VH = ALLModel[i].model.mesh.vertex_handle(VI->idx());
-	//		MyMesh::Point P = ALLModel[i].model.mesh.point(VH);
-	//		EdgeObj << "v " << P[0] << " " << P[1] << " " << P[2] << "\n";
-	//		NowVerticesCount++;
-	//	}
-	//}
-	//EdgeObj << Face_index;
-	//EdgeObj.close();
-
 
 }
 
@@ -2135,7 +2177,7 @@ void NewDetectRoof()
 			//ALLModel[ALLModel.size() - 1].model.mesh.request_vertex_texcoords2D();// _vertex_texcoords2D
 			model.AddSelectedFace(ID->first - 1);
 		}
-	}
+}
 	//找最高與最低
 
 	for (MyMesh::FIter FI = model.model.mesh.faces_begin(); FI != model.model.mesh.faces_end(); FI++)
@@ -2470,8 +2512,8 @@ void NewDetectRoof()
 			MyMesh::Point P = ALLModel[i].model.mesh.point(VH);
 			ObjFile << "v " << P[0] << " " << P[1] << " " << P[2] << "\n";
 			NowVerticesCount++;
+		}
 	}
-}
 	ObjFile << Face_index;
 	ObjFile.close();
 #endif // MultiOBJ
@@ -2498,4 +2540,9 @@ void NewDetectRoof()
 
 	Showwwwwwwwww = 1000;
 	//model.AddSelectedFace(0);
+}
+
+void Create_FaceCluster_BoundingBox()
+{
+	
 }

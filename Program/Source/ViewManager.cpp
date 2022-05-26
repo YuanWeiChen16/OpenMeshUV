@@ -284,7 +284,8 @@ void ViewManager::wheelEvent(int direction)
 void ViewManager::Zoom(float distance)
 {
 	zoom *= (1.0f + 0.05f * distance);
-	zoom = clamp(0.1f, zoom, 3.0f);
+	//zoom = clamp(0.1f, zoom, 3.0f); 
+	zoom = clamp(0.1f, zoom, 10.0f);
 }
 
 /**
@@ -337,12 +338,6 @@ void ViewManager::SetDown()
 	vec3 o(0, 0, 1);
 	rotationMatrix = rotate(rotationMatrix, (float)angle, cross(o, v));
 }
-
-
-
-
-
-
 
 /**
 * 重設相機的設定。
