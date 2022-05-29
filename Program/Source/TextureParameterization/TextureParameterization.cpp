@@ -223,9 +223,9 @@ void SetupGUI()
 
 
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
+	modelNames.push_back("Ahole.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("gta04_dt1_20_build2_high.obj");
-	modelNames.push_back("Ahole.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
@@ -481,6 +481,8 @@ void RenderMeshWindow()
 		//drawModelShader.DrawTexCoord(false);
 		drawModelShader.SetNormalType(false);
 
+		double bsize = 0.05;
+		int LineWeith = 5;
 		for (int i = 0; i < ALLModel.size(); i++)
 		{
 			ALLModel[i].Render();
@@ -490,25 +492,55 @@ void RenderMeshWindow()
 			vertices.reserve(ALLModel[i].model.mesh.n_vertices());
 			for (MyMesh::VertexIter v_it = ALLModel[i].model.mesh.vertices_begin(); v_it != ALLModel[i].model.mesh.vertices_end(); ++v_it)
 			{
-				vertices.push_back(ALLModel[i].model.mesh.point(*v_it));
+				MyMesh::Point P = ALLModel[i].model.mesh.point(*v_it);
+				P[1] -= bsize;
+				vertices.push_back(P);
 			}
 
 			glBufferData(GL_ARRAY_BUFFER, sizeof(MyMesh::Point) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
 			//glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3), glm::value_ptr(worldPos), GL_STATIC_DRAW);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 			glEnableVertexAttribArray(0);
-			glm::vec4 pointColor(1.0, 0.0, 1.0, 1.0);
+			glm::vec4 pointColor(1.0, 1.0, 0.0, 1.0);
 			drawPointShader.Enable();
 			drawPointShader.SetMVMat(mvMat);
 			drawPointShader.SetPMat(pMat);
 			drawPointShader.SetPointColor(pointColor);
 			//drawPointShader.SetPointSize(15.0);
-			glLineWidth(2);
+			glLineWidth(LineWeith);
 			//glDrawElements(GL_TRIANGLES, model.mesh.n_faces() * 3, GL_UNSIGNED_INT, 0);
 			glDrawArrays(GL_LINE_LOOP, 0, vertices.size());
 			drawPointShader.Disable();
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+
+
+
+			glBindBuffer(GL_ARRAY_BUFFER, vboPoint);
+			std::vector<MyMesh::Point> vertices2;
+			vertices2.reserve(ALLModel[i].model.mesh.n_vertices());
+			for (MyMesh::VertexIter v_it = ALLModel[i].model.mesh.vertices_begin(); v_it != ALLModel[i].model.mesh.vertices_end(); ++v_it)
+			{
+				MyMesh::Point P = ALLModel[i].model.mesh.point(*v_it);
+				P[1] += bsize;
+				vertices2.push_back(P);
+			}
+
+			glBufferData(GL_ARRAY_BUFFER, sizeof(MyMesh::Point) * vertices2.size(), &vertices2[0], GL_STATIC_DRAW);
+			//glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3), glm::value_ptr(worldPos), GL_STATIC_DRAW);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(0);
+			pointColor = vec4(1.0, 1.0, 0.0, 1.0);
+			drawPointShader.Enable();
+			drawPointShader.SetMVMat(mvMat);
+			drawPointShader.SetPMat(pMat);
+			drawPointShader.SetPointColor(pointColor);
+			//drawPointShader.SetPointSize(15.0);
+			glLineWidth(LineWeith);
+			//glDrawElements(GL_TRIANGLES, model.mesh.n_faces() * 3, GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_LINE_LOOP, 0, vertices2.size());
+			drawPointShader.Disable();
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 			//Down Ray
 			glBindBuffer(GL_ARRAY_BUFFER, vboPoint);
@@ -517,14 +549,21 @@ void RenderMeshWindow()
 			int PCount = 0;
 			for (MyMesh::VertexIter v_it = ALLModel[i].model.mesh.vertices_begin(); v_it != ALLModel[i].model.mesh.vertices_end(); ++v_it)
 			{
-				verticesTD.push_back(ALLModel[i].model.mesh.point(*v_it));
 
 				MyMesh::Point p = ALLModel[i].model.mesh.point(*v_it);
 
-				if (BoundingPointheight[i][PCount] < 199)
+				p[1] += bsize;
+
+				verticesTD.push_back(p);
+
+
+				p[1] -= (bsize*2);
+
+
+				/*if (BoundingPointheight[i][PCount] < 199)
 				{
 					p[1] = BoundingPointheight[i][PCount];
-				}
+				}*/
 
 
 				verticesTD.push_back(p);
@@ -535,13 +574,13 @@ void RenderMeshWindow()
 			//glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3), glm::value_ptr(worldPos), GL_STATIC_DRAW);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 			glEnableVertexAttribArray(0);
-			glm::vec4 lineColor(1.0, 0.0, 0.0, 1.0);
+			glm::vec4 lineColor(1.0, 1.0, 0.0, 1.0);
 			drawPointShader.Enable();
 			drawPointShader.SetMVMat(mvMat);
 			drawPointShader.SetPMat(pMat);
 			drawPointShader.SetPointColor(lineColor);
 			//drawPointShader.SetPointSize(15.0);
-			glLineWidth(2);
+			glLineWidth(LineWeith);
 			//glDrawElements(GL_TRIANGLES, model.mesh.n_faces() * 3, GL_UNSIGNED_INT, 0);
 			glDrawArrays(GL_LINES, 0, verticesTD.size());
 			drawPointShader.Disable();
