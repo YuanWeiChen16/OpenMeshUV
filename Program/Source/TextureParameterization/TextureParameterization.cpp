@@ -222,15 +222,15 @@ void SetupGUI()
 
 
 
+	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
-	modelNames.push_back("Ahole.obj");
-	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
-	modelNames.push_back("gta04_dt1_20_build2_high.obj");
-	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
+	modelNames.push_back("gta04_dt1_20_build2_high.obj");
+	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
+	modelNames.push_back("Ahole.obj");
+	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("WorldBuilding02_french_Arc_de_Triomphe.obj");
-	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
 
 
 
@@ -493,7 +493,7 @@ void RenderMeshWindow()
 			for (MyMesh::VertexIter v_it = ALLModel[i].model.mesh.vertices_begin(); v_it != ALLModel[i].model.mesh.vertices_end(); ++v_it)
 			{
 				MyMesh::Point P = ALLModel[i].model.mesh.point(*v_it);
-				P[1] -= bsize;
+				//P[1] -= bsize;
 				vertices.push_back(P);
 			}
 
@@ -501,7 +501,7 @@ void RenderMeshWindow()
 			//glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3), glm::value_ptr(worldPos), GL_STATIC_DRAW);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 			glEnableVertexAttribArray(0);
-			glm::vec4 pointColor(1.0, 1.0, 0.0, 1.0);
+			glm::vec4 pointColor(1.0, 0.0, 0.0, 1.0);
 			drawPointShader.Enable();
 			drawPointShader.SetMVMat(mvMat);
 			drawPointShader.SetPMat(pMat);
@@ -516,31 +516,31 @@ void RenderMeshWindow()
 
 
 
-			glBindBuffer(GL_ARRAY_BUFFER, vboPoint);
-			std::vector<MyMesh::Point> vertices2;
-			vertices2.reserve(ALLModel[i].model.mesh.n_vertices());
-			for (MyMesh::VertexIter v_it = ALLModel[i].model.mesh.vertices_begin(); v_it != ALLModel[i].model.mesh.vertices_end(); ++v_it)
-			{
-				MyMesh::Point P = ALLModel[i].model.mesh.point(*v_it);
-				P[1] += bsize;
-				vertices2.push_back(P);
-			}
+			//glBindBuffer(GL_ARRAY_BUFFER, vboPoint);
+			//std::vector<MyMesh::Point> vertices2;
+			//vertices2.reserve(ALLModel[i].model.mesh.n_vertices());
+			//for (MyMesh::VertexIter v_it = ALLModel[i].model.mesh.vertices_begin(); v_it != ALLModel[i].model.mesh.vertices_end(); ++v_it)
+			//{
+			//	MyMesh::Point P = ALLModel[i].model.mesh.point(*v_it);
+			//	//P[1] += bsize;
+			//	vertices2.push_back(P);
+			//}
 
-			glBufferData(GL_ARRAY_BUFFER, sizeof(MyMesh::Point) * vertices2.size(), &vertices2[0], GL_STATIC_DRAW);
-			//glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3), glm::value_ptr(worldPos), GL_STATIC_DRAW);
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-			glEnableVertexAttribArray(0);
-			pointColor = vec4(1.0, 1.0, 0.0, 1.0);
-			drawPointShader.Enable();
-			drawPointShader.SetMVMat(mvMat);
-			drawPointShader.SetPMat(pMat);
-			drawPointShader.SetPointColor(pointColor);
-			//drawPointShader.SetPointSize(15.0);
-			glLineWidth(LineWeith);
-			//glDrawElements(GL_TRIANGLES, model.mesh.n_faces() * 3, GL_UNSIGNED_INT, 0);
-			glDrawArrays(GL_LINE_LOOP, 0, vertices2.size());
-			drawPointShader.Disable();
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			//glBufferData(GL_ARRAY_BUFFER, sizeof(MyMesh::Point) * vertices2.size(), &vertices2[0], GL_STATIC_DRAW);
+			////glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3), glm::value_ptr(worldPos), GL_STATIC_DRAW);
+			//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			//glEnableVertexAttribArray(0);
+			//pointColor = vec4(1.0, 1.0, 0.0, 1.0);
+			//drawPointShader.Enable();
+			//drawPointShader.SetMVMat(mvMat);
+			//drawPointShader.SetPMat(pMat);
+			//drawPointShader.SetPointColor(pointColor);
+			////drawPointShader.SetPointSize(15.0);
+			//glLineWidth(LineWeith);
+			////glDrawElements(GL_TRIANGLES, model.mesh.n_faces() * 3, GL_UNSIGNED_INT, 0);
+			//glDrawArrays(GL_LINE_LOOP, 0, vertices2.size());
+			//drawPointShader.Disable();
+			//glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 			//Down Ray
 			glBindBuffer(GL_ARRAY_BUFFER, vboPoint);
@@ -552,19 +552,18 @@ void RenderMeshWindow()
 
 				MyMesh::Point p = ALLModel[i].model.mesh.point(*v_it);
 
-				p[1] += bsize;
+				//p[1] += bsize;
 
 				verticesTD.push_back(p);
 
 
-				p[1] -= (bsize*2);
+				//p[1] -= (bsize*2);
 
 
-				/*if (BoundingPointheight[i][PCount] < 199)
+				if (BoundingPointheight[i][PCount] < 199)
 				{
 					p[1] = BoundingPointheight[i][PCount];
-				}*/
-
+				}
 
 				verticesTD.push_back(p);
 				PCount++;
@@ -1838,7 +1837,7 @@ void DFS(std::vector<std::vector<int>>& M, std::vector<bool>& visited, int i)
 	visited[i] = true;
 	FriendZone[FriendCount].push_back(i);
 	//尋找這個人的朋友
-	for (int j = 0;j<M.size();j++)
+	for (int j = 0; j < M.size(); j++)
 	{
 		//沒有交集或已經被找過
 		if (M[i][j] == 0 || visited[j] == true) continue;
@@ -1853,15 +1852,15 @@ int FindFriend(std::vector<std::vector<int>>& M)
 	if (n == 0) return -1;
 
 	//有沒有被找過
-	std::vector<bool> visited(n,false);
+	std::vector<bool> visited(n, false);
 	//
-	for (int i=0;i<n;i++)
+	for (int i = 0; i < n; i++)
 	{
 		FriendZone.push_back(std::vector<int>());
 		//如果被找過
 		if (visited[i] == true) continue;
 		//沒被找過
-		DFS(M, visited,i);
+		DFS(M, visited, i);
 		FriendCount++;
 	}
 
@@ -1886,7 +1885,7 @@ void MergeBoundary()
 	{
 		M[i].resize(Idx.size());
 	}
-	for (int i=0;i< n_faces;i++)
+	for (int i = 0; i < n_faces; i++)
 	{
 		for (int j = 0; j < n_faces; j++)
 		{
@@ -1906,7 +1905,7 @@ void MergeBoundary()
 
 	//產生完矩陣
 	int ClusterCount = FindFriend(M);
-	cout <<"Cluster "<< ClusterCount << "\n";
+	cout << "Cluster " << ClusterCount << "\n";
 	//重新填色
 	for (int i = 0; i < FriendZone.size(); i++)
 	{
@@ -1916,10 +1915,10 @@ void MergeBoundary()
 		for (int j = 0; j < FriendZone[i].size(); j++)
 		{
 			MyMesh::FHandle FH = BeSelectModel.model.mesh.face_handle(FriendZone[i][j]);
-			for (MyMesh::FVIter FVI = BeSelectModel.model.mesh.fv_begin(FH);FVI!= BeSelectModel.model.mesh.fv_end(FH);FVI++)
+			for (MyMesh::FVIter FVI = BeSelectModel.model.mesh.fv_begin(FH); FVI != BeSelectModel.model.mesh.fv_end(FH); FVI++)
 			{
 				MyMesh::VHandle VH = BeSelectModel.model.mesh.vertex_handle(FVI->idx());
-				BeSelectModel.model.mesh.set_texcoord2D(VH,TC);
+				BeSelectModel.model.mesh.set_texcoord2D(VH, TC);
 			}
 		}
 	}
@@ -2086,13 +2085,96 @@ void caluBoundary()
 			VHnadleVector.push_back(ALLModel[i].model.mesh.add_vertex(P));
 		}*/
 
+
+		int PointLenght = EdgePointSet[i].size();
 		//篩選出來的點
-		for (int j = 0; j < EdgePointSet[i].size(); j++)
+		for (int j = 0; j < PointLenght; j++)
 		{
 			MyMesh::Point P = EdgePointSet[i][j];
+			P[1] = HeightY;
 			VHnadleVector.push_back(ALLModel[i].model.mesh.add_vertex(P));
 		}
+		//向下拉出的點
+		for (int j = 0; j < PointLenght; j++)
+		{
+			MyMesh::Point P = EdgePointSet[i][j];
+			/*if (BoundingPointheight[i][j] < 199)
+			{
+				P[1] = BoundingPointheight[i][j];
+			}*/
+			P[1] = DeepY;
+			VHnadleVector.push_back(ALLModel[i].model.mesh.add_vertex(P));
+		}
+		std::vector<MyMesh::VertexHandle> face_vhandles;
+		//for loop
+
+		for (int j = 0; j < PointLenght; j++)
+		{
+			//face 0 down
+			face_vhandles.clear();
+			face_vhandles.push_back(VHnadleVector[j]);
+			face_vhandles.push_back(VHnadleVector[(j + 1)% PointLenght]);
+			face_vhandles.push_back(VHnadleVector[j + PointLenght]);
+			ALLModel[i].model.mesh.add_face(face_vhandles);
+			//cout << "FACE " << ID->first - 1 << "FACE0 Down Is be Rebuild" << endl;
+			//face 0 up
+			face_vhandles.clear();
+			face_vhandles.push_back(VHnadleVector[(j + 1) % PointLenght + PointLenght]);
+			face_vhandles.push_back(VHnadleVector[j + PointLenght]);
+			face_vhandles.push_back(VHnadleVector[(j + 1) % PointLenght]);
+			ALLModel[i].model.mesh.add_face(face_vhandles);
+			//cout << "FACE " << ID->first - 1 << "FACE0 UP Is be Rebuild" << endl;
+		}
 	}
+
+	//saving OBJ
+	std::fstream ObjFile;
+	ObjFile.open("./Dfile/NewModel.obj", ios::out);
+	int VCount = BeSelectModel.model.mesh.n_vertices();
+	int NowVerticesCount = 1;
+	std::string Face_string = "";
+	for (MyMesh::VIter VI = BeSelectModel.model.mesh.vertices_begin(); VI != BeSelectModel.model.mesh.vertices_end(); VI++)
+	{
+		MyMesh::VHandle VH = BeSelectModel.model.mesh.vertex_handle(VI->idx());
+		MyMesh::Point P = BeSelectModel.model.mesh.point(VH);
+		ObjFile << "v " << P[0] << " " << HeightY << " " << P[2] << "\n";
+	}
+	for (MyMesh::FIter FI = BeSelectModel.model.mesh.faces_begin(); FI != BeSelectModel.model.mesh.faces_end(); FI++)
+	{
+		std::vector<int> FVIndex;
+		MyMesh::FHandle FH = BeSelectModel.model.mesh.face_handle(FI->idx());
+		for (MyMesh::FVIter FVI = BeSelectModel.model.mesh.fv_begin(FH); FVI != BeSelectModel.model.mesh.fv_end(FH); FVI++)
+		{
+			FVIndex.push_back(FVI->idx() + 1);
+		}
+		Face_string += ("f " + std::to_string(FVIndex[0]) + " " + std::to_string(FVIndex[1]) + " " + std::to_string(FVIndex[2]) + "\n");
+	}
+
+	for (int i = 0; i < BoundaryHalfEdgeHandler.size(); i++)
+	{
+		for (MyMesh::FIter FI = ALLModel[i].model.mesh.faces_begin(); FI != ALLModel[i].model.mesh.faces_end(); FI++)
+		{
+			std::vector<int> FVIndex;
+			MyMesh::FHandle FH = ALLModel[i].model.mesh.face_handle(FI->idx());
+			for (MyMesh::FVIter FVI = ALLModel[i].model.mesh.fv_begin(FH); FVI != ALLModel[i].model.mesh.fv_end(FH); FVI++)
+			{
+				FVIndex.push_back(FVI->idx() + NowVerticesCount + VCount);
+			}
+			Face_string += ("f " + std::to_string(FVIndex[0]) + " " + std::to_string(FVIndex[1]) + " " + std::to_string(FVIndex[2]) + "\n");
+		}
+
+
+		for (MyMesh::VIter VI = ALLModel[i].model.mesh.vertices_begin(); VI != ALLModel[i].model.mesh.vertices_end(); VI++)
+		{
+			MyMesh::VHandle VH = ALLModel[i].model.mesh.vertex_handle(VI->idx());
+			MyMesh::Point P = ALLModel[i].model.mesh.point(VH);
+			ObjFile << "v " << P[0] << " " << P[1] << " " << P[2] << "\n";
+			NowVerticesCount++;
+		}
+	}
+	ObjFile << Face_string;;
+	ObjFile.close();
+
 
 }
 
@@ -2215,7 +2297,7 @@ void NewDetectRoof()
 			//ALLModel[ALLModel.size() - 1].model.mesh.ClearMesh();
 			//ALLModel[ALLModel.size() - 1].model.mesh.request_vertex_texcoords2D();// _vertex_texcoords2D
 			model.AddSelectedFace(ID->first - 1);
-		}
+	}
 }
 	//找最高與最低
 
@@ -2579,9 +2661,9 @@ void NewDetectRoof()
 
 	Showwwwwwwwww = 1000;
 	//model.AddSelectedFace(0);
-}
+	}
 
 void Create_FaceCluster_BoundingBox()
 {
-	
+
 }
