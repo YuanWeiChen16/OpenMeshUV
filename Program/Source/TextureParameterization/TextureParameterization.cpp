@@ -2111,7 +2111,7 @@ void caluBoundary()
 			PointListFile << P[0] << " " << P[2] << " ";
 
 			//直接變最高
-			P[1] = HeightY;
+			//P[1] = HeightY;
 			
 			VHnadleVector.push_back(ALLModel[i].model.mesh.add_vertex(P));
 		}
@@ -2129,9 +2129,7 @@ void caluBoundary()
 			VHnadleVector.push_back(ALLModel[i].model.mesh.add_vertex(P));
 		}
 		std::vector<MyMesh::VertexHandle> face_vhandles;
-		//for loop
-
-
+		
 		//理論上需要做面高度的分類並產生對應 屋頂union區域 再擷取出 屋頂區域下拉面 在從屋頂下拉面，做同樣的整個流程
 		//
 		//
@@ -2175,7 +2173,7 @@ void caluBoundary()
 	{
 		MyMesh::VHandle VH = BeSelectModel.model.mesh.vertex_handle(VI->idx());
 		MyMesh::Point P = BeSelectModel.model.mesh.point(VH);
-		ObjFile << "v " << P[0] << " " << HeightY << " " << P[2] << "\n";
+		ObjFile << "v " << P[0] << " " << P[1] << " " << P[2] << "\n";
 	}
 	for (MyMesh::FIter FI = BeSelectModel.model.mesh.faces_begin(); FI != BeSelectModel.model.mesh.faces_end(); FI++)
 	{
@@ -2700,8 +2698,26 @@ void NewDetectRoof()
 	//model.AddSelectedFace(0);
 	}
 
+
+
+	//對牆壁照深度圖 需要確定 牆壁面方向 牆壁大小(中心點)
+	//Face_Diraction 單一 xyz 向量          Fce_Size  xyz 左上 xyz 右上 xyz 左下 xyz 右下  共四個xyz
+void NewDetectWall(std::vector<float> Face_Diraction, std::vector<float> Face_Size)
+{
+	
+
+
+
+
+
+
+}
+
+
+
 //each SideFace do camera depth thing
 void Create_FaceCluster_BoundingBox()
 {
+	
 
 }
