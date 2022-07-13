@@ -223,11 +223,11 @@ void SetupGUI()
 
 
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
-	modelNames.push_back("gta04_dt1_20_build2_high.obj");
+	modelNames.push_back("Side.obj");
+	modelNames.push_back("Ahole.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
-	modelNames.push_back("Ahole.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("WorldBuilding02_french_Arc_de_Triomphe.obj");
@@ -2025,7 +2025,6 @@ void caluBoundary()
 	//找出內群裡最高的
 	double diff = 0.01;
 
-
 	BoundingPointheight.resize(EdgePointSet.size());
 	for (int i = 0; i < EdgePointSet.size(); i++)
 	{
@@ -2081,7 +2080,9 @@ void caluBoundary()
 		ALLModel[i].model.mesh.ClearMesh();
 		ALLModel[i].model.mesh.request_vertex_texcoords2D();
 	}
-
+	//存點 做concave hull
+	std::fstream PointListFile;
+	PointListFile.open("./Dfile/Point_List.txt", ios::out);
 	for (int i = 0; i < BoundaryHalfEdgeHandler.size(); i++)
 	{
 		//set vertex
@@ -2100,13 +2101,22 @@ void caluBoundary()
 
 
 		int PointLenght = EdgePointSet[i].size();
+		
+
+
 		//篩選出來的點
 		for (int j = 0; j < PointLenght; j++)
 		{
 			MyMesh::Point P = EdgePointSet[i][j];
+			PointListFile << P[0] << " " << P[2] << " ";
+
+			//直接變最高
 			P[1] = HeightY;
+			
 			VHnadleVector.push_back(ALLModel[i].model.mesh.add_vertex(P));
 		}
+		PointListFile << "\n";
+
 		//向下拉出的點
 		for (int j = 0; j < PointLenght; j++)
 		{
@@ -2121,6 +2131,20 @@ void caluBoundary()
 		std::vector<MyMesh::VertexHandle> face_vhandles;
 		//for loop
 
+
+		//理論上需要做面高度的分類並產生對應 屋頂union區域 再擷取出 屋頂區域下拉面 在從屋頂下拉面，做同樣的整個流程
+		//
+		//
+
+
+
+
+
+
+
+
+
+
 		for (int j = 0; j < PointLenght; j++)
 		{
 			//face 0 down
@@ -2130,6 +2154,7 @@ void caluBoundary()
 			face_vhandles.push_back(VHnadleVector[j + PointLenght]);
 			ALLModel[i].model.mesh.add_face(face_vhandles);
 			//cout << "FACE " << ID->first - 1 << "FACE0 Down Is be Rebuild" << endl;
+			// 
 			//face 0 up
 			face_vhandles.clear();
 			face_vhandles.push_back(VHnadleVector[(j + 1) % PointLenght + PointLenght]);
@@ -2187,7 +2212,6 @@ void caluBoundary()
 	}
 	ObjFile << Face_string;;
 	ObjFile.close();
-
 
 }
 
@@ -2676,6 +2700,7 @@ void NewDetectRoof()
 	//model.AddSelectedFace(0);
 	}
 
+//each SideFace do camera depth thing
 void Create_FaceCluster_BoundingBox()
 {
 
