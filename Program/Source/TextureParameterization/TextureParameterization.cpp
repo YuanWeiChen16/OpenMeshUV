@@ -1832,7 +1832,7 @@ bool IsFaceConnect(int ID_X, int ID_Y)
 			float diff_x = (P1[0] - P2[0]) * (P1[0] - P2[0]);
 			float diff_y = (P1[1] - P2[1]) * (P1[1] - P2[1]);
 			float diff_z = (P1[2] - P2[2]) * (P1[2] - P2[2]);
-			if (sqrt(diff_x + diff_y + diff_z) <0.01)
+			if (sqrt(diff_x + diff_y + diff_z) < 0.01)
 			{
 				ConnectPointCount++;
 			}
@@ -2101,8 +2101,6 @@ void caluBoundary()
 
 
 		int PointLenght = EdgePointSet[i].size();
-		
-
 
 		//篩選出來的點
 		for (int j = 0; j < PointLenght; j++)
@@ -2112,7 +2110,7 @@ void caluBoundary()
 
 			//直接變最高
 			//P[1] = HeightY;
-			
+
 			VHnadleVector.push_back(ALLModel[i].model.mesh.add_vertex(P));
 		}
 		PointListFile << "\n";
@@ -2129,26 +2127,17 @@ void caluBoundary()
 			VHnadleVector.push_back(ALLModel[i].model.mesh.add_vertex(P));
 		}
 		std::vector<MyMesh::VertexHandle> face_vhandles;
-		
+
 		//理論上需要做面高度的分類並產生對應 屋頂union區域 再擷取出 屋頂區域下拉面 在從屋頂下拉面，做同樣的整個流程
 		//
 		//
-
-
-
-
-
-
-
-
-
 
 		for (int j = 0; j < PointLenght; j++)
 		{
 			//face 0 down
 			face_vhandles.clear();
 			face_vhandles.push_back(VHnadleVector[j]);
-			face_vhandles.push_back(VHnadleVector[(j + 1)% PointLenght]);
+			face_vhandles.push_back(VHnadleVector[(j + 1) % PointLenght]);
 			face_vhandles.push_back(VHnadleVector[j + PointLenght]);
 			ALLModel[i].model.mesh.add_face(face_vhandles);
 			//cout << "FACE " << ID->first - 1 << "FACE0 Down Is be Rebuild" << endl;
@@ -2186,6 +2175,8 @@ void caluBoundary()
 		Face_string += ("f " + std::to_string(FVIndex[0]) + " " + std::to_string(FVIndex[1]) + " " + std::to_string(FVIndex[2]) + "\n");
 	}
 
+#pragma region saveDownFace
+#ifdef SAVEDOWNFACE
 	for (int i = 0; i < BoundaryHalfEdgeHandler.size(); i++)
 	{
 		for (MyMesh::FIter FI = ALLModel[i].model.mesh.faces_begin(); FI != ALLModel[i].model.mesh.faces_end(); FI++)
@@ -2208,6 +2199,8 @@ void caluBoundary()
 			NowVerticesCount++;
 		}
 	}
+#endif // SAVEDOWNFACE
+#pragma endregion
 	ObjFile << Face_string;;
 	ObjFile.close();
 
@@ -2332,8 +2325,8 @@ void NewDetectRoof()
 			//ALLModel[ALLModel.size() - 1].model.mesh.ClearMesh();
 			//ALLModel[ALLModel.size() - 1].model.mesh.request_vertex_texcoords2D();// _vertex_texcoords2D
 			model.AddSelectedFace(ID->first - 1);
+		}
 	}
-}
 	//找最高與最低
 
 	for (MyMesh::FIter FI = model.model.mesh.faces_begin(); FI != model.model.mesh.faces_end(); FI++)
@@ -2696,15 +2689,97 @@ void NewDetectRoof()
 
 	Showwwwwwwwww = 1000;
 	//model.AddSelectedFace(0);
-	}
+}
 
 
 
-	//對牆壁照深度圖 需要確定 牆壁面方向 牆壁大小(中心點)
-	//Face_Diraction 單一 xyz 向量          Fce_Size  xyz 左上 xyz 右上 xyz 左下 xyz 右下  共四個xyz
+//對牆壁照深度圖 需要確定 牆壁面方向 牆壁大小(中心點)
+//Face_Diraction 單一 xyz 向量 向牆壁方向       Fce_Size  xyz 左上 xyz 右上 xyz 左下 xyz 右下  共四個xyz
 void NewDetectWall(std::vector<float> Face_Diraction, std::vector<float> Face_Size)
 {
-	
+
+	//拿到這個方向，用相機看過去得到的面與深度
+#pragma region  Camera GetDepth Map
+	//灰階深度圖
+	unsigned char* data = new unsigned char[360000];
+	//深度raw data
+	float* Rawdata = new float[360000];
+	//index彩色可視化
+	unsigned char* Colordata = new unsigned char[360000 * 3];
+	//原始index raycast 到的資料
+	int* RawIdxdata = new int[360000];
+
+	float MaxDepth = -1100000;
+	float MinDepth = 1100000;
+	//index 對應深度
+	map<int, double> IdxDepth;
+	//
+	std::map<int, std::vector<double>> ALL_Idx_Depth;
+	//for shader rendering
+	glm::mat4 mvMat = meshWindowCam.GetViewMatrix() * meshWindowCam.GetModelMatrix();
+	glm::mat4 pMat = meshWindowCam.GetProjectionMatrix(aspect);
+	float depthValue = 0;
+	//depthFile << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+	for (int i = 0; i < 600; i++)
+	{
+		for (int j = 0; j < 600; j++)
+		{
+			//depth map
+			glReadPixels(i, j, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depthValue);
+			float D = pickingTexture.ReadTexture(i, j);
+			//cout << D << " ";
+			if (D != 0)
+			{
+				if (depthValue < MinDepth)
+				{
+					MinDepth = depthValue;
+				}
+				if (depthValue > MaxDepth)
+				{
+					MaxDepth = depthValue;
+				}
+			}
+
+			Rawdata[(i)+(599 - j) * 600] = depthValue;
+			RawIdxdata[(i)+(599 - j) * 600] = D;
+			if (Idx.find(D) == Idx.end())
+			{
+				Idx[D] = 1;
+				ALL_Idx_Depth[D].push_back(depthValue);
+			}
+			else
+			{
+				Idx[D] ++;
+				ALL_Idx_Depth[D].push_back(depthValue);
+			}
+		}
+		if (i % 60 == 0)
+		{
+			cout << i / 60 << "/10" << "\n";
+		}
+
+		double diff = MaxDepth - MinDepth;
+		for (int i = 0; i < 360000; i++)
+		{
+			double tmp = Rawdata[i] - MinDepth;
+			data[i] = (char)((tmp / diff) * 256.0);
+			Colordata[i * 3 + 0] = (char)(colormap[RawIdxdata[i]][0] * 256.0);
+			Colordata[i * 3 + 1] = (char)(colormap[RawIdxdata[i]][1] * 256.0);
+			Colordata[i * 3 + 2] = (char)(colormap[RawIdxdata[i]][2] * 256.0);
+		}
+		//stbi_flip_vertically_on_write(true);
+		stbi_write_png("Fileeee.png", 600, 600, 1, data, 0);
+		stbi_write_png("Fileeee_Color.png", 600, 600, 3, Colordata, 0);
+		stbi_image_free(data);
+		stbi_image_free(Colordata);
+		Idx.erase(0);
+		ALL_Idx_Depth.erase(0);
+	}
+
+#pragma endregion
+
+	//面需要推的方向 相機指向vector乘上深度
+	//id 與 深度 與 面積 做判斷
 
 
 
@@ -2718,6 +2793,90 @@ void NewDetectWall(std::vector<float> Face_Diraction, std::vector<float> Face_Si
 //each SideFace do camera depth thing
 void Create_FaceCluster_BoundingBox()
 {
-	
+
 
 }
+
+
+
+
+//一維 K-means id 
+//ALL_Idx_Depth		idx 與 那個idx深度對應(最後一個為平均深度)
+//idx id 與重複次數
+void data_2_K_means(std::map<int, std::vector<double>> ALL_Idx_Depth, std::map<int, int> idx, int ClusterNum)
+{
+
+
+
+}
+
+#pragma region OneDimKMeans
+//用kx 分群
+std::vector<std::vector<double>> one_dim_K_means_cluster(std::vector<double> x, std::vector<double> kx, int seed)
+{
+	std::vector<std::vector<double>> team;
+	for (int i = 0; i < seed; i++)
+	{
+		team.push_back(std::vector<double>());
+	}
+	//依照原始點對分點的距離 做最近點分群
+	for (int i = 0; i < x.size(); i++)
+	{
+		double min_dis = 999999999;
+		int smallKJ = 0;
+		for (int j = 0; j < seed; j++)
+		{
+			 double dis =  abs(x[i] - kx[j]);
+			if (dis < min_dis)
+			{
+				min_dis = dis;
+				smallKJ = j;
+			}
+		}
+		//找出最近k點
+		team[smallKJ].push_back(i);
+	}
+	//回傳所有點分群結果
+	return team;
+}
+
+
+
+
+std::vector<double> one_dim_K_means_re_seed(std::vector<std::vector<double>> Team, std::vector<double> kx, int seed)
+{
+
+}
+
+//x 初始所有 點的值
+//kx 初始分群點
+//seed 分群數量
+//fig 疊代次數
+std::vector<std::vector<double>> one_dim_K_means(std::vector<double> x, std::vector<double> kx, int fig, int seed)
+{
+	std::vector<std::vector<double>> Team = one_dim_K_means_cluster(x, kx, seed);
+	std::vector<double> nkx = one_dim_K_means_re_seed(Team, kx, seed);
+
+	double Error = 0.01;
+	int Done = true;
+	for (int i = 0; i < seed; i++)
+	{
+		if (abs(nkx[i] - kx[i]) < Error)
+		{
+			Done = false;
+		}
+	}
+
+	if (Done == false)
+	{
+		one_dim_K_means(x, nkx, fig += 1, seed);
+	}
+	else
+	{
+		return Team;
+	}
+}
+
+
+
+#pragma endregion
