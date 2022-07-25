@@ -223,7 +223,7 @@ void SetupGUI()
 
 
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
-	modelNames.push_back("Side.obj");
+	modelNames.push_back("Stairs.obj");
 	modelNames.push_back("Ahole.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
@@ -2692,11 +2692,43 @@ void NewDetectRoof()
 }
 
 
+//對牆壁照深度圖 需要確定 牆壁面方向 牆壁大小(中心點)
+//Face_Diraction 單一 xyz 向量 向牆壁方向       Fce_Size  xyz 左上 xyz 右上 xyz 左下 xyz 右下  共四個xyz
+void ChangeCameraLook(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size)
+{
+	//將面的上下左右加起來做平均，算中心點
+	glm::vec3 Four(4);
+	glm::vec3 Face_Mid = (Face_Size[0] + Face_Size[1] + Face_Size[2] + Face_Size[3]) / Four;
+
+	//切換相機方向
+	glm::vec3 Campos(Face_Mid - Face_Diraction * Four);
+	vec3 up = vec3(0, 1, 0);
+	glm::mat4 CamLook = lookAt(Campos, Face_Mid, up);
+	meshWindowCam.SetViewMatrix(CamLook);
+
+
+
+
+}
+
 
 //對牆壁照深度圖 需要確定 牆壁面方向 牆壁大小(中心點)
 //Face_Diraction 單一 xyz 向量 向牆壁方向       Fce_Size  xyz 左上 xyz 右上 xyz 左下 xyz 右下  共四個xyz
-void NewDetectWall(std::vector<float> Face_Diraction, std::vector<float> Face_Size)
+void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size)
 {
+
+	//將面的上下左右加起來做平均，算中心點
+	glm::vec3 Four(4);
+	glm::vec3 Face_Mid = (Face_Size[0] + Face_Size[1] + Face_Size[2] + Face_Size[3]) / Four;
+
+	//切換相機方向
+	glm::vec3 Campos(Face_Mid - Face_Diraction* Four);
+	vec3 up = vec3(0, 1, 0);
+	glm::mat4 CamLook = lookAt(Campos,Face_Mid,up);
+	meshWindowCam.SetViewMatrix(CamLook);
+
+
+
 
 	//拿到這個方向，用相機看過去得到的面與深度
 #pragma region  Camera GetDepth Map
@@ -2719,7 +2751,7 @@ void NewDetectWall(std::vector<float> Face_Diraction, std::vector<float> Face_Si
 	glm::mat4 mvMat = meshWindowCam.GetViewMatrix() * meshWindowCam.GetModelMatrix();
 	glm::mat4 pMat = meshWindowCam.GetProjectionMatrix(aspect);
 	float depthValue = 0;
-	//depthFile << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+	//depthFile << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 	for (int i = 0; i < 600; i++)
 	{
 		for (int j = 0; j < 600; j++)
@@ -2757,7 +2789,6 @@ void NewDetectWall(std::vector<float> Face_Diraction, std::vector<float> Face_Si
 		{
 			cout << i / 60 << "/10" << "\n";
 		}
-
 		double diff = MaxDepth - MinDepth;
 		for (int i = 0; i < 360000; i++)
 		{
@@ -2775,16 +2806,10 @@ void NewDetectWall(std::vector<float> Face_Diraction, std::vector<float> Face_Si
 		Idx.erase(0);
 		ALL_Idx_Depth.erase(0);
 	}
-
 #pragma endregion
 
 	//面需要推的方向 相機指向vector乘上深度
 	//id 與 深度 與 面積 做判斷
-
-
-
-
-
 
 }
 
@@ -2800,6 +2825,8 @@ void Create_FaceCluster_BoundingBox()
 
 
 
+#pragma region OneDimKMeans
+
 //一維 K-means id 
 //ALL_Idx_Depth		idx 與 那個idx深度對應(最後一個為平均深度)
 //idx id 與重複次數
@@ -2810,7 +2837,6 @@ void data_2_K_means(std::map<int, std::vector<double>> ALL_Idx_Depth, std::map<i
 
 }
 
-#pragma region OneDimKMeans
 //用kx 分群
 std::vector<std::vector<double>> one_dim_K_means_cluster(std::vector<double> x, std::vector<double> kx, int seed)
 {
@@ -2839,9 +2865,6 @@ std::vector<std::vector<double>> one_dim_K_means_cluster(std::vector<double> x, 
 	//回傳所有點分群結果
 	return team;
 }
-
-
-
 
 std::vector<double> one_dim_K_means_re_seed(std::vector<std::vector<double>> Team, std::vector<double> kx, int seed)
 {
@@ -2876,7 +2899,5 @@ std::vector<std::vector<double>> one_dim_K_means(std::vector<double> x, std::vec
 		return Team;
 	}
 }
-
-
 
 #pragma endregion

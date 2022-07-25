@@ -35,6 +35,20 @@ mat4 ViewManager::GetViewMatrix()
 	return viewMatrix;
 }
 
+//for projection view change
+void ViewManager::SetModelratatioMatrix(glm::mat4 Mat)
+{
+	rotationMatrix = Mat;
+}
+void ViewManager::SetModelTranslateMatrix(glm::mat4 Mat)
+{
+	translationMatrix = Mat;
+}
+void ViewManager::SetViewMatrix(glm::mat4 Mat)
+{
+	viewMatrix = Mat;
+}
+
 /**
 * 設定並取得Projection Matrix。
 * @param aspect 畫面的長寬比。

@@ -50,6 +50,9 @@ public:
 
 	void SetDown();
 
+	void SetModelratatioMatrix(glm::mat4);
+	void SetModelTranslateMatrix(glm::mat4);
+	void SetViewMatrix(glm::mat4);
 
     bool ToggleOrtho() { return ortho = !ortho; }
     void Zoom(float distance);
