@@ -192,12 +192,24 @@ double PointAngle(MyMesh::Point P1, MyMesh::Point P2, MyMesh::Point VPoint)
 	angle = (angle * 180.0) / 3.1415926;
 	return angle;
 }
+void CoutMat4(glm::mat4 M)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			cout << M[i][j] << " ";
+		}
+		cout << endl;
+	}
+}
 unsigned int loadTexture(std::string path, int imageType);
 void magic();
 void magic_delete();
 
 void DFS(std::vector<std::vector<int>>& M, std::vector<bool>& visited, int i);
 int FindFriend(std::vector<std::vector<int>>& M);
+void ChangeCameraLook(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size);
 void MergeBoundary();
 void detectRoof();
 void caluBoundary();
@@ -1290,7 +1302,14 @@ void MyKeyboard(unsigned char key, int x, int y)
 	}
 	else if (key == 'l')
 	{
-
+		glm::vec3 Fdir(1, 0, 0);
+		glm::vec3 FMid(1, 0, 0);
+		std::vector<glm::vec3> F;
+		for (int i = 0; i < 4; i++)
+		{
+			F.push_back(FMid);
+		}
+		ChangeCameraLook(Fdir, F);
 	}
 	else
 	{
@@ -2692,7 +2711,7 @@ void NewDetectRoof()
 }
 
 
-//對牆壁照深度圖 需要確定 牆壁面方向 牆壁大小(中心點)
+//切換相機方向 需要確定 牆壁面方向 牆壁大小(中心點)
 //Face_Diraction 單一 xyz 向量 向牆壁方向       Fce_Size  xyz 左上 xyz 右上 xyz 左下 xyz 右下  共四個xyz
 void ChangeCameraLook(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size)
 {
@@ -2700,15 +2719,18 @@ void ChangeCameraLook(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size
 	glm::vec3 Four(4);
 	glm::vec3 Face_Mid = (Face_Size[0] + Face_Size[1] + Face_Size[2] + Face_Size[3]) / Four;
 
+	cout << Face_Mid[0]<<" " << Face_Mid[1] << " " << Face_Mid[2] << endl;
+
 	//切換相機方向
-	glm::vec3 Campos(Face_Mid - Face_Diraction * Four);
+	glm::vec3 Campos(Face_Mid - Face_Diraction * Four + Face_Mid);
 	vec3 up = vec3(0, 1, 0);
 	glm::mat4 CamLook = lookAt(Campos, Face_Mid, up);
-	meshWindowCam.SetViewMatrix(CamLook);
-
-
-
-
+	CoutMat4(CamLook);
+		
+	//meshWindowCam.SetViewMatrix(CamLook);
+	glm::mat4 IdM(1);
+	meshWindowCam.SetModelratatioMatrix(CamLook);
+	meshWindowCam.SetModelTranslateMatrix(IdM);
 }
 
 
@@ -2717,19 +2739,8 @@ void ChangeCameraLook(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size
 void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size)
 {
 
-	//將面的上下左右加起來做平均，算中心點
-	glm::vec3 Four(4);
-	glm::vec3 Face_Mid = (Face_Size[0] + Face_Size[1] + Face_Size[2] + Face_Size[3]) / Four;
-
-	//切換相機方向
-	glm::vec3 Campos(Face_Mid - Face_Diraction* Four);
-	vec3 up = vec3(0, 1, 0);
-	glm::mat4 CamLook = lookAt(Campos,Face_Mid,up);
-	meshWindowCam.SetViewMatrix(CamLook);
-
-
-
-
+	//切換相機位置與方向
+	ChangeCameraLook(Face_Diraction,Face_Size);
 	//拿到這個方向，用相機看過去得到的面與深度
 #pragma region  Camera GetDepth Map
 	//灰階深度圖
@@ -2808,8 +2819,14 @@ void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size)
 	}
 #pragma endregion
 
+	//對於斜面 整個斜面分成同一類，儘管高度不同
+	//再做Kmeans時，必須分在同一類
+
 	//面需要推的方向 相機指向vector乘上深度
 	//id 與 深度 與 面積 做判斷
+	//
+
+
 
 }
 
