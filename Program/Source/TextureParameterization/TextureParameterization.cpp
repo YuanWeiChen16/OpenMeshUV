@@ -2847,12 +2847,15 @@ void Create_FaceCluster_BoundingBox()
 //一維 K-means id 
 //ALL_Idx_Depth		idx 與 那個idx深度對應(最後一個為平均深度)
 //idx id 與重複次數
+
 void data_2_K_means(std::map<int, std::vector<double>> ALL_Idx_Depth, std::map<int, int> idx, int ClusterNum)
 {
 
 
 
 }
+
+//需要更新成預先有分群的 kmeans(kmeans 不能破壞原本分群)
 
 //用kx 分群
 std::vector<std::vector<double>> one_dim_K_means_cluster(std::vector<double> x, std::vector<double> kx, int seed)
@@ -2883,9 +2886,30 @@ std::vector<std::vector<double>> one_dim_K_means_cluster(std::vector<double> x, 
 	return team;
 }
 
+//kmeans 重新取點中心 
 std::vector<double> one_dim_K_means_re_seed(std::vector<std::vector<double>> Team, std::vector<double> kx, int seed)
 {
-
+	double sumx = 0;
+	std::vector<double> new_seed;
+	for (int i = 0; i < Team.size(); i++)
+	{
+		if (Team.size() == 0)
+		{
+			new_seed.push_back(kx[0]);
+		}
+		for (int j = 0; j < Team[i].size(); j++)
+		{
+			sumx += Team[i][j];
+		}
+		new_seed.push_back(sumx/Team[i].size());
+		sumx = 0;
+	}
+	std::vector<double> nkx;
+	for (int i = 0; i < new_seed.size(); i++)
+	{
+		nkx.push_back(new_seed[i]);
+	}
+	return nkx;
 }
 
 //x 初始所有 點的值
@@ -2899,6 +2923,43 @@ std::vector<std::vector<double>> one_dim_K_means(std::vector<double> x, std::vec
 
 	double Error = 0.01;
 	int Done = true;
+	for (int i = 0; i < seed; i++)
+	{
+		if (abs(nkx[i] - kx[i]) < Error)
+		{
+			Done = false;
+		}
+	}
+
+	if (Done == false)
+	{
+		one_dim_K_means(x, nkx, fig += 1, seed);
+	}
+	else
+	{
+		return Team;
+	}
+}
+
+
+
+//預分類 Kmeans 
+//ALL_Idx_Depth		idx 與 那個idx深度對應(最後一個為平均深度)
+//idx id 與重複次數
+// 
+// 
+//id 深度 次數
+//被分類完的id 與深度
+
+std::vector<std::map<int, double>> pre_Cluster_Kmeans(std::map<int,std::pair<int, double>> x, std::vector<std::pair<std::vector<int>,double>> kx ,int seed)
+{
+	std::vector<std::vector<double>> Team = pre_K_means_cluster(x, kx, seed);
+	std::vector<double> nkx = pre_K_means_re_seed(Team, kx, seed);
+
+	double Error = 0.01;
+	int Done = true;
+
+
 	for (int i = 0; i < seed; i++)
 	{
 		if (abs(nkx[i] - kx[i]) < Error)
