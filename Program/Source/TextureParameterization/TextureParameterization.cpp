@@ -3,6 +3,7 @@
 #include <AntTweakBar/AntTweakBar.h>
 #include <ResourcePath.h>
 #include <fstream>
+#include <string>
 #include<map>
 
 #include <Eigen/Sparse>
@@ -203,6 +204,63 @@ void CoutMat4(glm::mat4 M)
 		cout << endl;
 	}
 }
+
+//確認點是不是在bounding box內
+bool CheckInBox(glm::vec3 Point, std::vector<glm::vec3> Face)
+{
+	double MaxX = -100000;
+	double MinX = 100000;
+	double MaxY = -100000;
+	double MinY = 100000;
+	double MaxZ = -100000;
+	double MinZ = 100000;
+	//find max min
+	for (int i = 0; i < Face.size(); i++)
+	{
+		//X
+		if (Face[i].x > MaxX)
+		{
+			MaxX = Face[i].x;
+		}
+		if (Face[i].x < MinX)
+		{
+			MinX = Face[i].x;
+		}
+		//Y
+		if (Face[i].y > MaxY)
+		{
+			MaxY = Face[i].y;
+		}
+		if (Face[i].y < MinY)
+		{
+			MinY = Face[i].y;
+		}
+		//Z
+		if (Face[i].z > MaxZ)
+		{
+			MaxZ = Face[i].z;
+		}
+		if (Face[i].z < MinZ)
+		{
+			MinZ = Face[i].z;
+		}
+	}
+	//check in box
+	if ((Point.x > MaxX) || (Point.x < MinX))
+	{
+		return false;
+	}
+	if ((Point.y > MaxY) || (Point.y < MinY))
+	{
+		return false;
+	}
+	if ((Point.z > MaxZ) || (Point.z < MinZ))
+	{
+		return false;
+	}
+	return true;
+}
+
 unsigned int loadTexture(std::string path, int imageType);
 void magic();
 void magic_delete();
@@ -210,6 +268,7 @@ void magic_delete();
 void DFS(std::vector<std::vector<int>>& M, std::vector<bool>& visited, int i);
 int FindFriend(std::vector<std::vector<int>>& M);
 void ChangeCameraLook(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size);
+void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size, int ID);
 void MergeBoundary();
 void detectRoof();
 void caluBoundary();
@@ -232,15 +291,13 @@ void SetupGUI()
 	// Adding season to bar
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
-
-
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
+	modelNames.push_back("Manyhole.obj");
 	modelNames.push_back("Stairs.obj");
 	modelNames.push_back("Ahole.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
-	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("WorldBuilding02_french_Arc_de_Triomphe.obj");
 
@@ -965,10 +1022,10 @@ void RenderMeshWindow()
 			if (selectionMode == SelectionMode::SELECT_POINT)
 			{
 				magic();
-			}
+		}
 #endif // OneRingSelect
 			updateFlag = false;
-		}
+	}
 
 
 		//if (RealShow != NowShow)
@@ -1083,7 +1140,7 @@ void RenderMeshWindow()
 			}
 		}
 		glEnd();
-	}
+}
 
 #endif // givecolor
 
@@ -1604,7 +1661,7 @@ void magic()
 #ifdef DEBUG
 			cout << "InnerPoint " << InnerPoint.size() << " ID: " << SeachPoint.idx() << endl;
 #endif // DEBUG
-		}
+	}
 	}
 
 
@@ -1779,7 +1836,7 @@ void magic()
 			}
 		}
 		cout << "Line " << i << endl;
-	}
+		}
 
 
 
@@ -1814,7 +1871,7 @@ void magic()
 
 		BeSelectModel.MY_LoadToShader();
 	}
-}
+	}
 
 void magic_delete()
 {
@@ -2169,6 +2226,32 @@ void caluBoundary()
 			ALLModel[i].model.mesh.add_face(face_vhandles);
 			//cout << "FACE " << ID->first - 1 << "FACE0 UP Is be Rebuild" << endl;
 		}
+
+
+		//做側面投影*************************************************************
+		for (int j = 0; j < PointLenght; j++)
+		{
+			
+			MyMesh::Point S = EdgePointSet[i][(j + 1) % PointLenght] - EdgePointSet[i][j];
+			glm::vec3 EdgeDir(S[0], S[1], S[2]);
+			glm::vec3 UpDir(0, 1, 0);
+			glm::vec3 FaceDir = -glm::cross(EdgeDir, UpDir);
+			std::vector<glm::vec3> FacePoint;
+			glm::vec3 glmP(EdgePointSet[i][j][0], EdgePointSet[i][j][1], EdgePointSet[i][j][2]);
+			FacePoint.push_back(glmP);
+			glmP = glm::vec3(EdgePointSet[i][(j + 1) % PointLenght][0], EdgePointSet[i][(j + 1) % PointLenght][1], EdgePointSet[i][(j + 1) % PointLenght][2]);
+			FacePoint.push_back(glmP);
+			glmP = glm::vec3(EdgePointSet[i][j][0], DeepY, EdgePointSet[i][j][2]);
+			FacePoint.push_back(glmP);
+			glmP = glm::vec3(EdgePointSet[i][(j + 1) % PointLenght][0], DeepY, EdgePointSet[i][(j + 1) % PointLenght][2]);
+			FacePoint.push_back(glmP);
+
+			//切換相機位置與方向
+			ChangeCameraLook(FaceDir, FacePoint);
+			RenderMeshWindow();
+
+			NewDetectWall(FaceDir, FacePoint, i * 1000 + j);
+		}
 	}
 
 	//saving OBJ
@@ -2192,7 +2275,7 @@ void caluBoundary()
 			FVIndex.push_back(FVI->idx() + 1);
 		}
 		Face_string += ("f " + std::to_string(FVIndex[0]) + " " + std::to_string(FVIndex[1]) + " " + std::to_string(FVIndex[2]) + "\n");
-	}
+}
 
 #pragma region saveDownFace
 #ifdef SAVEDOWNFACE
@@ -2223,7 +2306,7 @@ void caluBoundary()
 	ObjFile << Face_string;;
 	ObjFile.close();
 
-}
+		}
 
 void NewDetectRoof()
 {
@@ -2708,8 +2791,7 @@ void NewDetectRoof()
 
 	Showwwwwwwwww = 1000;
 	//model.AddSelectedFace(0);
-}
-
+		}
 
 //切換相機方向 需要確定 牆壁面方向 牆壁大小(中心點)
 //Face_Diraction 單一 xyz 向量 向牆壁方向       Fce_Size  xyz 左上 xyz 右上 xyz 左下 xyz 右下  共四個xyz
@@ -2719,28 +2801,32 @@ void ChangeCameraLook(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size
 	glm::vec3 Four(4);
 	glm::vec3 Face_Mid = (Face_Size[0] + Face_Size[1] + Face_Size[2] + Face_Size[3]) / Four;
 
-	cout << Face_Mid[0]<<" " << Face_Mid[1] << " " << Face_Mid[2] << endl;
+	cout << Face_Mid[0] << " " << Face_Mid[1] << " " << Face_Mid[2] << endl;
 
 	//切換相機方向
 	glm::vec3 Campos(Face_Mid - Face_Diraction * Four + Face_Mid);
 	vec3 up = vec3(0, 1, 0);
 	glm::mat4 CamLook = lookAt(Campos, Face_Mid, up);
 	CoutMat4(CamLook);
-		
+
 	//meshWindowCam.SetViewMatrix(CamLook);
 	glm::mat4 IdM(1);
 	meshWindowCam.SetModelratatioMatrix(CamLook);
 	meshWindowCam.SetModelTranslateMatrix(IdM);
+	if (!meshWindowCam.IsOrthoProjection())
+	{
+		meshWindowCam.ToggleOrtho();
+	}
 }
 
 
 //對牆壁照深度圖 需要確定 牆壁面方向 牆壁大小(中心點)
 //Face_Diraction 單一 xyz 向量 向牆壁方向       Fce_Size  xyz 左上 xyz 右上 xyz 左下 xyz 右下  共四個xyz
-void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size)
+//ID 就是新ID
+void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size, int ID)
 {
+	
 
-	//切換相機位置與方向
-	ChangeCameraLook(Face_Diraction,Face_Size);
 	//拿到這個方向，用相機看過去得到的面與深度
 #pragma region  Camera GetDepth Map
 	//灰階深度圖
@@ -2762,6 +2848,9 @@ void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size)
 	glm::mat4 mvMat = meshWindowCam.GetViewMatrix() * meshWindowCam.GetModelMatrix();
 	glm::mat4 pMat = meshWindowCam.GetProjectionMatrix(aspect);
 	float depthValue = 0;
+
+
+	Idx.clear();
 	//depthFile << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 	for (int i = 0; i < 600; i++)
 	{
@@ -2800,34 +2889,83 @@ void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size)
 		{
 			cout << i / 60 << "/10" << "\n";
 		}
-		double diff = MaxDepth - MinDepth;
-		for (int i = 0; i < 360000; i++)
-		{
-			double tmp = Rawdata[i] - MinDepth;
-			data[i] = (char)((tmp / diff) * 256.0);
-			Colordata[i * 3 + 0] = (char)(colormap[RawIdxdata[i]][0] * 256.0);
-			Colordata[i * 3 + 1] = (char)(colormap[RawIdxdata[i]][1] * 256.0);
-			Colordata[i * 3 + 2] = (char)(colormap[RawIdxdata[i]][2] * 256.0);
-		}
-		//stbi_flip_vertically_on_write(true);
-		stbi_write_png("Fileeee.png", 600, 600, 1, data, 0);
-		stbi_write_png("Fileeee_Color.png", 600, 600, 3, Colordata, 0);
-		stbi_image_free(data);
-		stbi_image_free(Colordata);
-		Idx.erase(0);
-		ALL_Idx_Depth.erase(0);
+		
 	}
+
+	double diff = MaxDepth - MinDepth;
+	for (int i = 0; i < 360000; i++)
+	{
+		double tmp = Rawdata[i] - MinDepth;
+		data[i] = (char)((tmp / diff) * 256.0);
+		Colordata[i * 3 + 0] = (char)(colormap[RawIdxdata[i]][0] * 256.0);
+		Colordata[i * 3 + 1] = (char)(colormap[RawIdxdata[i]][1] * 256.0);
+		Colordata[i * 3 + 2] = (char)(colormap[RawIdxdata[i]][2] * 256.0);
+	}
+	//stbi_flip_vertically_on_write(true);
+	string Filename = "Fileeee";
+	Filename += std::to_string(ID);
+	stbi_write_png((Filename + ".png").c_str(), 600, 600, 1, data, 0);
+	stbi_write_png((Filename + "_Color.png").c_str(), 600, 600, 3, Colordata, 0);
+	stbi_image_free(data);
+	stbi_image_free(Colordata);
+	Idx.erase(0);
+	ALL_Idx_Depth.erase(0);
+
 #pragma endregion
 
+	//存檔
+
+	//用id去對要選這次 哪個面(bounding內面?)
+	std::fstream ObjFile;
+	std::string ObjName = "./Dfile/NewModel_";
+	ObjName += std::to_string(ID);
+	ObjFile.open(ObjName + ".obj", ios::out);
+	std::map<int, bool> FaceinBox;
+
+	//確認照到的面是不是在bounding box裡  (NOT DONE)
+	for (map<int, int>::iterator ID = Idx.begin(); ID != Idx.end(); ID++)
+	{
+		std::vector<int> Face_vertex_index;
+		MyMesh::FHandle FH = model.model.mesh.face_handle(ID->first - 1);
+		bool Flag = false;
+		//每個Face裡的vertex只要有一個在box裡就算 (NOT DONE)
+		for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); FVI++)
+		{
+			MyMesh::VHandle VH = model.model.mesh.vertex_handle(FVI->idx());
+			MyMesh::Point P = model.model.mesh.point(VH);
+			glm::vec3 glmP(P[0], P[1], P[2]);
+			if (CheckInBox(glmP, Face_Size))
+			{
+				Flag = true;
+			}
+			//NOT Done
+			Flag = true;
+			if (Flag == true)
+			{
+				ObjFile << "v " << P[0] << " " << P[1] << " " << P[2] << "\n";
+			}
+		}
+	}
+
+	//存檔綁點
+	int EdgeCount = 1;
+	for (map<int, int>::iterator ID = Idx.begin(); ID != Idx.end(); ID++)
+	{
+		std::vector<int> Face_vertex_index;
+		MyMesh::FHandle FH = model.model.mesh.face_handle(ID->first - 1);
+		ObjFile << ("f " + std::to_string(EdgeCount + 0) + " " + std::to_string(EdgeCount + 1) + " " + std::to_string(EdgeCount + 2) + "\n");
+		ObjFile << ("f " + std::to_string(EdgeCount + 1) + " " + std::to_string(EdgeCount + 2) + " " + std::to_string(EdgeCount + 0) + "\n");
+		ObjFile << ("f " + std::to_string(EdgeCount + 2) + " " + std::to_string(EdgeCount + 0) + " " + std::to_string(EdgeCount + 1) + "\n");
+		EdgeCount += 3;
+	}
+
+	ObjFile.close();
 	//對於斜面 整個斜面分成同一類，儘管高度不同
 	//再做Kmeans時，必須分在同一類
 
 	//面需要推的方向 相機指向vector乘上深度
 	//id 與 深度 與 面積 做判斷
 	//
-
-
-
 }
 
 
@@ -2872,7 +3010,7 @@ std::vector<std::vector<double>> one_dim_K_means_cluster(std::vector<double> x, 
 		int smallKJ = 0;
 		for (int j = 0; j < seed; j++)
 		{
-			 double dis =  abs(x[i] - kx[j]);
+			double dis = abs(x[i] - kx[j]);
 			if (dis < min_dis)
 			{
 				min_dis = dis;
@@ -2901,7 +3039,7 @@ std::vector<double> one_dim_K_means_re_seed(std::vector<std::vector<double>> Tea
 		{
 			sumx += Team[i][j];
 		}
-		new_seed.push_back(sumx/Team[i].size());
+		new_seed.push_back(sumx / Team[i].size());
 		sumx = 0;
 	}
 	std::vector<double> nkx;
@@ -2944,38 +3082,41 @@ std::vector<std::vector<double>> one_dim_K_means(std::vector<double> x, std::vec
 
 
 //預分類 Kmeans 
+// 
+
+
 //ALL_Idx_Depth		idx 與 那個idx深度對應(最後一個為平均深度)
 //idx id 與重複次數
 // 
 // 
 //id 深度 次數
 //被分類完的id 與深度
-
-std::vector<std::map<int, double>> pre_Cluster_Kmeans(std::map<int,std::pair<int, double>> x, std::vector<std::pair<std::vector<int>,double>> kx ,int seed)
-{
-	std::vector<std::vector<double>> Team = pre_K_means_cluster(x, kx, seed);
-	std::vector<double> nkx = pre_K_means_re_seed(Team, kx, seed);
-
-	double Error = 0.01;
-	int Done = true;
-
-
-	for (int i = 0; i < seed; i++)
-	{
-		if (abs(nkx[i] - kx[i]) < Error)
-		{
-			Done = false;
-		}
-	}
-
-	if (Done == false)
-	{
-		one_dim_K_means(x, nkx, fig += 1, seed);
-	}
-	else
-	{
-		return Team;
-	}
-}
+//
+//std::vector<std::map<int, double>> pre_Cluster_Kmeans(std::map<int,std::pair<int, double>> x, std::vector<std::pair<std::vector<int>,double>> kx ,int seed)
+//{
+//
+//	std::vector<std::vector<double>> Team = pre_K_means_cluster(x, kx, seed);
+//	std::vector<double> nkx = pre_K_means_re_seed(Team, kx, seed);
+//
+//	double Error = 0.01;
+//	int Done = true;
+//
+//	for (int i = 0; i < seed; i++)
+//	{
+//		if (abs(nkx[i] - kx[i]) < Error)
+//		{
+//			Done = false;
+//		}
+//	}
+//
+//	if (Done == false)
+//	{
+//		one_dim_K_means(x, nkx, fig += 1, seed);
+//	}
+//	else
+//	{
+//		return Team;
+//	}
+//}
 
 #pragma endregion
