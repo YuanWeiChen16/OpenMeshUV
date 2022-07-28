@@ -87,3 +87,20 @@ GLuint PickingTexture::ReadTexture(unsigned int x, unsigned int y)
 
 	return data;
 }
+
+GLuint* PickingTexture::ReadTextures()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+
+	int Nsize = 600;
+	GLuint* data = (GLuint*)malloc(sizeof(GLuint) * Nsize * Nsize);
+	memset(data, 0, sizeof(GLuint) * Nsize * Nsize);
+	//GLuint* data = new GLuint[360000];
+	glReadPixels(0, 0, 600, 600, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
+
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	return data;
+}
+

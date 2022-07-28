@@ -12,6 +12,7 @@ public:
 	void Enable();
 	void Disable();
 	GLuint ReadTexture(unsigned int x, unsigned int y);
+	GLuint* PickingTexture::ReadTextures();
 	GLuint GetColorTex() { return fboColor; }
 
 private:

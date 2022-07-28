@@ -1022,10 +1022,10 @@ void RenderMeshWindow()
 			if (selectionMode == SelectionMode::SELECT_POINT)
 			{
 				magic();
-		}
+			}
 #endif // OneRingSelect
 			updateFlag = false;
-	}
+		}
 
 
 		//if (RealShow != NowShow)
@@ -1140,7 +1140,7 @@ void RenderMeshWindow()
 			}
 		}
 		glEnd();
-}
+	}
 
 #endif // givecolor
 
@@ -1661,7 +1661,7 @@ void magic()
 #ifdef DEBUG
 			cout << "InnerPoint " << InnerPoint.size() << " ID: " << SeachPoint.idx() << endl;
 #endif // DEBUG
-	}
+		}
 	}
 
 
@@ -1836,7 +1836,7 @@ void magic()
 			}
 		}
 		cout << "Line " << i << endl;
-		}
+	}
 
 
 
@@ -1871,7 +1871,7 @@ void magic()
 
 		BeSelectModel.MY_LoadToShader();
 	}
-	}
+}
 
 void magic_delete()
 {
@@ -2231,9 +2231,10 @@ void caluBoundary()
 		//做側面投影*************************************************************
 		for (int j = 0; j < PointLenght; j++)
 		{
-			
+
 			MyMesh::Point S = EdgePointSet[i][(j + 1) % PointLenght] - EdgePointSet[i][j];
-			glm::vec3 EdgeDir(S[0], S[1], S[2]);
+			//設定高差為0
+			glm::vec3 EdgeDir(S[0], 0, S[2]);
 			glm::vec3 UpDir(0, 1, 0);
 			glm::vec3 FaceDir = -glm::cross(EdgeDir, UpDir);
 			std::vector<glm::vec3> FacePoint;
@@ -2275,7 +2276,7 @@ void caluBoundary()
 			FVIndex.push_back(FVI->idx() + 1);
 		}
 		Face_string += ("f " + std::to_string(FVIndex[0]) + " " + std::to_string(FVIndex[1]) + " " + std::to_string(FVIndex[2]) + "\n");
-}
+	}
 
 #pragma region saveDownFace
 #ifdef SAVEDOWNFACE
@@ -2306,7 +2307,7 @@ void caluBoundary()
 	ObjFile << Face_string;;
 	ObjFile.close();
 
-		}
+}
 
 void NewDetectRoof()
 {
@@ -2333,13 +2334,25 @@ void NewDetectRoof()
 
 	//depthFile << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
+
+	int Nsize = 600;
+	//float* depthmap = (float*)malloc(sizeof(float) * Nsize * Nsize);
+	float* depthmap = new float[360000];
+	//memset(depthmap, 0, sizeof(float) * Nsize * Nsize);
+	glReadPixels(0, 0, Nsize, Nsize, GL_DEPTH_COMPONENT, GL_FLOAT, depthmap);
+	
+	GLuint* Dmap  = new GLuint[360000];
+	Dmap = pickingTexture.ReadTextures();
+
 	for (int i = 0; i < 600; i++)
 	{
 		for (int j = 0; j < 600; j++)
 		{
 			//depth map
-			glReadPixels(i, j, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depthValue);
-			float D = pickingTexture.ReadTexture(i, j);
+			float depthValue = depthmap[(i)+(599 - j) * 600];
+			float D = Dmap[(i)+(599 - j) * 600];
+
+			//cout << D << " ";
 			//cout << D << " ";
 			if (D != 0)
 			{
@@ -2382,6 +2395,7 @@ void NewDetectRoof()
 		{
 			cout << i / 60 << "/10" << "\n";
 		}
+		//cout <<"\n";
 	}
 
 	//IdxFile.close();
@@ -2428,7 +2442,7 @@ void NewDetectRoof()
 			//ALLModel[ALLModel.size() - 1].model.mesh.request_vertex_texcoords2D();// _vertex_texcoords2D
 			model.AddSelectedFace(ID->first - 1);
 		}
-	}
+}
 	//找最高與最低
 
 	for (MyMesh::FIter FI = model.model.mesh.faces_begin(); FI != model.model.mesh.faces_end(); FI++)
@@ -2825,7 +2839,7 @@ void ChangeCameraLook(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size
 //ID 就是新ID
 void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size, int ID)
 {
-	
+
 
 	//拿到這個方向，用相機看過去得到的面與深度
 #pragma region  Camera GetDepth Map
@@ -2889,7 +2903,7 @@ void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size, i
 		{
 			cout << i / 60 << "/10" << "\n";
 		}
-		
+
 	}
 
 	double diff = MaxDepth - MinDepth;
@@ -2976,8 +2990,6 @@ void Create_FaceCluster_BoundingBox()
 
 
 }
-
-
 
 
 #pragma region OneDimKMeans
