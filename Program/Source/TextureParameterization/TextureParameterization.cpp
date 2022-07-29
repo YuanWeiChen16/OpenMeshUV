@@ -1348,6 +1348,7 @@ void MyKeyboard(unsigned char key, int x, int y)
 		NewDetectRoof();
 		caluBoundary();
 		MergeBoundary();
+		cout << "Done\n";
 	}
 	else if (key == 'o')
 	{
@@ -2334,12 +2335,10 @@ void NewDetectRoof()
 
 	//depthFile << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
-
-	int Nsize = 600;
 	//float* depthmap = (float*)malloc(sizeof(float) * Nsize * Nsize);
 	float* depthmap = new float[360000];
 	//memset(depthmap, 0, sizeof(float) * Nsize * Nsize);
-	glReadPixels(0, 0, Nsize, Nsize, GL_DEPTH_COMPONENT, GL_FLOAT, depthmap);
+	glReadPixels(0, 0, 600, 600, GL_DEPTH_COMPONENT, GL_FLOAT, depthmap);
 	
 	GLuint* Dmap  = new GLuint[360000];
 	Dmap = pickingTexture.ReadTextures();
@@ -2866,13 +2865,22 @@ void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size, i
 
 	Idx.clear();
 	//depthFile << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+	//float* depthmap = (float*)malloc(sizeof(float) * Nsize * Nsize);
+	float* depthmap = new float[360000];
+	//memset(depthmap, 0, sizeof(float) * Nsize * Nsize);
+	glReadPixels(0, 0, 600, 600, GL_DEPTH_COMPONENT, GL_FLOAT, depthmap);
+
+	GLuint* Dmap = new GLuint[360000];
+	Dmap = pickingTexture.ReadTextures();
+
 	for (int i = 0; i < 600; i++)
 	{
 		for (int j = 0; j < 600; j++)
 		{
 			//depth map
-			glReadPixels(i, j, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depthValue);
-			float D = pickingTexture.ReadTexture(i, j);
+			//glReadPixels(i, j, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depthValue);
+			depthValue = depthmap[(i)+(599 - j) * 600];
+			float D = Dmap[(i)+(599 - j) * 600];
 			//cout << D << " ";
 			if (D != 0)
 			{
