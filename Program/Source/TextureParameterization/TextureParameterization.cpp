@@ -26,6 +26,10 @@
 
 
 
+//#include <boost/regex.hpp>
+//#include "CGAL/Simple_cartesian.h"
+
+
 
 
 //ifdebug===============================================
@@ -34,6 +38,9 @@
 using namespace glm;
 using namespace std;
 using namespace Eigen;
+
+
+
 
 glm::vec3 worldPos;
 bool updateFlag = false;
@@ -294,8 +301,8 @@ void SetupGUI()
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
 	modelNames.push_back("Manyhole.obj");
 	modelNames.push_back("Stairs.obj");
-	modelNames.push_back("Ahole.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
+	modelNames.push_back("Ahole.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
@@ -2990,8 +2997,6 @@ void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size, i
 	//
 }
 
-
-
 //each SideFace do camera depth thing
 void Create_FaceCluster_BoundingBox()
 {
@@ -3140,3 +3145,12 @@ std::vector<std::vector<double>> one_dim_K_means(std::vector<double> x, std::vec
 //}
 
 #pragma endregion
+//
+////find polygon outline
+//std::vector<glm::vec3> Polygons_Union(std::vector<glm::vec3> outLine1 , std::vector < glm::vec3> outline2)
+//{
+//	//create outline w/ all intersition
+//	//ring find outsider point
+//	std::vector<glm::vec3> MorePointoutlie;
+//
+//}

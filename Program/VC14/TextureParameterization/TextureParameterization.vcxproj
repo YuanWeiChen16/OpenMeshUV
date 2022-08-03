@@ -72,7 +72,14 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Include\CGAL-5.5\include;C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Include\boost_1_71_0\boost;$(IncludePath)</IncludePath>
+    <ReferencePath>C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Include\build\boost;C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Include\CGAL-5.5\lib;$(ReferencePath)</ReferencePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Include\CGAL-5.5\include;C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Include\boost_1_71_0\boost;$(IncludePath)</IncludePath>
+    <ReferencePath>C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Include\build\boost;C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Include\CGAL-5.5\lib;$(ReferencePath)</ReferencePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
