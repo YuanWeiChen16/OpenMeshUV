@@ -2872,8 +2872,7 @@ void ChangeCameraLook(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size
 void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size, int ID)
 {
 
-
-	//拿到這個方向，用相機看過去得到的面與深度
+	ChangeCameraLook(Face_Diraction,Face_Size);	//拿到這個方向，用相機看過去得到的面與深度
 #pragma region  Camera GetDepth Map
 	//灰階深度圖
 	unsigned char* data = new unsigned char[360000];
@@ -3108,7 +3107,7 @@ std::vector<std::vector<double>> one_dim_K_means(std::vector<double> x, std::vec
 {
 	std::vector<std::vector<double>> Team = one_dim_K_means_cluster(x, kx, seed);
 	std::vector<double> nkx = one_dim_K_means_re_seed(Team, kx, seed);
-
+	u
 	double Error = 0.01;
 	int Done = true;
 	for (int i = 0; i < seed; i++)
@@ -3132,13 +3131,12 @@ std::vector<std::vector<double>> one_dim_K_means(std::vector<double> x, std::vec
 
 
 //預分類 Kmeans 
-// 
 //ALL_Idx_Depth		idx 與 那個idx深度對應(最後一個為平均深度)
 //idx id 與重複次數
 // 
 // 
-//id 深度 次數
-//被分類完的id 與深度
+//id 次數 深度
+//
 //
 
 #pragma endregion
@@ -3146,8 +3144,7 @@ std::vector<std::vector<double>> one_dim_K_means(std::vector<double> x, std::vec
 //用kx分群
 std::vector<std::map<int, std::vector<double>>> pre_K_means_cluster(std::map<int, std::vector<double>> x, std::vector < double > kx, int seed)
 {
-	std::vector<std::map<int, std::vector<double>>> team;
-	for (int i = 0; i < seed; i++)
+for (int i = 0; i < seed; i++)
 	{
 		team.push_back(std::map<int, std::vector<double>>());
 	}
@@ -3224,8 +3221,7 @@ std::vector<double> pre_K_means_re_seed(std::vector<std::map<int, std::vector<do
 // 
 std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans(std::map<int, std::vector<double>> x, std::vector < double > kx, int fig,int seed)
 {
-	std::vector<std::map<int, std::vector<double>>> Team = pre_K_means_cluster(x, kx, seed);
-	std::vector<double> nkx = pre_K_means_re_seed(Team, kx, seed);
+	std::vector<std::map<int, std::vector<double>>> Team = pre_K_means_cluster(x, kx, seed);	std::vector<double> nkx = pre_K_means_re_seed(Team, kx, seed);
 
 	double Error = 0.01;
 	int Done = true;
