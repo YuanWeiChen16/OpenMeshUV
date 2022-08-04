@@ -276,6 +276,10 @@ void DFS(std::vector<std::vector<int>>& M, std::vector<bool>& visited, int i);
 int FindFriend(std::vector<std::vector<int>>& M);
 void ChangeCameraLook(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size);
 void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size, int ID);
+std::vector<std::map<int, std::vector<double>>> pre_K_means_cluster(std::map<int, std::vector<double>> x, std::vector < double > kx, int seed);
+std::vector<double> pre_K_means_re_seed(std::vector<std::map<int, std::vector<double>>> Team, std::vector<double> kx, int seed);
+std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans(std::map<int, std::vector<double>> x, std::vector < double > kx, int fig, int seed);
+
 void MergeBoundary();
 void detectRoof();
 void caluBoundary();
@@ -299,12 +303,12 @@ void SetupGUI()
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
-	modelNames.push_back("Manyhole.obj");
+	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("Stairs.obj");
+	modelNames.push_back("Manyhole.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
 	modelNames.push_back("Ahole.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
-	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("WorldBuilding02_french_Arc_de_Triomphe.obj");
 
@@ -2471,6 +2475,28 @@ void NewDetectRoof()
 	cout << "DeepY " << DeepY << "\n";
 	//mesh TopDown
 
+	//K means 分群原本面
+	std::vector<double> kx;
+	int SEED = 3;
+	//預設seed
+	for (int i = 0; i < SEED; i++)
+	{
+		double nkx =  (MaxDepth - MinDepth)*i + MinDepth;
+		kx.push_back(nkx);
+	}
+	//k means分類
+	std::vector<std::map<int,std::vector<double>>> R = pre_Cluster_Kmeans(ALL_Idx_Depth, kx, 0, SEED);
+
+	//輸出分類結果
+	for (int i = 0; i < R.size(); i++)
+	{
+		for (std::map<int, std::vector<double>>::iterator RIter = R[i].begin(); RIter != R[i].end(); RIter++)
+		{
+			cout << RIter->first << " ";
+		}
+		cout << "\n";
+	}
+
 	//舊vertex 與 新vertex對應
 	//給舊vertex Index回傳新vertex Index
 	//排除重複點
@@ -3004,7 +3030,6 @@ void Create_FaceCluster_BoundingBox()
 
 }
 
-
 #pragma region OneDimKMeans
 
 //一維 K-means id 
@@ -3108,8 +3133,6 @@ std::vector<std::vector<double>> one_dim_K_means(std::vector<double> x, std::vec
 
 //預分類 Kmeans 
 // 
-
-
 //ALL_Idx_Depth		idx 與 那個idx深度對應(最後一個為平均深度)
 //idx id 與重複次數
 // 
@@ -3117,40 +3140,109 @@ std::vector<std::vector<double>> one_dim_K_means(std::vector<double> x, std::vec
 //id 深度 次數
 //被分類完的id 與深度
 //
-//std::vector<std::map<int, double>> pre_Cluster_Kmeans(std::map<int,std::pair<int, double>> x, std::vector<std::pair<std::vector<int>,double>> kx ,int seed)
-//{
-//
-//	std::vector<std::vector<double>> Team = pre_K_means_cluster(x, kx, seed);
-//	std::vector<double> nkx = pre_K_means_re_seed(Team, kx, seed);
-//
-//	double Error = 0.01;
-//	int Done = true;
-//
-//	for (int i = 0; i < seed; i++)
-//	{
-//		if (abs(nkx[i] - kx[i]) < Error)
-//		{
-//			Done = false;
-//		}
-//	}
-//
-//	if (Done == false)
-//	{
-//		one_dim_K_means(x, nkx, fig += 1, seed);
-//	}
-//	else
-//	{
-//		return Team;
-//	}
-//}
 
 #pragma endregion
-//
-////find polygon outline
-//std::vector<glm::vec3> Polygons_Union(std::vector<glm::vec3> outLine1 , std::vector < glm::vec3> outline2)
-//{
-//	//create outline w/ all intersition
-//	//ring find outsider point
-//	std::vector<glm::vec3> MorePointoutlie;
-//
-//}
+
+//用kx分群
+std::vector<std::map<int, std::vector<double>>> pre_K_means_cluster(std::map<int, std::vector<double>> x, std::vector < double > kx, int seed)
+{
+	std::vector<std::map<int, std::vector<double>>> team;
+	for (int i = 0; i < seed; i++)
+	{
+		team.push_back(std::map<int, std::vector<double>>());
+	}
+	//依照原始點對分點的距離 做最近點分群
+	//map第一項是 面id 第二項是次數 與深度(深度有可能會不一樣!!!)
+	for (map<int, std::vector<double>>::iterator Xitr = x.begin(); Xitr != x.end(); Xitr++)
+	{
+		double min_dis = 999999999;
+		int smallKJ = 0;
+		for (int j = 0; j < seed; j++)
+		{
+			//針對面裡面的每個點，將所有點的高差紀錄起來
+			double total_dis = 0;
+			for (int i = 0; i < Xitr->second.size(); i++)
+			{
+				total_dis += abs(Xitr->second[i] - kx[j]);
+			}
+			//找出最距離最小
+			if (total_dis < min_dis)
+			{
+				min_dis = total_dis;
+				smallKJ = j;
+			}
+		}
+
+		std::vector<double> temp;
+		for (int i = 0; i < Xitr->second.size(); i++)
+		{
+			temp.push_back(Xitr->second[i]);
+		}
+		team[smallKJ][Xitr->first] = temp;
+	}
+	//回傳所有點分群結果
+	return team;
+}
+
+//重新取中心點
+std::vector<double> pre_K_means_re_seed(std::vector<std::map<int, std::vector<double>>> Team, std::vector<double> kx, int seed)
+{
+	double sumx = 0;
+	std::vector<double> new_seed;
+	int Point_Length = 0;
+	for (int i = 0; i < Team.size(); i++)
+	{
+		if (Team.size() == 0)
+		{
+			new_seed.push_back(kx[0]);
+		}
+		Point_Length = 0;
+		for (int j = 0; j < Team[i].size(); j++)
+		{
+			for (std::map<int, std::vector<double>>::iterator TeamIter = Team[i].begin(); TeamIter != Team[i].end(); TeamIter++)
+			{
+				for (int k = 0; k < TeamIter->second.size(); k++)
+				{
+					sumx += TeamIter->second[k];
+					Point_Length++;
+				}
+			}
+		}
+
+		new_seed.push_back(sumx / Point_Length);
+		sumx = 0;
+	}
+	std::vector<double> nkx;
+	for (int i = 0; i < new_seed.size(); i++)
+	{
+		nkx.push_back(new_seed[i]);
+	}
+	return nkx;
+}
+
+//預分類 Kmeans 
+// 
+std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans(std::map<int, std::vector<double>> x, std::vector < double > kx, int fig,int seed)
+{
+	std::vector<std::map<int, std::vector<double>>> Team = pre_K_means_cluster(x, kx, seed);
+	std::vector<double> nkx = pre_K_means_re_seed(Team, kx, seed);
+
+	double Error = 0.01;
+	int Done = true;
+	for (int i = 0; i < seed; i++)
+	{
+		if (abs(nkx[i] - kx[i]) < Error)
+		{
+			Done = false;
+		}
+	}
+
+	if ((Done == true)||(fig > 2))
+	{
+		return Team;
+	}
+	else
+	{
+		return pre_Cluster_Kmeans(x, nkx, fig += 1, seed);
+	}
+}
