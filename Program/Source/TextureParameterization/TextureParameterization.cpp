@@ -303,16 +303,14 @@ void SetupGUI()
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
-	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
-	modelNames.push_back("Stairs.obj");
+	modelNames.push_back("stairs.obj");
+	modelNames.push_back("HEX.obj");
 	modelNames.push_back("Manyhole.obj");
+	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
-	modelNames.push_back("Ahole.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("WorldBuilding02_french_Arc_de_Triomphe.obj");
-
-
 
 	modelNames.push_back("WorldBuilding01_EmpireState_lp.obj");
 	modelNames.push_back("Res_Building_8x8_038_001_root.obj");
@@ -2291,6 +2289,7 @@ void caluBoundary()
 	}
 
 #pragma region saveDownFace
+#define SAVEDOWNFACE
 #ifdef SAVEDOWNFACE
 	for (int i = 0; i < BoundaryHalfEdgeHandler.size(); i++)
 	{
@@ -2487,13 +2486,22 @@ void NewDetectRoof()
 	//k means分類
 	std::vector<std::map<int,std::vector<double>>> R = pre_Cluster_Kmeans(ALL_Idx_Depth, kx, 0, SEED);
 
-	//輸出分類結果
+	//輸出與統計分類結果  //計算平均深度
+	std::vector<double> IDDepth;
 	for (int i = 0; i < R.size(); i++)
 	{
+		double AvgDepth = 0;
+		int Point_Count = 0;
 		for (std::map<int, std::vector<double>>::iterator RIter = R[i].begin(); RIter != R[i].end(); RIter++)
 		{
 			cout << RIter->first << " ";
+			for (int j = 0; j < RIter->second.size(); j++)
+			{
+				AvgDepth += RIter->second[j];
+				Point_Count++;
+			}
 		}
+		IDDepth.push_back(AvgDepth/(double)(Point_Count));
 		cout << "\n";
 	}
 
@@ -2865,7 +2873,6 @@ void ChangeCameraLook(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size
 	}
 }
 
-
 //對牆壁照深度圖 需要確定 牆壁面方向 牆壁大小(中心點)
 //Face_Diraction 單一 xyz 向量 向牆壁方向       Fce_Size  xyz 左上 xyz 右上 xyz 左下 xyz 右下  共四個xyz
 //ID 就是新ID
@@ -3107,7 +3114,6 @@ std::vector<std::vector<double>> one_dim_K_means(std::vector<double> x, std::vec
 {
 	std::vector<std::vector<double>> Team = one_dim_K_means_cluster(x, kx, seed);
 	std::vector<double> nkx = one_dim_K_means_re_seed(Team, kx, seed);
-	u
 	double Error = 0.01;
 	int Done = true;
 	for (int i = 0; i < seed; i++)
@@ -3144,7 +3150,8 @@ std::vector<std::vector<double>> one_dim_K_means(std::vector<double> x, std::vec
 //用kx分群
 std::vector<std::map<int, std::vector<double>>> pre_K_means_cluster(std::map<int, std::vector<double>> x, std::vector < double > kx, int seed)
 {
-for (int i = 0; i < seed; i++)
+	std::vector<std::map<int, std::vector<double>>> team;
+	for (int i = 0; i < seed; i++)
 	{
 		team.push_back(std::map<int, std::vector<double>>());
 	}
