@@ -268,6 +268,9 @@ bool CheckInBox(glm::vec3 Point, std::vector<glm::vec3> Face)
 	return true;
 }
 
+//深度轉世界座標
+
+
 unsigned int loadTexture(std::string path, int imageType);
 void magic();
 void magic_delete();
@@ -304,8 +307,8 @@ void SetupGUI()
 
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
 	modelNames.push_back("stairs.obj");
-	modelNames.push_back("HEX.obj");
 	modelNames.push_back("Manyhole.obj");
+	modelNames.push_back("HEX.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
@@ -2239,9 +2242,9 @@ void caluBoundary()
 
 
 		//做側面投影*************************************************************
+#ifdef SideProjection
 		for (int j = 0; j < PointLenght; j++)
 		{
-
 			MyMesh::Point S = EdgePointSet[i][(j + 1) % PointLenght] - EdgePointSet[i][j];
 			//設定高差為0
 			glm::vec3 EdgeDir(S[0], 0, S[2]);
@@ -2263,6 +2266,7 @@ void caluBoundary()
 
 			NewDetectWall(FaceDir, FacePoint, i * 1000 + j);
 		}
+#endif // SideProjection
 	}
 
 	//saving OBJ
@@ -2303,8 +2307,7 @@ void caluBoundary()
 			}
 			Face_string += ("f " + std::to_string(FVIndex[0]) + " " + std::to_string(FVIndex[1]) + " " + std::to_string(FVIndex[2]) + "\n");
 		}
-
-
+		//saving down Face
 		for (MyMesh::VIter VI = ALLModel[i].model.mesh.vertices_begin(); VI != ALLModel[i].model.mesh.vertices_end(); VI++)
 		{
 			MyMesh::VHandle VH = ALLModel[i].model.mesh.vertex_handle(VI->idx());
@@ -2317,7 +2320,6 @@ void caluBoundary()
 #pragma endregion
 	ObjFile << Face_string;;
 	ObjFile.close();
-
 }
 
 void NewDetectRoof()
@@ -2338,8 +2340,13 @@ void NewDetectRoof()
 	//std::fstream IdxFile;
 	glm::mat4 mvMat = meshWindowCam.GetViewMatrix() * meshWindowCam.GetModelMatrix();
 	glm::mat4 pMat = meshWindowCam.GetProjectionMatrix(aspect);
+
+	double Near = pMat[2][3] / (pMat[2][2] - 1);
+	double Far = pMat[2][3] / (pMat[2][2] + 1);
+
+
 	float depthValue = 0;
-	ObjFile.open("./Dfile/NewModel.obj", ios::out);
+	ObjFile.open("./Dfile/NewModel_Roof.obj", ios::out);
 	//DepthFile.open("./Dfile/DepthFile.txt", ios::out);
 
 
@@ -2349,8 +2356,8 @@ void NewDetectRoof()
 	float* depthmap = new float[360000];
 	//memset(depthmap, 0, sizeof(float) * Nsize * Nsize);
 	glReadPixels(0, 0, 600, 600, GL_DEPTH_COMPONENT, GL_FLOAT, depthmap);
-	
-	GLuint* Dmap  = new GLuint[360000];
+
+	GLuint* Dmap = new GLuint[360000];
 	Dmap = pickingTexture.ReadTextures();
 
 	for (int i = 0; i < 600; i++)
@@ -2427,6 +2434,7 @@ void NewDetectRoof()
 	Idx.erase(0);
 	ALL_Idx_Depth.erase(0);
 
+
 	//平均深度
 	for (map<int, std::vector<double>>::iterator ID = ALL_Idx_Depth.begin(); ID != ALL_Idx_Depth.end(); ID++)
 	{
@@ -2448,10 +2456,10 @@ void NewDetectRoof()
 			//ALLModel.push_back(MeshObject());
 			//ALLModel[ALLModel.size() - 1].model.mesh.clear();
 			//ALLModel[ALLModel.size() - 1].model.mesh.ClearMesh();
-			//ALLModel[ALLModel.size() - 1].model.mesh.request_vertex_texcoords2D();// _vertex_texcoords2D
+			//ALLModel[ALLModel.size() - 1].model.mesh.request_vertex_texcoords2D();
 			model.AddSelectedFace(ID->first - 1);
 		}
-}
+	}
 	//找最高與最低
 
 	for (MyMesh::FIter FI = model.model.mesh.faces_begin(); FI != model.model.mesh.faces_end(); FI++)
@@ -2474,17 +2482,19 @@ void NewDetectRoof()
 	cout << "DeepY " << DeepY << "\n";
 	//mesh TopDown
 
+#define Kmeans
+#ifdef Kmeans
 	//K means 分群原本面
 	std::vector<double> kx;
 	int SEED = 3;
 	//預設seed
 	for (int i = 0; i < SEED; i++)
 	{
-		double nkx =  (MaxDepth - MinDepth)*i + MinDepth;
+		double nkx = (MaxDepth - MinDepth) * i + MinDepth;
 		kx.push_back(nkx);
 	}
 	//k means分類
-	std::vector<std::map<int,std::vector<double>>> R = pre_Cluster_Kmeans(ALL_Idx_Depth, kx, 0, SEED);
+	std::vector<std::map<int, std::vector<double>>> R = pre_Cluster_Kmeans(ALL_Idx_Depth, kx, 0, SEED);
 
 	//輸出與統計分類結果  //計算平均深度
 	std::vector<double> IDDepth;
@@ -2501,9 +2511,14 @@ void NewDetectRoof()
 				Point_Count++;
 			}
 		}
-		IDDepth.push_back(AvgDepth/(double)(Point_Count));
-		cout << "\n";
+
+		IDDepth.push_back(AvgDepth / (double)(Point_Count));
+
+		cout << "Avg Depth" << AvgDepth / (double)(Point_Count) << "\n";
 	}
+#endif // Kmeans
+
+
 
 	//舊vertex 與 新vertex對應
 	//給舊vertex Index回傳新vertex Index
@@ -2515,6 +2530,8 @@ void NewDetectRoof()
 	TC[1] = 1;
 	BeSelectModel.model.mesh.request_vertex_texcoords2D();
 	//直接連接依照每個面，建造向下bounding box
+
+#ifdef original
 	for (map<int, int>::iterator ID = Idx.begin(); ID != Idx.end(); ID++)
 	{
 		MyMesh::FHandle FH = model.model.mesh.face_handle(ID->first - 1);
@@ -2532,6 +2549,85 @@ void NewDetectRoof()
 			}
 		}
 	}
+#endif // original
+
+#ifdef Kmeans
+	//用分類的順序產生點 直接存OBJ
+	for (int i = 0; i < R.size(); i++)
+	{
+		double AvgDepth = 0;
+		int Point_Count = 0;
+		for (std::map<int, std::vector<double>>::iterator RIter = R[i].begin(); RIter != R[i].end(); RIter++)
+		{
+			//輸出面id
+			//cout << RIter->first << " ";
+			MyMesh::FHandle FH = model.model.mesh.face_handle(RIter->first-1);
+			for (MyMesh::FVIter FV1 = model.model.mesh.fv_begin(FH); FV1 != model.model.mesh.fv_end(FH); ++FV1)
+			{
+				//if (VectorSerise.find(FV1->idx()) == VectorSerise.end())
+				//{
+				MyMesh::VHandle VH = model.model.mesh.vertex_handle(FV1->idx());
+				MyMesh::Point P = model.model.mesh.point(VH);
+				//	int Size = VectorSerise.size();
+				//	VectorSerise[FV1->idx()] = Size;
+
+				mat4 inverse_biased_projection_matrix = pMat * mvMat;
+				inverse_biased_projection_matrix = inverse(inverse_biased_projection_matrix);
+					
+				mat4 inverse_projection_matrix = inverse(pMat);
+				//	
+				vec3 clip_space_position = vec3(vec2(0.5, 0.5), IDDepth[i]);
+
+				vec4 view_position(vec2(inverse_projection_matrix[0][0], inverse_projection_matrix[1][1]) * clip_space_position.xy, -1.0,
+					inverse_projection_matrix[2][3] * clip_space_position.z + inverse_projection_matrix[3][3]);
+
+				//vec3 FinalPos = view_position.xyz / view_position.w;
+				double RDepth = view_position.y / view_position.w;
+				P[1]  = IDDepth[i];
+				//	vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
+
+				//	//BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
+				//}
+
+				vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
+			}
+		}
+	}
+	
+	int Point_Count = 0;
+	for (int i = 0; i < R.size(); i++)
+	{
+		double AvgDepth = 0;
+		std::vector<MyMesh::VertexHandle>  face_vhandles;
+
+		for (std::map<int, std::vector<double>>::iterator RIter = R[i].begin(); RIter != R[i].end(); RIter++)
+		{
+			std::vector<int> Face_vertex_index;
+			MyMesh::FHandle FH = BeSelectModel.model.mesh.face_handle(RIter->first - 1);
+			if (RIter->first != 0)
+			{
+				//點做重新對應，避免使用重複點
+				/*for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); FVI++)
+				{*/
+				//Face_vertex_index.push_back(FVI->idx());
+
+				//對應點做
+				face_vhandles.clear();/*
+				face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[0]]]);
+				face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[1]]]);
+				face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[2]]]);*/
+
+				face_vhandles.push_back(vhandle[Point_Count + 0]);
+				face_vhandles.push_back(vhandle[Point_Count + 1]);
+				face_vhandles.push_back(vhandle[Point_Count + 2]);
+				BeSelectModel.model.mesh.add_face(face_vhandles);
+				Point_Count += 3;
+				//}
+			}
+		}
+	}
+#endif // Kmeans
+
 	TC[0] = 1;
 	TC[1] = 1;
 
@@ -2565,6 +2661,8 @@ void NewDetectRoof()
 	//#endif // GENERATE_FLOOR
 		//連接面產生小box===================================================================================
 		//connect point to face to beselectModel===================================================================================
+
+#ifdef original
 	std::vector<MyMesh::VertexHandle>  face_vhandles;
 	int count = 0;
 
@@ -2575,65 +2673,11 @@ void NewDetectRoof()
 			//舊三角面對應點id
 			std::vector<int> Face_vertex_index;
 			MyMesh::FHandle FH = model.model.mesh.face_handle(ID->first - 1);
-			//std::vector <MyMesh::VertexHandle> All_Vhandle;
-			//TC[0] = 1;
-			//TC[1] = 0;
-			//double AvgDepth = 0;
-			////Find Avg Depth
-			//for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); FVI++)
-			//{
-			//	MyMesh::VertexHandle VH = model.model.mesh.vertex_handle(FVI->idx());
-			//	MyMesh::Point P = model.model.mesh.point(VH);
-			//	AvgDepth += P[1];
-			//}
-			//AvgDepth /= 3;
-			//int ClusterSize = 5;
-			//double ClusterDeep = (HeightY - DeepY) / (double)ClusterSize;
-			//int Custer = 0;
-			//for (int i = 0; i < ClusterSize; i++)
-			//{
-			//	if (((ClusterDeep * (i + 1) + DeepY) > AvgDepth) && (AvgDepth > (ClusterDeep * i + DeepY)))
-			//	{
-			//		AvgDepth = (ClusterDeep * (i + 0.5)) + DeepY;
-			//		Custer = i;
-			//		break;
-			//	}
-			//}
-			//TC[0] = colormap[Custer][0];
-			//TC[1] = colormap[Custer][1];
 
 			for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); FVI++)
 			{
 				Face_vertex_index.push_back(FVI->idx());
-
-				//MyMesh::VertexHandle VH = model.model.mesh.vertex_handle(FVI->idx());
-				//MyMesh::Point P = model.model.mesh.point(VH);
-				//int ClusterSize = 5;
-				//double ClusterDeep = (HeightY - DeepY) / (double)ClusterSize;
-				////int Custer = 0;
-				//for (int i = 0; i < ClusterSize; i++)
-				//{
-				//	if (((ClusterDeep * (i + 1) + DeepY) > P[1]) && (P[1] > (ClusterDeep * i + DeepY)))
-				//	{
-				//		P[1] = (ClusterDeep * (i + 0.5)) + DeepY;
-				//		Custer = i;
-				//		break;
-				//	}
-				//}
-				////P[1] = AvgDepth;
-				//All_Vhandle.push_back(ALLModel[count].model.mesh.add_vertex(P));
-				//ALLModel[count].model.mesh.set_texcoord2D(All_Vhandle[All_Vhandle.size() - 1], TC);
 			}
-			//TC[0] = 1;
-			//TC[1] = 1;
-		/*	for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); FVI++)
-			{
-				MyMesh::VertexHandle VH = model.model.mesh.vertex_handle(FVI->idx());
-				MyMesh::Point P = model.model.mesh.point(VH);
-				P[1] = DeepY;
-				All_Vhandle.push_back(ALLModel[count].model.mesh.add_vertex(P));
-				ALLModel[count].model.mesh.set_texcoord2D(All_Vhandle[All_Vhandle.size() - 1], TC);
-			}*/
 #pragma region box
 			//top
 			face_vhandles.clear();
@@ -2641,13 +2685,6 @@ void NewDetectRoof()
 			face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[1]]]);
 			face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[2]]]);
 			BeSelectModel.model.mesh.add_face(face_vhandles);
-
-			//cout << "Index " << Face_vertex_index[0] << " " << VectorSerise[Face_vertex_index[0]] << "\n";
-			//cout << "Index " << Face_vertex_index[1] << " " << VectorSerise[Face_vertex_index[1]] << "\n";
-			//cout << "Index " << Face_vertex_index[2] << " " << VectorSerise[Face_vertex_index[2]] << "\n";
-
-
-
 
 #ifdef CREATE_FACE_DEBUG
 			cout << "FACE " << ID->first - 1 << "TOP Is be Rebuild" << endl;
@@ -2704,6 +2741,10 @@ void NewDetectRoof()
 			face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[2]] + VSize]);
 			BeSelectModel.model.mesh.add_face(face_vhandles);*/
 #pragma endregion
+
+
+
+
 
 #pragma region newbox
 			//			int NHS = 3;
@@ -2783,12 +2824,13 @@ void NewDetectRoof()
 			//#endif // CREATE_FACE_DEBUG
 			//			count++;
 		}
-	}
+}
+#endif // original
 
-	BeSelectModel.model.mesh.request_face_normals();
-	BeSelectModel.model.mesh.update_normals();
-	BeSelectModel.model.mesh.release_face_normals();
-	BeSelectModel.MY_LoadToShader();
+	//BeSelectModel.model.mesh.request_face_normals();
+	//BeSelectModel.model.mesh.update_normals();
+	//BeSelectModel.model.mesh.release_face_normals();
+	//BeSelectModel.MY_LoadToShader();
 
 	int NowVerticesCount = 1;
 
@@ -2845,7 +2887,7 @@ void NewDetectRoof()
 
 	Showwwwwwwwww = 1000;
 	//model.AddSelectedFace(0);
-		}
+}
 
 //切換相機方向 需要確定 牆壁面方向 牆壁大小(中心點)
 //Face_Diraction 單一 xyz 向量 向牆壁方向       Fce_Size  xyz 左上 xyz 右上 xyz 左下 xyz 右下  共四個xyz
@@ -2879,7 +2921,7 @@ void ChangeCameraLook(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size
 void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size, int ID)
 {
 
-	ChangeCameraLook(Face_Diraction,Face_Size);	//拿到這個方向，用相機看過去得到的面與深度
+	ChangeCameraLook(Face_Diraction, Face_Size);	//拿到這個方向，用相機看過去得到的面與深度
 #pragma region  Camera GetDepth Map
 	//灰階深度圖
 	unsigned char* data = new unsigned char[360000];
@@ -3226,7 +3268,7 @@ std::vector<double> pre_K_means_re_seed(std::vector<std::map<int, std::vector<do
 
 //預分類 Kmeans 
 // 
-std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans(std::map<int, std::vector<double>> x, std::vector < double > kx, int fig,int seed)
+std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans(std::map<int, std::vector<double>> x, std::vector < double > kx, int fig, int seed)
 {
 	std::vector<std::map<int, std::vector<double>>> Team = pre_K_means_cluster(x, kx, seed);	std::vector<double> nkx = pre_K_means_re_seed(Team, kx, seed);
 
@@ -3240,7 +3282,7 @@ std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans(std::map<int,
 		}
 	}
 
-	if ((Done == true)||(fig > 2))
+	if ((Done == true) || (fig > 2))
 	{
 		return Team;
 	}
