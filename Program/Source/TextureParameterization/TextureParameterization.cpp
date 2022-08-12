@@ -295,13 +295,13 @@ void SetupGUI()
 	// Adding season to bar
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
-	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
+	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
+	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
 	modelNames.push_back("stairs.obj");
 	modelNames.push_back("Manyhole.obj");
 	modelNames.push_back("HEX.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
-	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("WorldBuilding02_french_Arc_de_Triomphe.obj");
 
@@ -2480,7 +2480,7 @@ void NewDetectRoof()
 	//預設seed
 	for (int i = 0; i < SEED; i++)
 	{
-		double nkx = (MaxDepth - MinDepth) * i + MinDepth;
+		double nkx = ((MaxDepth - MinDepth)/(double)SEED) * i + MinDepth;
 		kx.push_back(nkx);
 	}
 	//k means分類
@@ -3227,10 +3227,16 @@ std::vector<std::map<int, std::vector<double>>> pre_K_means_cluster(std::map<int
 		{
 			//針對面裡面的每個點，將所有點的高差紀錄起來
 			double total_dis = 0;
-			for (int i = 0; i < Xitr->second.size(); i++)
+
+			/*for (int i = 0; i < Xitr->second.size(); i++)
 			{
 				total_dis += abs(Xitr->second[i] - kx[j]);
-			}
+			}*/
+			//暫時加速
+			total_dis += abs(Xitr->second[0] - kx[j]) * Xitr->second.size();
+			//
+			 
+			
 			//找出最距離最小
 			if (total_dis < min_dis)
 			{
@@ -3267,11 +3273,15 @@ std::vector<double> pre_K_means_re_seed(std::vector<std::map<int, std::vector<do
 		{
 			for (std::map<int, std::vector<double>>::iterator TeamIter = Team[i].begin(); TeamIter != Team[i].end(); TeamIter++)
 			{
-				for (int k = 0; k < TeamIter->second.size(); k++)
+				//暫時加速
+				/*for (int k = 0; k < TeamIter->second.size(); k++)
 				{
 					sumx += TeamIter->second[k];
 					Point_Length++;
-				}
+				}*/
+				sumx += TeamIter->second[0] * TeamIter->second.size();
+				Point_Length += TeamIter->second.size();
+
 			}
 		}
 

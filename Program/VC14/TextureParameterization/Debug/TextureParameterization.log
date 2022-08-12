@@ -1,4 +1,4 @@
-﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(377,5): warning MSB8004: Output 目錄結尾不是結尾斜線。這個建置執行個體將會加入此斜線，因為這樣才能正確評估 Output 目錄。
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(377,5): warning MSB8004: Output 目錄結尾不是結尾斜線。這個建置執行個體將會加入此斜線，因為這樣才能正確評估 Output 目錄。
   TextureParameterization.cpp
 c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(215): warning C4018: '<': signed/unsigned 不相符
 c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(742): warning C4018: '<': signed/unsigned 不相符
@@ -140,12 +140,10 @@ c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\t
 c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3150): warning C4018: '<': signed/unsigned 不相符
 c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3156): warning C4018: '<': signed/unsigned 不相符
 c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3164): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3230): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3243): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3259): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3266): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3270): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3282): warning C4018: '<': signed/unsigned 不相符
-c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3307): warning C4805: '==': 作業中不安全的混用類型 'int' 和類型 'bool'
+c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3249): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3265): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3272): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3292): warning C4018: '<': signed/unsigned 不相符
+c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3317): warning C4805: '==': 作業中不安全的混用類型 'int' 和類型 'bool'
 c:\users\user\desktop\mymesh\openmeshuv\program\source\textureparameterization\textureparameterization.cpp(3197): warning C4715: 'one_dim_K_means': 不是所有控制路徑都傳回值
-  TextureParameterization.vcxproj -> C:\Users\User\Desktop\Mymesh\OpenMeshUV\Program\VC14\TextureParameterization\..\..\Assets\TextureParameterization.exe
+  TextureParameterization.vcxproj -> C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\VC14\TextureParameterization\..\..\Assets\TextureParameterization.exe
