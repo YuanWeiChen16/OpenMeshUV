@@ -20,17 +20,11 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../Include/STB/stb_image.h"
 
-
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../../Include/STB/stb_image_write.h"
 
-
-
 //#include <boost/regex.hpp>
 //#include "CGAL/Simple_cartesian.h"
-
-
-
 
 //ifdebug===============================================
 //#define DEBUG 
@@ -38,8 +32,6 @@
 using namespace glm;
 using namespace std;
 using namespace Eigen;
-
-
 
 
 glm::vec3 worldPos;
@@ -72,8 +64,6 @@ float OuterLengh = 0;
 float TextureX = 0;
 float TextureY = 0;
 float TexRotate = 0;
-
-
 
 // use by Roof thing============================================
 vector<vector<int>> adjmatrix;
@@ -306,11 +296,11 @@ void SetupGUI()
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
+	modelNames.push_back("gta02_dt1_03_build2_high.obj");
 	modelNames.push_back("stairs.obj");
 	modelNames.push_back("Manyhole.obj");
 	modelNames.push_back("HEX.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
-	modelNames.push_back("gta02_dt1_03_build2_high.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("WorldBuilding02_french_Arc_de_Triomphe.obj");
@@ -2486,7 +2476,7 @@ void NewDetectRoof()
 #ifdef Kmeans
 	//K means 分群原本面
 	std::vector<double> kx;
-	int SEED = 3;
+	int SEED = 10;
 	//預設seed
 	for (int i = 0; i < SEED; i++)
 	{
@@ -2576,14 +2566,21 @@ void NewDetectRoof()
 					
 				mat4 inverse_projection_matrix = inverse(pMat);
 				//	
-				vec3 clip_space_position = vec3(vec2(0.5, 0.5), IDDepth[i]);
-
+				vec3 clip_space_position = vec3(vec2(0.5, 0.5), IDDepth[i] * 2.0 + 1.0);
 				vec4 view_position(vec2(inverse_projection_matrix[0][0], inverse_projection_matrix[1][1]) * clip_space_position.xy, -1.0,
 					inverse_projection_matrix[2][3] * clip_space_position.z + inverse_projection_matrix[3][3]);
 
+				mat4 viewMaterixInv = inverse(mvMat);
+
+				vec4 clipSpacePosition = vec4(vec2(0.5, 0.5), IDDepth[i] * 2.0 + 1.0, 1.0);
+				vec4 viewSpacePosition = inverse_projection_matrix * clipSpacePosition;
+				viewSpacePosition /= viewSpacePosition.w;
+				vec4 worldSapcePosition = viewMaterixInv * viewSpacePosition;
+
 				//vec3 FinalPos = view_position.xyz / view_position.w;
 				double RDepth = view_position.y / view_position.w;
-				P[1]  = IDDepth[i];
+
+				P[1] = worldSapcePosition.y + 1000;
 				//	vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
 
 				//	//BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
@@ -2593,7 +2590,30 @@ void NewDetectRoof()
 			}
 		}
 	}
-	
+	//
+	//for (int i = 0; i < R.size(); i++)
+	//{
+	//	double AvgDepth = 0;
+	//	int Point_Count = 0;
+	//	for (std::map<int, std::vector<double>>::iterator RIter = R[i].begin(); RIter != R[i].end(); RIter++)
+	//	{
+	//		//輸出面id
+	//		//cout << RIter->first << " ";
+	//		MyMesh::FHandle FH = model.model.mesh.face_handle(RIter->first - 1);
+	//		for (MyMesh::FVIter FV1 = model.model.mesh.fv_begin(FH); FV1 != model.model.mesh.fv_end(FH); ++FV1)
+	//		{
+	//			MyMesh::VHandle VH = model.model.mesh.vertex_handle(FV1->idx());
+	//			MyMesh::Point P = model.model.mesh.point(VH);
+	//			P[1] = DeepY;
+	//			//	vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
+	//			//	//BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
+	//			//}
+	//			vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
+	//		}
+	//	}
+	//}
+
+
 	int Point_Count = 0;
 	for (int i = 0; i < R.size(); i++)
 	{
@@ -3270,7 +3290,9 @@ std::vector<double> pre_K_means_re_seed(std::vector<std::map<int, std::vector<do
 // 
 std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans(std::map<int, std::vector<double>> x, std::vector < double > kx, int fig, int seed)
 {
-	std::vector<std::map<int, std::vector<double>>> Team = pre_K_means_cluster(x, kx, seed);	std::vector<double> nkx = pre_K_means_re_seed(Team, kx, seed);
+	std::vector<std::map<int, std::vector<double>>> Team = pre_K_means_cluster(x, kx, seed);
+	std::vector<double> nkx = pre_K_means_re_seed(Team, kx, seed);
+	cout << "Kmeans " << fig << "\n";
 
 	double Error = 0.01;
 	int Done = true;
