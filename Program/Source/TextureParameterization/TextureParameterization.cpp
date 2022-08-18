@@ -296,19 +296,16 @@ void SetupGUI()
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
+	modelNames.push_back("gta06_dt1_20_build2_high_fillhole.obj");
+	modelNames.push_back("octopus.obj");
+	modelNames.push_back("WorldBuilding01_EmpireState_lp.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
 	modelNames.push_back("stairs.obj");
 	modelNames.push_back("Manyhole.obj");
-	modelNames.push_back("HEX.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("WorldBuilding02_french_Arc_de_Triomphe.obj");
-
-	modelNames.push_back("WorldBuilding01_EmpireState_lp.obj");
-	modelNames.push_back("Res_Building_8x8_038_001_root.obj");
-
-
 	modelNames.push_back("xyzrgb_dragon_100k.obj");
 
 	TextureNames.push_back("checkerboard4.jpg");
@@ -2209,8 +2206,6 @@ void caluBoundary()
 
 		//理論上需要做面高度的分類並產生對應 屋頂union區域 再擷取出 屋頂區域下拉面 在從屋頂下拉面，做同樣的整個流程
 		//
-		//
-
 		for (int j = 0; j < PointLenght; j++)
 		{
 			//face 0 down
@@ -2229,7 +2224,6 @@ void caluBoundary()
 			ALLModel[i].model.mesh.add_face(face_vhandles);
 			//cout << "FACE " << ID->first - 1 << "FACE0 UP Is be Rebuild" << endl;
 		}
-
 
 		//做側面投影*************************************************************
 #ifdef SideProjection
@@ -2412,15 +2406,16 @@ void NewDetectRoof()
 	{
 		double tmp = Rawdata[i] - MinDepth;
 		data[i] = (char)((tmp / diff) * 256.0);
-		Colordata[i * 3 + 0] = (char)(colormap[RawIdxdata[i]][0] * 256.0);
+
+		/*Colordata[i * 3 + 0] = (char)(colormap[RawIdxdata[i]][0] * 256.0);
 		Colordata[i * 3 + 1] = (char)(colormap[RawIdxdata[i]][1] * 256.0);
-		Colordata[i * 3 + 2] = (char)(colormap[RawIdxdata[i]][2] * 256.0);
+		Colordata[i * 3 + 2] = (char)(colormap[RawIdxdata[i]][2] * 256.0);*/
 	}
 	//stbi_flip_vertically_on_write(true);
 	stbi_write_png("Fileeee.png", 600, 600, 1, data, 0);
-	stbi_write_png("Fileeee_Color.png", 600, 600, 3, Colordata, 0);
+	//stbi_write_png("Fileeee_Color.png", 600, 600, 3, Colordata, 0);
 	stbi_image_free(data);
-	stbi_image_free(Colordata);
+
 	Idx.erase(0);
 	ALL_Idx_Depth.erase(0);
 
@@ -2476,11 +2471,11 @@ void NewDetectRoof()
 #ifdef Kmeans
 	//K means 分群原本面
 	std::vector<double> kx;
-	int SEED = 10;
+	int SEED = 40;
 	//預設seed
 	for (int i = 0; i < SEED; i++)
 	{
-		double nkx = ((MaxDepth - MinDepth)/(double)SEED) * i + MinDepth;
+		double nkx = ((MaxDepth - MinDepth) / (double)SEED) * i + MinDepth;
 		kx.push_back(nkx);
 	}
 	//k means分類
@@ -2495,11 +2490,14 @@ void NewDetectRoof()
 		for (std::map<int, std::vector<double>>::iterator RIter = R[i].begin(); RIter != R[i].end(); RIter++)
 		{
 			cout << RIter->first << " ";
-			for (int j = 0; j < RIter->second.size(); j++)
+			//暫時加速
+			/*for (int j = 0; j < RIter->second.size(); j++)
 			{
 				AvgDepth += RIter->second[j];
 				Point_Count++;
-			}
+			}*/
+			AvgDepth += RIter->second[0] * RIter->second.size();
+			Point_Count += RIter->second.size();
 		}
 
 		IDDepth.push_back(AvgDepth / (double)(Point_Count));
@@ -2508,7 +2506,36 @@ void NewDetectRoof()
 	}
 #endif // Kmeans
 
+	//save Kmeans class end
 
+	for (int i = 0; i < 360000; i++)
+	{
+		int nowIdx = RawIdxdata[i];
+		int classIndex = 0;
+		for (int i = 0; i < R.size(); i++)
+		{
+			for (std::map<int, std::vector<double>>::iterator RIter = R[i].begin(); RIter != R[i].end(); RIter++)
+			{
+				if (nowIdx == RIter->first)
+				{
+					classIndex = i;
+					break;
+				}
+			}
+		}
+		
+		Colordata[i * 3 + 0] = (char)(colormap[classIndex-1][0] * 256.0);
+		Colordata[i * 3 + 1] = (char)(colormap[classIndex-1][1] * 256.0);
+		Colordata[i * 3 + 2] = (char)(colormap[classIndex-1][2] * 256.0);
+		if (classIndex == 0)
+		{
+			Colordata[i * 3 + 0] = 0;
+			Colordata[i * 3 + 1] = 0;
+			Colordata[i * 3 + 2] = 0;
+		}
+	}
+	stbi_write_png("Fileeee_Color.png", 600, 600, 3, Colordata, 0);
+	stbi_image_free(Colordata);
 
 	//舊vertex 與 新vertex對應
 	//給舊vertex Index回傳新vertex Index
@@ -2551,7 +2578,7 @@ void NewDetectRoof()
 		{
 			//輸出面id
 			//cout << RIter->first << " ";
-			MyMesh::FHandle FH = model.model.mesh.face_handle(RIter->first-1);
+			MyMesh::FHandle FH = model.model.mesh.face_handle(RIter->first - 1);
 			for (MyMesh::FVIter FV1 = model.model.mesh.fv_begin(FH); FV1 != model.model.mesh.fv_end(FH); ++FV1)
 			{
 				//if (VectorSerise.find(FV1->idx()) == VectorSerise.end())
@@ -2563,7 +2590,7 @@ void NewDetectRoof()
 
 				mat4 inverse_biased_projection_matrix = pMat * mvMat;
 				inverse_biased_projection_matrix = inverse(inverse_biased_projection_matrix);
-					
+
 				mat4 inverse_projection_matrix = inverse(pMat);
 				//	
 				vec3 clip_space_position = vec3(vec2(0.5, 0.5), IDDepth[i] * 2.0 + 1.0);
@@ -2844,7 +2871,7 @@ void NewDetectRoof()
 			//#endif // CREATE_FACE_DEBUG
 			//			count++;
 		}
-}
+	}
 #endif // original
 
 	//BeSelectModel.model.mesh.request_face_normals();
@@ -3235,8 +3262,8 @@ std::vector<std::map<int, std::vector<double>>> pre_K_means_cluster(std::map<int
 			//暫時加速
 			total_dis += abs(Xitr->second[0] - kx[j]) * Xitr->second.size();
 			//
-			 
-			
+
+
 			//找出最距離最小
 			if (total_dis < min_dis)
 			{
