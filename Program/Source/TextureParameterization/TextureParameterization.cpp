@@ -295,13 +295,13 @@ void SetupGUI()
 	// Adding season to bar
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
+	modelNames.push_back("building.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
+	modelNames.push_back("Residence.obj");
+	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
 	modelNames.push_back("gta06_dt1_20_build2_high_fillhole.obj");
-	modelNames.push_back("octopus.obj");
 	modelNames.push_back("WorldBuilding01_EmpireState_lp.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
-	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
-	modelNames.push_back("stairs.obj");
 	modelNames.push_back("Manyhole.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
@@ -2344,6 +2344,9 @@ void NewDetectRoof()
 	GLuint* Dmap = new GLuint[360000];
 	Dmap = pickingTexture.ReadTextures();
 
+	//蒐集資訊，目前蒐集深度與找到面的id，需要繼續找面的normal，與連接方式
+	//
+
 	for (int i = 0; i < 600; i++)
 	{
 		for (int j = 0; j < 600; j++)
@@ -2471,7 +2474,7 @@ void NewDetectRoof()
 #ifdef Kmeans
 	//K means 分群原本面
 	std::vector<double> kx;
-	int SEED = 40;
+	int SEED = 20;
 	//預設seed
 	for (int i = 0; i < SEED; i++)
 	{
@@ -2501,13 +2504,10 @@ void NewDetectRoof()
 		}
 
 		IDDepth.push_back(AvgDepth / (double)(Point_Count));
-
 		cout << "Avg Depth" << AvgDepth / (double)(Point_Count) << "\n";
 	}
-#endif // Kmeans
 
 	//save Kmeans class end
-
 	for (int i = 0; i < 360000; i++)
 	{
 		int nowIdx = RawIdxdata[i];
@@ -2523,19 +2523,24 @@ void NewDetectRoof()
 				}
 			}
 		}
-		
-		Colordata[i * 3 + 0] = (char)(colormap[classIndex-1][0] * 256.0);
-		Colordata[i * 3 + 1] = (char)(colormap[classIndex-1][1] * 256.0);
-		Colordata[i * 3 + 2] = (char)(colormap[classIndex-1][2] * 256.0);
 		if (classIndex == 0)
 		{
-			Colordata[i * 3 + 0] = 0;
+			Colordata[i * 3 + 0] = 1;
 			Colordata[i * 3 + 1] = 0;
 			Colordata[i * 3 + 2] = 0;
+		}
+		else
+		{
+			Colordata[i * 3 + 0] = (char)(colormap[classIndex - 1][0] * 256.0);
+			Colordata[i * 3 + 1] = (char)(colormap[classIndex - 1][1] * 256.0);
+			Colordata[i * 3 + 2] = (char)(colormap[classIndex - 1][2] * 256.0);
 		}
 	}
 	stbi_write_png("Fileeee_Color.png", 600, 600, 3, Colordata, 0);
 	stbi_image_free(Colordata);
+#endif // Kmeans
+
+
 
 	//舊vertex 與 新vertex對應
 	//給舊vertex Index回傳新vertex Index
@@ -2581,42 +2586,45 @@ void NewDetectRoof()
 			MyMesh::FHandle FH = model.model.mesh.face_handle(RIter->first - 1);
 			for (MyMesh::FVIter FV1 = model.model.mesh.fv_begin(FH); FV1 != model.model.mesh.fv_end(FH); ++FV1)
 			{
-				//if (VectorSerise.find(FV1->idx()) == VectorSerise.end())
-				//{
-				MyMesh::VHandle VH = model.model.mesh.vertex_handle(FV1->idx());
-				MyMesh::Point P = model.model.mesh.point(VH);
-				//	int Size = VectorSerise.size();
-				//	VectorSerise[FV1->idx()] = Size;
+				if (VectorSerise.find(FV1->idx()) == VectorSerise.end())
+				{
+					MyMesh::VHandle VH = model.model.mesh.vertex_handle(FV1->idx());
+					MyMesh::Point P = model.model.mesh.point(VH);
+					//紀錄 原始點ID 與 之後點ID 對應
+					int Size = VectorSerise.size();
+					VectorSerise[FV1->idx()] = Size;
 
-				mat4 inverse_biased_projection_matrix = pMat * mvMat;
-				inverse_biased_projection_matrix = inverse(inverse_biased_projection_matrix);
+					//深度返算點位置
+					mat4 inverse_biased_projection_matrix = pMat * mvMat;
+					inverse_biased_projection_matrix = inverse(inverse_biased_projection_matrix);
+					mat4 inverse_projection_matrix = inverse(pMat);
+					//	
+					vec3 clip_space_position = vec3(vec2(0.5, 0.5), IDDepth[i] * 2.0 + 1.0);
+					vec4 view_position(vec2(inverse_projection_matrix[0][0], inverse_projection_matrix[1][1]) * clip_space_position.xy, -1.0,
+						inverse_projection_matrix[2][3] * clip_space_position.z + inverse_projection_matrix[3][3]);
 
-				mat4 inverse_projection_matrix = inverse(pMat);
-				//	
-				vec3 clip_space_position = vec3(vec2(0.5, 0.5), IDDepth[i] * 2.0 + 1.0);
-				vec4 view_position(vec2(inverse_projection_matrix[0][0], inverse_projection_matrix[1][1]) * clip_space_position.xy, -1.0,
-					inverse_projection_matrix[2][3] * clip_space_position.z + inverse_projection_matrix[3][3]);
+					mat4 viewMaterixInv = inverse(mvMat);
+					vec4 clipSpacePosition = vec4(vec2(0.5, 0.5), IDDepth[i] * 2.0 + 1.0, 1.0);
+					vec4 viewSpacePosition = inverse_projection_matrix * clipSpacePosition;
+					viewSpacePosition /= viewSpacePosition.w;
+					vec4 worldSapcePosition = viewMaterixInv * viewSpacePosition;
 
-				mat4 viewMaterixInv = inverse(mvMat);
+					//vec3 FinalPos = view_position.xyz / view_position.w;
+					double RDepth = view_position.y / view_position.w;
 
-				vec4 clipSpacePosition = vec4(vec2(0.5, 0.5), IDDepth[i] * 2.0 + 1.0, 1.0);
-				vec4 viewSpacePosition = inverse_projection_matrix * clipSpacePosition;
-				viewSpacePosition /= viewSpacePosition.w;
-				vec4 worldSapcePosition = viewMaterixInv * viewSpacePosition;
 
-				//vec3 FinalPos = view_position.xyz / view_position.w;
-				double RDepth = view_position.y / view_position.w;
+					P[1] = worldSapcePosition.y + 1000;
+					//	vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
 
-				P[1] = worldSapcePosition.y + 1000;
-				//	vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
+					//	//BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
 
-				//	//BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
-				//}
+					vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
 
-				vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
+				}
 			}
 		}
 	}
+
 	//
 	//for (int i = 0; i < R.size(); i++)
 	//{
@@ -2650,7 +2658,7 @@ void NewDetectRoof()
 		for (std::map<int, std::vector<double>>::iterator RIter = R[i].begin(); RIter != R[i].end(); RIter++)
 		{
 			std::vector<int> Face_vertex_index;
-			MyMesh::FHandle FH = BeSelectModel.model.mesh.face_handle(RIter->first - 1);
+			MyMesh::FHandle FH = model.model.mesh.face_handle(RIter->first - 1);
 			if (RIter->first != 0)
 			{
 				//點做重新對應，避免使用重複點
@@ -2659,17 +2667,31 @@ void NewDetectRoof()
 				//Face_vertex_index.push_back(FVI->idx());
 
 				//對應點做
-				face_vhandles.clear();/*
+				face_vhandles.clear();
+
+				////face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[0]]]);
+				////face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[1]]]);
+				////face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[2]]]);
+
+				//face_vhandles.push_back(vhandle[Point_Count + 0]);
+				//face_vhandles.push_back(vhandle[Point_Count + 1]);
+				//face_vhandles.push_back(vhandle[Point_Count + 2]);
+
+				//BeSelectModel.model.mesh.add_face(face_vhandles);
+				//Point_Count += 3;
+				//}
+
+				for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); FVI++)
+				{
+					Face_vertex_index.push_back(FVI->idx());
+				}
+
 				face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[0]]]);
 				face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[1]]]);
-				face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[2]]]);*/
+				face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[2]]]);
 
-				face_vhandles.push_back(vhandle[Point_Count + 0]);
-				face_vhandles.push_back(vhandle[Point_Count + 1]);
-				face_vhandles.push_back(vhandle[Point_Count + 2]);
 				BeSelectModel.model.mesh.add_face(face_vhandles);
-				Point_Count += 3;
-				//}
+
 			}
 		}
 	}
@@ -2898,7 +2920,7 @@ void NewDetectRoof()
 				FVIndex.push_back(FVI->idx() + NowVerticesCount);
 			}
 			Face_index += ("f " + std::to_string(FVIndex[0]) + " " + std::to_string(FVIndex[1]) + " " + std::to_string(FVIndex[2]) + "\n");
-		}
+}
 
 		for (MyMesh::VIter VI = ALLModel[i].model.mesh.vertices_begin(); VI != ALLModel[i].model.mesh.vertices_end(); VI++)
 		{
@@ -3236,6 +3258,8 @@ std::vector<std::vector<double>> one_dim_K_means(std::vector<double> x, std::vec
 
 #pragma endregion
 
+#pragma region PRE_CLUSTER_KMEANS
+
 //用kx分群
 std::vector<std::map<int, std::vector<double>>> pre_K_means_cluster(std::map<int, std::vector<double>> x, std::vector < double > kx, int seed)
 {
@@ -3350,3 +3374,13 @@ std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans(std::map<int,
 		return pre_Cluster_Kmeans(x, nkx, fig += 1, seed);
 	}
 }
+#pragma endregion
+
+#pragma region mean_shift
+
+
+
+
+
+
+#pragma endregion

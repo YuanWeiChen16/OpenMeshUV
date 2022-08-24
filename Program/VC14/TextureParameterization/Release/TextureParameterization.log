@@ -117,34 +117,34 @@ C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\T
               Scalar=float
           ]
 C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2282,20): warning C4018: '<': signed/unsigned 不相符
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2353,12): warning C4244: '正在初始化': 將 'GLuint' 轉換為 'float'，由於類型不同，可能導致資料遺失
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2378,38): warning C4244: '=': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2380,17): warning C4244: '引數': 將 'float' 轉換為 'const int'，由於類型不同，可能導致資料遺失
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2382,9): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2383,19): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2387,9): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2388,19): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2427,21): warning C4018: '<': signed/unsigned 不相符
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2486,20): warning C4018: '<': signed/unsigned 不相符
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2356,12): warning C4244: '正在初始化': 將 'GLuint' 轉換為 'float'，由於類型不同，可能導致資料遺失
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2381,38): warning C4244: '=': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2383,17): warning C4244: '引數': 將 'float' 轉換為 'const int'，由於類型不同，可能導致資料遺失
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2385,9): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2386,19): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2390,9): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2391,19): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2430,21): warning C4018: '<': signed/unsigned 不相符
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2489,20): warning C4018: '<': signed/unsigned 不相符
 C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2515,21): warning C4018: '<': signed/unsigned 不相符
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2573,20): warning C4018: '<': signed/unsigned 不相符
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2645,20): warning C4018: '<': signed/unsigned 不相符
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3011,12): warning C4244: '正在初始化': 將 'GLuint' 轉換為 'float'，由於類型不同，可能導致資料遺失
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3026,38): warning C4244: '=': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3027,17): warning C4244: '引數': 將 'float' 轉換為 'const int'，由於類型不同，可能導致資料遺失
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3029,9): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3030,19): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3034,9): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3035,19): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3152,20): warning C4018: '<': signed/unsigned 不相符
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3177,20): warning C4018: '<': signed/unsigned 不相符
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3183,21): warning C4018: '<': signed/unsigned 不相符
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3191,20): warning C4018: '<': signed/unsigned 不相符
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3276,21): warning C4018: '<': signed/unsigned 不相符
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3292,20): warning C4018: '<': signed/unsigned 不相符
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3299,21): warning C4018: '<': signed/unsigned 不相符
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3319,20): warning C4018: '<': signed/unsigned 不相符
-C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3344,15): warning C4805: '==': 作業中不安全的混用類型 'int' 和類型 'bool'
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2578,20): warning C4018: '<': signed/unsigned 不相符
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(2653,20): warning C4018: '<': signed/unsigned 不相符
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3033,12): warning C4244: '正在初始化': 將 'GLuint' 轉換為 'float'，由於類型不同，可能導致資料遺失
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3048,38): warning C4244: '=': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3049,17): warning C4244: '引數': 將 'float' 轉換為 'const int'，由於類型不同，可能導致資料遺失
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3051,9): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3052,19): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3056,9): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3057,19): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3174,20): warning C4018: '<': signed/unsigned 不相符
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3199,20): warning C4018: '<': signed/unsigned 不相符
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3205,21): warning C4018: '<': signed/unsigned 不相符
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3213,20): warning C4018: '<': signed/unsigned 不相符
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3300,21): warning C4018: '<': signed/unsigned 不相符
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3316,20): warning C4018: '<': signed/unsigned 不相符
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3323,21): warning C4018: '<': signed/unsigned 不相符
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3343,20): warning C4018: '<': signed/unsigned 不相符
+C:\Users\User\Desktop\MyMesh\OpenMeshUV\Program\Source\TextureParameterization\TextureParameterization.cpp(3368,15): warning C4805: '==': 作業中不安全的混用類型 'int' 和類型 'bool'
   正在產生程式碼
   1 of 5996 functions (<0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
