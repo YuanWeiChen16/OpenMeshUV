@@ -296,14 +296,14 @@ void SetupGUI()
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
 	modelNames.push_back("building.obj");
+	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
-	modelNames.push_back("Residence.obj");
+	modelNames.push_back("Wave.obj");
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
 	modelNames.push_back("gta06_dt1_20_build2_high_fillhole.obj");
 	modelNames.push_back("WorldBuilding01_EmpireState_lp.obj");
 	modelNames.push_back("gta03_dt1_11_dt1_tower_high.obj");
 	modelNames.push_back("Manyhole.obj");
-	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("Imposter01_Res_Building_4x8_012_003_root.obj");
 	modelNames.push_back("WorldBuilding02_french_Arc_de_Triomphe.obj");
 	modelNames.push_back("xyzrgb_dragon_100k.obj");
@@ -2339,20 +2339,42 @@ void NewDetectRoof()
 	//float* depthmap = (float*)malloc(sizeof(float) * Nsize * Nsize);
 	float* depthmap = new float[360000];
 	//memset(depthmap, 0, sizeof(float) * Nsize * Nsize);
+	std::vector <glm::vec3> NormalMap;
+
 	glReadPixels(0, 0, 600, 600, GL_DEPTH_COMPONENT, GL_FLOAT, depthmap);
+	//glReadPixels(0, 0, 600, 600, GL_NORMAL_MAP, GL_FLOAT, depthmap);
 
 	GLuint* Dmap = new GLuint[360000];
 	Dmap = pickingTexture.ReadTextures();
 
 	//蒐集資訊，目前蒐集深度與找到面的id，需要繼續找面的normal，與連接方式
-	//
+	//											面的normal就是深度的微分!!!!
 
 	for (int i = 0; i < 600; i++)
 	{
 		for (int j = 0; j < 600; j++)
 		{
 			//depth map
-			float depthValue = depthmap[(i)+(599 - j) * 600];
+			//深度返算點位置
+			mat4 inverse_biased_projection_matrix = pMat * mvMat;
+			inverse_biased_projection_matrix = inverse(inverse_biased_projection_matrix);
+			mat4 inverse_projection_matrix = inverse(pMat);
+			//	
+			vec3 clip_space_position = vec3(vec2(0.5, 0.5), depthmap[(i)+(599 - j) * 600] * 2.0 + 1.0);
+			vec4 view_position(vec2(inverse_projection_matrix[0][0], inverse_projection_matrix[1][1]) * clip_space_position.xy, -1.0,
+				inverse_projection_matrix[2][3] * clip_space_position.z + inverse_projection_matrix[3][3]);
+
+			mat4 viewMaterixInv = inverse(mvMat);
+			vec4 clipSpacePosition = vec4(vec2(0.5, 0.5), depthmap[(i)+(599 - j) * 600] * 2.0 + 1.0, 1.0);
+			vec4 viewSpacePosition = inverse_projection_matrix * clipSpacePosition;
+			viewSpacePosition /= viewSpacePosition.w;
+			vec4 worldSapcePosition = viewMaterixInv * viewSpacePosition;
+
+			//vec3 FinalPos = view_position.xyz / view_position.w;
+			double RDepth = view_position.y / view_position.w;
+
+			float depthValue = worldSapcePosition.y + 1000;
+			//float depthValue = depthmap[(i)+(599 - j) * 600];
 			float D = Dmap[(i)+(599 - j) * 600];
 
 			//cout << D << " ";
@@ -2370,14 +2392,12 @@ void NewDetectRoof()
 			}
 			//IdxFile << depthValue << " ";
 			//DepthFile << D << " ";
-
 			if (D == 0)
 			{
 
 			}
-
+			//紀錄深度與ID
 			Rawdata[(i)+(599 - j) * 600] = depthValue;
-
 			RawIdxdata[(i)+(599 - j) * 600] = D;
 
 			if (Idx.find(D) == Idx.end())
@@ -2390,6 +2410,34 @@ void NewDetectRoof()
 				Idx[D] ++;
 				ALL_Idx_Depth[D].push_back(depthValue);
 			}
+
+			//normal 與深度計算
+			//if (D == 0)
+			//{
+			//	NormalMap.push_back(glm::vec3(-1));
+			//}
+			//else
+			//{
+			//	double UPx = depthmap[(i + 1) + (599 - j) * 600];
+			//	double DOWNx = depthmap[(i - 1) + (599 - j) * 600];
+			//	double UPy = depthmap[(i)+(599 - (j + 1)) * 600];
+			//	double DOWNy = depthmap[(i)+(599 - (j - 1)) * 600];
+
+			//	if (UPx == 0 || DOWNx == 0 || UPy == 0 || DOWNy == 0)
+			//	{
+			//		NormalMap.push_back(glm::vec3(-1));
+			//		continue;
+			//	}
+			//	//微分?
+			//	double dx = (UPx - DOWNx) / 600.0;
+			//	double dy = (UPy - DOWNy) / 600.0;
+
+
+
+			//}
+
+
+
 		}
 		//cout << "\n";
 		//IdxFile << "\n";
@@ -2408,11 +2456,11 @@ void NewDetectRoof()
 	for (int i = 0; i < 360000; i++)
 	{
 		double tmp = Rawdata[i] - MinDepth;
-		data[i] = (char)((tmp / diff) * 256.0);
+		data[i] = (char)((tmp / diff) * 255.0);
 
-		/*Colordata[i * 3 + 0] = (char)(colormap[RawIdxdata[i]][0] * 256.0);
-		Colordata[i * 3 + 1] = (char)(colormap[RawIdxdata[i]][1] * 256.0);
-		Colordata[i * 3 + 2] = (char)(colormap[RawIdxdata[i]][2] * 256.0);*/
+		/*Colordata[i * 3 + 0] = (char)(colormap[RawIdxdata[i]][0] * 255.0);
+		Colordata[i * 3 + 1] = (char)(colormap[RawIdxdata[i]][1] * 255.0);
+		Colordata[i * 3 + 2] = (char)(colormap[RawIdxdata[i]][2] * 255.0);*/
 	}
 	//stbi_flip_vertically_on_write(true);
 	stbi_write_png("Fileeee.png", 600, 600, 1, data, 0);
@@ -2474,7 +2522,7 @@ void NewDetectRoof()
 #ifdef Kmeans
 	//K means 分群原本面
 	std::vector<double> kx;
-	int SEED = 20;
+	int SEED = 3;
 	//預設seed
 	for (int i = 0; i < SEED; i++)
 	{
@@ -2492,26 +2540,28 @@ void NewDetectRoof()
 		int Point_Count = 0;
 		for (std::map<int, std::vector<double>>::iterator RIter = R[i].begin(); RIter != R[i].end(); RIter++)
 		{
-			cout << RIter->first << " ";
+			//cout << RIter->first << " ";
 			//暫時加速
-			/*for (int j = 0; j < RIter->second.size(); j++)
+			for (int j = 0; j < RIter->second.size(); j++)
 			{
 				AvgDepth += RIter->second[j];
 				Point_Count++;
-			}*/
-			AvgDepth += RIter->second[0] * RIter->second.size();
-			Point_Count += RIter->second.size();
+			}
+			//AvgDepth += RIter->second[0] * RIter->second.size();
+			//Point_Count += RIter->second.size();
 		}
 
 		IDDepth.push_back(AvgDepth / (double)(Point_Count));
 		cout << "Avg Depth" << AvgDepth / (double)(Point_Count) << "\n";
 	}
 
+	
+
 	//save Kmeans class end
 	for (int i = 0; i < 360000; i++)
 	{
 		int nowIdx = RawIdxdata[i];
-		int classIndex = 0;
+		int classIndex = -100;
 		for (int i = 0; i < R.size(); i++)
 		{
 			for (std::map<int, std::vector<double>>::iterator RIter = R[i].begin(); RIter != R[i].end(); RIter++)
@@ -2523,17 +2573,17 @@ void NewDetectRoof()
 				}
 			}
 		}
-		if (classIndex == 0)
+		if (classIndex == -100)
 		{
-			Colordata[i * 3 + 0] = 1;
+			Colordata[i * 3 + 0] = 0;
 			Colordata[i * 3 + 1] = 0;
 			Colordata[i * 3 + 2] = 0;
 		}
 		else
 		{
-			Colordata[i * 3 + 0] = (char)(colormap[classIndex - 1][0] * 256.0);
-			Colordata[i * 3 + 1] = (char)(colormap[classIndex - 1][1] * 256.0);
-			Colordata[i * 3 + 2] = (char)(colormap[classIndex - 1][2] * 256.0);
+			Colordata[i * 3 + 0] = (char)(colormap[classIndex][0] * 255.0);
+			Colordata[i * 3 + 1] = (char)(colormap[classIndex][1] * 255.0);
+			Colordata[i * 3 + 2] = (char)(colormap[classIndex][2] * 255.0);
 		}
 	}
 	stbi_write_png("Fileeee_Color.png", 600, 600, 3, Colordata, 0);
@@ -2586,7 +2636,7 @@ void NewDetectRoof()
 			MyMesh::FHandle FH = model.model.mesh.face_handle(RIter->first - 1);
 			for (MyMesh::FVIter FV1 = model.model.mesh.fv_begin(FH); FV1 != model.model.mesh.fv_end(FH); ++FV1)
 			{
-				if (VectorSerise.find(FV1->idx()) == VectorSerise.end())
+				//if (VectorSerise.find(FV1->idx()) == VectorSerise.end())
 				{
 					MyMesh::VHandle VH = model.model.mesh.vertex_handle(FV1->idx());
 					MyMesh::Point P = model.model.mesh.point(VH);
@@ -2594,26 +2644,27 @@ void NewDetectRoof()
 					int Size = VectorSerise.size();
 					VectorSerise[FV1->idx()] = Size;
 
-					//深度返算點位置
-					mat4 inverse_biased_projection_matrix = pMat * mvMat;
-					inverse_biased_projection_matrix = inverse(inverse_biased_projection_matrix);
-					mat4 inverse_projection_matrix = inverse(pMat);
-					//	
-					vec3 clip_space_position = vec3(vec2(0.5, 0.5), IDDepth[i] * 2.0 + 1.0);
-					vec4 view_position(vec2(inverse_projection_matrix[0][0], inverse_projection_matrix[1][1]) * clip_space_position.xy, -1.0,
-						inverse_projection_matrix[2][3] * clip_space_position.z + inverse_projection_matrix[3][3]);
+					////深度返算點位置
+					//mat4 inverse_biased_projection_matrix = pMat * mvMat;
+					//inverse_biased_projection_matrix = inverse(inverse_biased_projection_matrix);
+					//mat4 inverse_projection_matrix = inverse(pMat);
+					////	
+					//vec3 clip_space_position = vec3(vec2(0.5, 0.5), IDDepth[i] * 2.0 + 1.0);
+					//vec4 view_position(vec2(inverse_projection_matrix[0][0], inverse_projection_matrix[1][1]) * clip_space_position.xy, -1.0,
+					//	inverse_projection_matrix[2][3] * clip_space_position.z + inverse_projection_matrix[3][3]);
 
-					mat4 viewMaterixInv = inverse(mvMat);
-					vec4 clipSpacePosition = vec4(vec2(0.5, 0.5), IDDepth[i] * 2.0 + 1.0, 1.0);
-					vec4 viewSpacePosition = inverse_projection_matrix * clipSpacePosition;
-					viewSpacePosition /= viewSpacePosition.w;
-					vec4 worldSapcePosition = viewMaterixInv * viewSpacePosition;
+					//mat4 viewMaterixInv = inverse(mvMat);
+					//vec4 clipSpacePosition = vec4(vec2(0.5, 0.5), IDDepth[i] * 2.0 + 1.0, 1.0);
+					//vec4 viewSpacePosition = inverse_projection_matrix * clipSpacePosition;
+					//viewSpacePosition /= viewSpacePosition.w;
+					//vec4 worldSapcePosition = viewMaterixInv * viewSpacePosition;
 
-					//vec3 FinalPos = view_position.xyz / view_position.w;
-					double RDepth = view_position.y / view_position.w;
+					////vec3 FinalPos = view_position.xyz / view_position.w;
+					//double RDepth = view_position.y / view_position.w;
 
 
-					P[1] = worldSapcePosition.y + 1000;
+					//P[1] = worldSapcePosition.y + 1000;
+					P[1] = IDDepth[i];
 					//	vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
 
 					//	//BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
@@ -2659,36 +2710,35 @@ void NewDetectRoof()
 		{
 			std::vector<int> Face_vertex_index;
 			MyMesh::FHandle FH = model.model.mesh.face_handle(RIter->first - 1);
+
 			if (RIter->first != 0)
 			{
 				//點做重新對應，避免使用重複點
-				/*for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); FVI++)
-				{*/
-				//Face_vertex_index.push_back(FVI->idx());
+				
 
 				//對應點做
 				face_vhandles.clear();
 
-				////face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[0]]]);
-				////face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[1]]]);
-				////face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[2]]]);
+				/*face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[0]]]);
+				face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[1]]]);
+				face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[2]]]);*/
 
-				//face_vhandles.push_back(vhandle[Point_Count + 0]);
-				//face_vhandles.push_back(vhandle[Point_Count + 1]);
-				//face_vhandles.push_back(vhandle[Point_Count + 2]);
+				face_vhandles.push_back(vhandle[Point_Count + 0]);
+				face_vhandles.push_back(vhandle[Point_Count + 1]);
+				face_vhandles.push_back(vhandle[Point_Count + 2]);
 
 				//BeSelectModel.model.mesh.add_face(face_vhandles);
-				//Point_Count += 3;
+				Point_Count += 3;
 				//}
 
-				for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); FVI++)
+				/*for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); FVI++)
 				{
 					Face_vertex_index.push_back(FVI->idx());
 				}
 
 				face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[0]]]);
 				face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[1]]]);
-				face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[2]]]);
+				face_vhandles.push_back(vhandle[VectorSerise[Face_vertex_index[2]]]);*/
 
 				BeSelectModel.model.mesh.add_face(face_vhandles);
 
@@ -3068,10 +3118,10 @@ void NewDetectWall(glm::vec3 Face_Diraction, std::vector<glm::vec3> Face_Size, i
 	for (int i = 0; i < 360000; i++)
 	{
 		double tmp = Rawdata[i] - MinDepth;
-		data[i] = (char)((tmp / diff) * 256.0);
-		Colordata[i * 3 + 0] = (char)(colormap[RawIdxdata[i]][0] * 256.0);
-		Colordata[i * 3 + 1] = (char)(colormap[RawIdxdata[i]][1] * 256.0);
-		Colordata[i * 3 + 2] = (char)(colormap[RawIdxdata[i]][2] * 256.0);
+		data[i] = (char)((tmp / diff) * 255.0);
+		Colordata[i * 3 + 0] = (char)(colormap[RawIdxdata[i]][0] * 255.0);
+		Colordata[i * 3 + 1] = (char)(colormap[RawIdxdata[i]][1] * 255.0);
+		Colordata[i * 3 + 2] = (char)(colormap[RawIdxdata[i]][2] * 255.0);
 	}
 	//stbi_flip_vertically_on_write(true);
 	string Filename = "Fileeee";
@@ -3279,12 +3329,12 @@ std::vector<std::map<int, std::vector<double>>> pre_K_means_cluster(std::map<int
 			//針對面裡面的每個點，將所有點的高差紀錄起來
 			double total_dis = 0;
 
-			/*for (int i = 0; i < Xitr->second.size(); i++)
+			for (int i = 0; i < Xitr->second.size(); i++)
 			{
 				total_dis += abs(Xitr->second[i] - kx[j]);
-			}*/
+			}
 			//暫時加速
-			total_dis += abs(Xitr->second[0] - kx[j]) * Xitr->second.size();
+			//total_dis += abs(Xitr->second[0] - kx[j]) * Xitr->second.size();
 			//
 
 
@@ -3325,13 +3375,13 @@ std::vector<double> pre_K_means_re_seed(std::vector<std::map<int, std::vector<do
 			for (std::map<int, std::vector<double>>::iterator TeamIter = Team[i].begin(); TeamIter != Team[i].end(); TeamIter++)
 			{
 				//暫時加速
-				/*for (int k = 0; k < TeamIter->second.size(); k++)
+				for (int k = 0; k < TeamIter->second.size(); k++)
 				{
 					sumx += TeamIter->second[k];
 					Point_Length++;
-				}*/
-				sumx += TeamIter->second[0] * TeamIter->second.size();
-				Point_Length += TeamIter->second.size();
+				}
+				//sumx += TeamIter->second[0] * TeamIter->second.size();
+				//Point_Length += TeamIter->second.size();
 
 			}
 		}
