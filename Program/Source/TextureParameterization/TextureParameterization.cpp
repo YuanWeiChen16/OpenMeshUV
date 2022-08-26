@@ -33,6 +33,14 @@ using namespace glm;
 using namespace std;
 using namespace Eigen;
 
+struct FaceData
+{
+	int ID = -1;
+	int pointcount = 0;
+	std::vector<double> Depth;
+	std::vector<glm::vec3> Normal;
+	glm::vec3 realNormal;
+};
 
 glm::vec3 worldPos;
 bool updateFlag = false;
@@ -295,10 +303,10 @@ void SetupGUI()
 	// Adding season to bar
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
-	modelNames.push_back("building.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
-	modelNames.push_back("gta02_dt1_03_build2_high.obj");
 	modelNames.push_back("Wave.obj");
+	modelNames.push_back("building.obj");
+	modelNames.push_back("gta02_dt1_03_build2_high.obj");
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
 	modelNames.push_back("gta06_dt1_20_build2_high_fillhole.obj");
 	modelNames.push_back("WorldBuilding01_EmpireState_lp.obj");
@@ -2328,18 +2336,19 @@ void NewDetectRoof()
 	double Near = pMat[2][3] / (pMat[2][2] - 1);
 	double Far = pMat[2][3] / (pMat[2][2] + 1);
 
-
 	float depthValue = 0;
 	ObjFile.open("./Dfile/NewModel_Roof.obj", ios::out);
 	//DepthFile.open("./Dfile/DepthFile.txt", ios::out);
 
-
 	//depthFile << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
+	std::vector<FaceData> ALL_Face;
+
 
 	//float* depthmap = (float*)malloc(sizeof(float) * Nsize * Nsize);
 	float* depthmap = new float[360000];
 	//memset(depthmap, 0, sizeof(float) * Nsize * Nsize);
-	std::vector <glm::vec3> NormalMap;
+	std::map<int, std::vector<glm::vec3>> ALL_Idx_Normal;
 
 	glReadPixels(0, 0, 600, 600, GL_DEPTH_COMPONENT, GL_FLOAT, depthmap);
 	//glReadPixels(0, 0, 600, 600, GL_NORMAL_MAP, GL_FLOAT, depthmap);
@@ -2347,15 +2356,14 @@ void NewDetectRoof()
 	GLuint* Dmap = new GLuint[360000];
 	Dmap = pickingTexture.ReadTextures();
 
-	//蒐集資訊，目前蒐集深度與找到面的id，需要繼續找面的normal，與連接方式
-	//											面的normal就是深度的微分!!!!
-
+	//蒐集資訊，目前蒐集深度與找到面的id與Normal，與連接方式??? 有需要連接方式?
 	for (int i = 0; i < 600; i++)
 	{
 		for (int j = 0; j < 600; j++)
 		{
 			//depth map
 			//深度返算點位置
+#pragma region CamDepthToRealDepth
 			mat4 inverse_biased_projection_matrix = pMat * mvMat;
 			inverse_biased_projection_matrix = inverse(inverse_biased_projection_matrix);
 			mat4 inverse_projection_matrix = inverse(pMat);
@@ -2369,11 +2377,10 @@ void NewDetectRoof()
 			vec4 viewSpacePosition = inverse_projection_matrix * clipSpacePosition;
 			viewSpacePosition /= viewSpacePosition.w;
 			vec4 worldSapcePosition = viewMaterixInv * viewSpacePosition;
-
 			//vec3 FinalPos = view_position.xyz / view_position.w;
 			double RDepth = view_position.y / view_position.w;
-
-			float depthValue = worldSapcePosition.y + 1000;
+			double depthValue = worldSapcePosition.y + 1000;
+#pragma endregion
 			//float depthValue = depthmap[(i)+(599 - j) * 600];
 			float D = Dmap[(i)+(599 - j) * 600];
 
@@ -2396,6 +2403,36 @@ void NewDetectRoof()
 			{
 
 			}
+
+			glm::vec3 tempNormal;
+			//normal 與深度計算
+			if (D == 0)
+			{
+				tempNormal = glm::vec3(-1);
+			}
+			else
+			{
+				double UPx = depthmap[(i + 1) + (599 - j) * 600];
+				double DOWNx = depthmap[(i - 1) + (599 - j) * 600];
+				double UPy = depthmap[(i)+(599 - (j + 1)) * 600];
+				double DOWNy = depthmap[(i)+(599 - (j - 1)) * 600];
+				if (UPx == 0 || DOWNx == 0 || UPy == 0 || DOWNy == 0)
+				{
+					tempNormal = glm::vec3(-1);
+				}
+				else
+				{
+					//這就是微分? NO
+					double dx = (UPx - DOWNx) / 600.0;
+					double dy = (UPy - DOWNy) / 600.0;
+
+					//微分轉normal
+					glm::vec3 PointNormal(dx, 1, dy);
+					tempNormal = PointNormal;
+				}
+			}
+
+
 			//紀錄深度與ID
 			Rawdata[(i)+(599 - j) * 600] = depthValue;
 			RawIdxdata[(i)+(599 - j) * 600] = D;
@@ -2404,39 +2441,24 @@ void NewDetectRoof()
 			{
 				Idx[D] = 1;
 				ALL_Idx_Depth[D].push_back(depthValue);
+				ALL_Idx_Normal[D].push_back(tempNormal);
 			}
 			else
 			{
 				Idx[D] ++;
 				ALL_Idx_Depth[D].push_back(depthValue);
+				ALL_Idx_Normal[D].push_back(tempNormal);
 			}
 
-			//normal 與深度計算
-			//if (D == 0)
-			//{
-			//	NormalMap.push_back(glm::vec3(-1));
-			//}
-			//else
-			//{
-			//	double UPx = depthmap[(i + 1) + (599 - j) * 600];
-			//	double DOWNx = depthmap[(i - 1) + (599 - j) * 600];
-			//	double UPy = depthmap[(i)+(599 - (j + 1)) * 600];
-			//	double DOWNy = depthmap[(i)+(599 - (j - 1)) * 600];
 
-			//	if (UPx == 0 || DOWNx == 0 || UPy == 0 || DOWNy == 0)
+			//for (int k = 0; k < ALL_Face.size();k++)
+			//{
+			//	if (D == ALL_Face[k].ID)
 			//	{
-			//		NormalMap.push_back(glm::vec3(-1));
-			//		continue;
+			//		ALL_Face[k].Depth.push_back(depthValue);
+			//		ALL_Face[k].pointcount++;
 			//	}
-			//	//微分?
-			//	double dx = (UPx - DOWNx) / 600.0;
-			//	double dy = (UPy - DOWNy) / 600.0;
-
-
-
 			//}
-
-
 
 		}
 		//cout << "\n";
@@ -2522,7 +2544,7 @@ void NewDetectRoof()
 #ifdef Kmeans
 	//K means 分群原本面
 	std::vector<double> kx;
-	int SEED = 3;
+	int SEED = 5;
 	//預設seed
 	for (int i = 0; i < SEED; i++)
 	{
@@ -2555,7 +2577,7 @@ void NewDetectRoof()
 		cout << "Avg Depth" << AvgDepth / (double)(Point_Count) << "\n";
 	}
 
-	
+
 
 	//save Kmeans class end
 	for (int i = 0; i < 360000; i++)
@@ -2714,7 +2736,7 @@ void NewDetectRoof()
 			if (RIter->first != 0)
 			{
 				//點做重新對應，避免使用重複點
-				
+
 
 				//對應點做
 				face_vhandles.clear();
@@ -2970,7 +2992,7 @@ void NewDetectRoof()
 				FVIndex.push_back(FVI->idx() + NowVerticesCount);
 			}
 			Face_index += ("f " + std::to_string(FVIndex[0]) + " " + std::to_string(FVIndex[1]) + " " + std::to_string(FVIndex[2]) + "\n");
-}
+		}
 
 		for (MyMesh::VIter VI = ALLModel[i].model.mesh.vertices_begin(); VI != ALLModel[i].model.mesh.vertices_end(); VI++)
 		{
@@ -3331,7 +3353,7 @@ std::vector<std::map<int, std::vector<double>>> pre_K_means_cluster(std::map<int
 
 			for (int i = 0; i < Xitr->second.size(); i++)
 			{
-				total_dis += abs(Xitr->second[i] - kx[j]);
+				total_dis += (abs(Xitr->second[i] - kx[j]) + 0);
 			}
 			//暫時加速
 			//total_dis += abs(Xitr->second[0] - kx[j]) * Xitr->second.size();
@@ -3426,11 +3448,80 @@ std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans(std::map<int,
 }
 #pragma endregion
 
-#pragma region mean_shift
-
-
-
-
-
-
+#pragma region Normal_shift
+//
+////用kx分群
+//std::vector<std::map<int, std::vector<std::pair<double, glm::vec3>>>> pre_K_means_cluster_Normal(std::map<int, std::vector<std::pair<double, glm::vec3>>> x, std::vector <std::pair<double, glm::vec3>> kx, int seed)
+//{
+//	std::vector<std::map<int, std::vector<std::pair<double, glm::vec3>>>> team;
+//	for (int i = 0; i < seed; i++)
+//	{
+//		team.push_back(std::map<int, std::vector<std::pair<double, glm::vec3>>>());
+//	}
+//	//依照原始點對分點的距離 做最近點分群
+//	//map第一項是 面id 第二項是次數 與深度(深度有可能會不一樣!!!)
+//	for (map<int, std::vector<std::pair<double, glm::vec3>>>::iterator Xitr = x.begin(); Xitr != x.end(); Xitr++)
+//	{
+//		double min_dis = 999999999;
+//		int smallKJ = 0;
+//		for (int j = 0; j < seed; j++)
+//		{
+//			//針對面裡面的每個點，將所有點的高差紀錄起來
+//			double total_dis = 0;
+//
+//			for (int i = 0; i < Xitr->second.size(); i++)
+//			{
+//				//應該要加上係數重要性
+//				total_dis += (abs(Xitr->second[i].first - kx[j].first)) + glm::length((Xitr->second[i].second - kx[j].second));
+//			}
+//			//暫時加速
+//			//total_dis += abs(Xitr->second[0] - kx[j]) * Xitr->second.size();
+//			//
+//			//找出最距離最小
+//			if (total_dis < min_dis)
+//			{
+//				min_dis = total_dis;
+//				smallKJ = j;
+//			}
+//		}
+//
+//		std::vector<std::pair<double, glm::vec3>> temp;
+//		for (int i = 0; i < Xitr->second.size(); i++)
+//		{
+//			temp.push_back(Xitr->second[i]);
+//		}
+//		team[smallKJ][Xitr->first] = temp;
+//	}
+//	//回傳所有點分群結果
+//	return team;
+//}
+//
+//
+//
+//
+//std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans_normal(std::map<int, std::vector<std::pair<double, glm::vec3>>> x, std::vector < std::pair<double, glm::vec3> > kx, int fig, int seed)
+//{
+//	std::vector<std::map<int, std::vector<std::pair<double, glm::vec3>>>> Team = pre_K_means_cluster_Normal(x, kx, seed);
+//	std::vector<std::pair<double, glm::vec3>> nkx = pre_K_means_re_seed(Team, kx, seed);
+//	cout << "Kmeans " << fig << "\n";
+//
+//	double Error = 0.01;
+//	int Done = true;
+//	for (int i = 0; i < seed; i++)
+//	{
+//		if (abs(nkx[i] - kx[i]) < Error)
+//		{
+//			Done = false;
+//		}
+//	}
+//
+//	if ((Done == true) || (fig > 2))
+//	{
+//		return Team;
+//	}
+//	else
+//	{
+//		return pre_Cluster_Kmeans(x, nkx, fig += 1, seed);
+//	}
+//}
 #pragma endregion
