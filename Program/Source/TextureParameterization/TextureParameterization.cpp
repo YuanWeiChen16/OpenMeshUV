@@ -6,6 +6,8 @@
 #include <string>
 #include<map>
 
+#include <omp.h>
+
 #include <Eigen/Sparse>
 
 #include "OpenMesh.h"
@@ -17,11 +19,16 @@
 #include "DrawTextureShader.h"
 #include "DrawPointShader.h"
 
+#include"FaceData.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../Include/STB/stb_image.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../../Include/STB/stb_image_write.h"
+
+
+
 
 //#include <boost/regex.hpp>
 //#include "CGAL/Simple_cartesian.h"
@@ -33,14 +40,19 @@ using namespace glm;
 using namespace std;
 using namespace Eigen;
 
-struct FaceData
-{
-	int ID = -1;
-	int pointcount = 0;
-	std::vector<double> Depth;
-	std::vector<glm::vec3> Normal;
-	glm::vec3 realNormal;
-};
+//一個面有的資訊
+//struct FaceData
+//{
+//	int ID = -1;
+//	//raycast到的點的數量
+//	int pointcount = 0;
+//	//raycast到的點的深度
+//	std::vector<double> Depth;
+//	//raycast到的點的Normal
+//	std::vector<glm::vec3> Normal;
+//	//平均normal
+//	glm::vec3 realNormal;
+//};
 
 glm::vec3 worldPos;
 bool updateFlag = false;
@@ -3449,79 +3461,86 @@ std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans(std::map<int,
 #pragma endregion
 
 #pragma region Normal_shift
-//
-////用kx分群
-//std::vector<std::map<int, std::vector<std::pair<double, glm::vec3>>>> pre_K_means_cluster_Normal(std::map<int, std::vector<std::pair<double, glm::vec3>>> x, std::vector <std::pair<double, glm::vec3>> kx, int seed)
-//{
-//	std::vector<std::map<int, std::vector<std::pair<double, glm::vec3>>>> team;
-//	for (int i = 0; i < seed; i++)
-//	{
-//		team.push_back(std::map<int, std::vector<std::pair<double, glm::vec3>>>());
-//	}
-//	//依照原始點對分點的距離 做最近點分群
-//	//map第一項是 面id 第二項是次數 與深度(深度有可能會不一樣!!!)
-//	for (map<int, std::vector<std::pair<double, glm::vec3>>>::iterator Xitr = x.begin(); Xitr != x.end(); Xitr++)
-//	{
-//		double min_dis = 999999999;
-//		int smallKJ = 0;
-//		for (int j = 0; j < seed; j++)
-//		{
-//			//針對面裡面的每個點，將所有點的高差紀錄起來
-//			double total_dis = 0;
-//
-//			for (int i = 0; i < Xitr->second.size(); i++)
-//			{
-//				//應該要加上係數重要性
-//				total_dis += (abs(Xitr->second[i].first - kx[j].first)) + glm::length((Xitr->second[i].second - kx[j].second));
-//			}
-//			//暫時加速
-//			//total_dis += abs(Xitr->second[0] - kx[j]) * Xitr->second.size();
-//			//
-//			//找出最距離最小
-//			if (total_dis < min_dis)
-//			{
-//				min_dis = total_dis;
-//				smallKJ = j;
-//			}
-//		}
-//
-//		std::vector<std::pair<double, glm::vec3>> temp;
-//		for (int i = 0; i < Xitr->second.size(); i++)
-//		{
-//			temp.push_back(Xitr->second[i]);
-//		}
-//		team[smallKJ][Xitr->first] = temp;
-//	}
-//	//回傳所有點分群結果
-//	return team;
-//}
-//
-//
-//
-//
-//std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans_normal(std::map<int, std::vector<std::pair<double, glm::vec3>>> x, std::vector < std::pair<double, glm::vec3> > kx, int fig, int seed)
-//{
-//	std::vector<std::map<int, std::vector<std::pair<double, glm::vec3>>>> Team = pre_K_means_cluster_Normal(x, kx, seed);
-//	std::vector<std::pair<double, glm::vec3>> nkx = pre_K_means_re_seed(Team, kx, seed);
-//	cout << "Kmeans " << fig << "\n";
-//
-//	double Error = 0.01;
-//	int Done = true;
-//	for (int i = 0; i < seed; i++)
-//	{
-//		if (abs(nkx[i] - kx[i]) < Error)
-//		{
-//			Done = false;
-//		}
-//	}
-//
-//	if ((Done == true) || (fig > 2))
-//	{
-//		return Team;
-//	}
-//	else
-//	{
-//		return pre_Cluster_Kmeans(x, nkx, fig += 1, seed);
-//	}
-//}
+//以FaceData為單位分類
+std::vector<std::vector<FaceData>> FaceData_K_means_cluster(std::vector<FaceData> x, std::vector<FaceData> kx, int seed)
+{
+	std::vector<std::vector<FaceData>> team;
+
+	//依照原始點對分點的距離 做最近點分群
+	//map第一項是 面id 第二項是次數 與深度(深度有可能會不一樣!!!)
+	//每個面去找與他最近的kx面
+	for (int i = 0; i < x.size(); i++)
+	{
+		double min_dis = 999999999;
+		int smallKJ = 0;
+		for (int j = 0; j < seed; j++)
+		{
+			//針對面裡面的每個點，將所有點的高差紀錄起來
+			double total_dis = 0;
+			total_dis = x[i] - kx[j];
+			if (total_dis < min_dis)
+			{
+				min_dis = total_dis;
+				smallKJ = j;
+			}
+		}
+		//找完距離最小，加入team
+		team[smallKJ].push_back(x[i]);
+	}
+	//回傳所有點分群結果
+	return team;
+}
+//FaceData
+std::vector<FaceData> FaceData_K_means_re_seed(std::vector<std::vector<FaceData>> Team, std::vector<FaceData> kx, int seed)
+{
+	double sumx = 0;
+	std::vector<FaceData> new_seed;
+	int Point_Length = 0;
+	for (int i = 0; i < Team.size(); i++)
+	{
+		if (Team.size() == 0)
+		{
+			new_seed.push_back(kx[0]);
+		}
+		Point_Length = 0;
+		FaceData tempFaceData;
+		//計算新平均
+
+		for (int j = 0; j < Team[i].size(); j++)
+		{
+			tempFaceData = tempFaceData + Team[i][j];
+		}
+		new_seed.push_back(tempFaceData);
+	}
+	return new_seed;
+}
+
+std::vector<std::vector<FaceData>> FaceData_Cluster_Kmeans(std::vector<FaceData> x, std::vector<FaceData> kx, int fig, int seed)
+{
+	std::vector<std::vector<FaceData>> Team = FaceData_K_means_cluster(x, kx, seed);
+	std::vector<FaceData> nkx = FaceData_K_means_re_seed(Team, kx, seed);
+	cout << "Kmeans " << fig << "\n";
+
+	double Error = 0.01;
+	int Done = true;
+	for (int i = 0; i < seed; i++)
+	{
+		if (abs(nkx[i] - kx[i]) < Error)
+		{
+			Done = false;
+		}
+	}
+
+	if ((Done == true) || (fig > 2))
+	{
+		return Team;
+	}
+	else
+	{
+		return FaceData_Cluster_Kmeans(x, nkx, fig += 1, seed);
+	}
+
+
+
+}
 #pragma endregion
