@@ -315,9 +315,9 @@ void SetupGUI()
 	// Adding season to bar
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
+	modelNames.push_back("Slide.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("Wave.obj");
-	modelNames.push_back("building.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
 	modelNames.push_back("gta06_dt1_20_build2_high_fillhole.obj");
@@ -2368,6 +2368,34 @@ void NewDetectRoof()
 	GLuint* Dmap = new GLuint[360000];
 	Dmap = pickingTexture.ReadTextures();
 
+	float* RealDepthMap = new float[360000];
+
+	for (int i = 0; i < 600; i++)
+	{
+		for (int j = 0; j < 600; j++)
+		{
+#pragma region CamDepthToRealDepth
+			mat4 inverse_biased_projection_matrix = pMat * mvMat;
+			inverse_biased_projection_matrix = inverse(inverse_biased_projection_matrix);
+			mat4 inverse_projection_matrix = inverse(pMat);
+			//	
+			vec3 clip_space_position = vec3(vec2(0.5, 0.5), depthmap[(i)+(599 - j) * 600] * 2.0 + 1.0);
+			vec4 view_position(vec2(inverse_projection_matrix[0][0], inverse_projection_matrix[1][1]) * clip_space_position.xy, -1.0,
+				inverse_projection_matrix[2][3] * clip_space_position.z + inverse_projection_matrix[3][3]);
+
+			mat4 viewMaterixInv = inverse(mvMat);
+			vec4 clipSpacePosition = vec4(vec2(0.5, 0.5), depthmap[(i)+(599 - j) * 600] * 2.0 + 1.0, 1.0);
+			vec4 viewSpacePosition = inverse_projection_matrix * clipSpacePosition;
+			viewSpacePosition /= viewSpacePosition.w;
+			vec4 worldSapcePosition = viewMaterixInv * viewSpacePosition;
+			//vec3 FinalPos = view_position.xyz / view_position.w;
+			double RDepth = view_position.y / view_position.w;
+			double depthValue = worldSapcePosition.y + 1000;
+#pragma endregion
+			RealDepthMap[(i)+(599 - j) * 600] = depthValue;
+		}
+	}
+
 	//蒐集資訊，目前蒐集深度與找到面的id與Normal，與連接方式??? 有需要連接方式?
 	for (int i = 0; i < 600; i++)
 	{
@@ -2391,7 +2419,9 @@ void NewDetectRoof()
 			vec4 worldSapcePosition = viewMaterixInv * viewSpacePosition;
 			//vec3 FinalPos = view_position.xyz / view_position.w;
 			double RDepth = view_position.y / view_position.w;
-			double depthValue = worldSapcePosition.y + 1000;
+			
+			double depthValue = RealDepthMap[(i)+(599 - j) * 600];
+			//double depthValue = worldSapcePosition.y + 1000;
 #pragma endregion
 			//float depthValue = depthmap[(i)+(599 - j) * 600];
 			float D = Dmap[(i)+(599 - j) * 600];
@@ -2424,22 +2454,26 @@ void NewDetectRoof()
 			}
 			else
 			{
-				double UPx = depthmap[(i + 1) + (599 - j) * 600];
-				double DOWNx = depthmap[(i - 1) + (599 - j) * 600];
-				double UPy = depthmap[(i)+(599 - (j + 1)) * 600];
-				double DOWNy = depthmap[(i)+(599 - (j - 1)) * 600];
+				double UPx = RealDepthMap[(i + 1) + (599 - j) * 600];
+				double DOWNx = RealDepthMap[(i - 1) + (599 - j) * 600];
+				double UPy = RealDepthMap[(i)+(599 - (j + 1)) * 600];
+				double DOWNy = RealDepthMap[(i)+(599 - (j - 1)) * 600];
 				if (UPx == 0 || DOWNx == 0 || UPy == 0 || DOWNy == 0)
 				{
 					tempNormal = glm::vec3(-1);
 				}
 				else
 				{
-					//這就是微分? NO
-					double dx = (UPx - DOWNx) / 600.0;
-					double dy = (UPy - DOWNy) / 600.0;
+					//這就是微分? NO?
+					double dx = (UPx - DOWNx) ;
+					double dy = (UPy - DOWNy) ;
 
 					//微分轉normal
+					//還需要修改
+					double dLenght = sqrt(dx * dx + dy * dy);
+
 					glm::vec3 PointNormal(dx, 1, dy);
+
 					tempNormal = PointNormal;
 				}
 			}
@@ -2454,14 +2488,15 @@ void NewDetectRoof()
 				Idx[D] = 1;
 				ALL_Idx_Depth[D].push_back(depthValue);
 				ALL_Idx_Normal[D].push_back(tempNormal);
+				cout << "Normal: " << tempNormal[0] << " " << tempNormal[1] << " " << tempNormal[2] << " " << endl;
 			}
 			else
 			{
 				Idx[D] ++;
 				ALL_Idx_Depth[D].push_back(depthValue);
 				ALL_Idx_Normal[D].push_back(tempNormal);
+				
 			}
-
 
 			//for (int k = 0; k < ALL_Face.size();k++)
 			//{
@@ -2483,23 +2518,57 @@ void NewDetectRoof()
 		//cout <<"\n";
 	}
 
+	//平均normal
+	for (map<int, std::vector<glm::vec3>>::iterator ID = ALL_Idx_Normal.begin(); ID != ALL_Idx_Normal.end(); ID++)
+	{
+		glm::vec3 totalnormal;
+		for (int i = 0; i < ID->second.size(); i++)
+		{
+			totalnormal += ID->second[i];
+		}
+		cout << ID->second.size();
+		totalnormal /= ID->second.size();
+
+		cout << "Avg Normal: " << totalnormal[0] << " " << totalnormal[1] << " " << totalnormal[2] << " " << endl;
+	}
+
+
 	//IdxFile.close();
 	//DepthFile.close();
 
 	double diff = MaxDepth - MinDepth;
+
+	unsigned char* normalColordata = new unsigned char[360000 * 3];
 	for (int i = 0; i < 360000; i++)
 	{
 		double tmp = Rawdata[i] - MinDepth;
 		data[i] = (char)((tmp / diff) * 255.0);
 
-		/*Colordata[i * 3 + 0] = (char)(colormap[RawIdxdata[i]][0] * 255.0);
+		Colordata[i * 3 + 0] = (char)(colormap[RawIdxdata[i]][0] * 255.0);
 		Colordata[i * 3 + 1] = (char)(colormap[RawIdxdata[i]][1] * 255.0);
-		Colordata[i * 3 + 2] = (char)(colormap[RawIdxdata[i]][2] * 255.0);*/
+		Colordata[i * 3 + 2] = (char)(colormap[RawIdxdata[i]][2] * 255.0);
+		
+
+		normalColordata[i * 3 + 0] = 0;
+		normalColordata[i * 3 + 1] = 0;
+		normalColordata[i * 3 + 2] = 0;
+		if (RawIdxdata[i] > 0)
+		{
+			MyMesh::FHandle FH = model.model.mesh.face_handle(RawIdxdata[i] - 1);
+			MyMesh::Normal N = model.model.mesh.normal(FH);
+
+			normalColordata[i * 3 + 0] = (char)((((double)(N[0]) + 1) / 2.0) * 255.0);
+			normalColordata[i * 3 + 1] = (char)((((double)(N[2]) + 1) / 2.0) * 255.0);
+			normalColordata[i * 3 + 2] = (char)((((double)(N[1]) + 1) / 2.0) * 255.0);
+		}
 	}
+
 	//stbi_flip_vertically_on_write(true);
 	stbi_write_png("Fileeee.png", 600, 600, 1, data, 0);
-	//stbi_write_png("Fileeee_Color.png", 600, 600, 3, Colordata, 0);
+	stbi_write_png("Fileeee_FaceID_Color.png", 600, 600, 3, Colordata, 0);
+	stbi_write_png("Fileeee_Normal_Color.png", 600, 600, 3, normalColordata, 0);
 	stbi_image_free(data);
+	stbi_image_free(normalColordata);
 
 	Idx.erase(0);
 	ALL_Idx_Depth.erase(0);
@@ -2623,8 +2692,6 @@ void NewDetectRoof()
 	stbi_write_png("Fileeee_Color.png", 600, 600, 3, Colordata, 0);
 	stbi_image_free(Colordata);
 #endif // Kmeans
-
-
 
 	//舊vertex 與 新vertex對應
 	//給舊vertex Index回傳新vertex Index
@@ -3017,10 +3084,10 @@ void NewDetectRoof()
 	ObjFile << Face_index;
 	ObjFile.close();
 #endif // MultiOBJ
-
 	for (MyMesh::VIter VI = BeSelectModel.model.mesh.vertices_begin(); VI != BeSelectModel.model.mesh.vertices_end(); VI++)
 	{
 		MyMesh::VHandle VH = BeSelectModel.model.mesh.vertex_handle(VI->idx());
+		MyMesh::Normal N = BeSelectModel.model.mesh.normal(VH);
 		MyMesh::Point P = BeSelectModel.model.mesh.point(VH);
 		ObjFile << "v " << P[0] << " " << P[1] << " " << P[2] << "\n";
 	}
