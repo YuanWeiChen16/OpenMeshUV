@@ -27,9 +27,6 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../../Include/STB/stb_image_write.h"
 
-
-
-
 //#include <boost/regex.hpp>
 //#include "CGAL/Simple_cartesian.h"
 
@@ -2356,45 +2353,18 @@ void NewDetectRoof()
 
 	std::vector<FaceData> ALL_Face;
 
-
 	//float* depthmap = (float*)malloc(sizeof(float) * Nsize * Nsize);
 	float* depthmap = new float[360000];
 	//memset(depthmap, 0, sizeof(float) * Nsize * Nsize);
 	std::map<int, std::vector<glm::vec3>> ALL_Idx_Normal;
+
+	std::map<int, std::vector<glm::vec2>> ALL_Idx_UV;
 
 	glReadPixels(0, 0, 600, 600, GL_DEPTH_COMPONENT, GL_FLOAT, depthmap);
 	//glReadPixels(0, 0, 600, 600, GL_NORMAL_MAP, GL_FLOAT, depthmap);
 
 	GLuint* Dmap = new GLuint[360000];
 	Dmap = pickingTexture.ReadTextures();
-
-	float* RealDepthMap = new float[360000];
-
-	for (int i = 0; i < 600; i++)
-	{
-		for (int j = 0; j < 600; j++)
-		{
-#pragma region CamDepthToRealDepth
-			mat4 inverse_biased_projection_matrix = pMat * mvMat;
-			inverse_biased_projection_matrix = inverse(inverse_biased_projection_matrix);
-			mat4 inverse_projection_matrix = inverse(pMat);
-			//	
-			vec3 clip_space_position = vec3(vec2(0.5, 0.5), depthmap[(i)+(599 - j) * 600] * 2.0 + 1.0);
-			vec4 view_position(vec2(inverse_projection_matrix[0][0], inverse_projection_matrix[1][1]) * clip_space_position.xy, -1.0,
-				inverse_projection_matrix[2][3] * clip_space_position.z + inverse_projection_matrix[3][3]);
-
-			mat4 viewMaterixInv = inverse(mvMat);
-			vec4 clipSpacePosition = vec4(vec2(0.5, 0.5), depthmap[(i)+(599 - j) * 600] * 2.0 + 1.0, 1.0);
-			vec4 viewSpacePosition = inverse_projection_matrix * clipSpacePosition;
-			viewSpacePosition /= viewSpacePosition.w;
-			vec4 worldSapcePosition = viewMaterixInv * viewSpacePosition;
-			//vec3 FinalPos = view_position.xyz / view_position.w;
-			double RDepth = view_position.y / view_position.w;
-			double depthValue = worldSapcePosition.y + 1000;
-#pragma endregion
-			RealDepthMap[(i)+(599 - j) * 600] = depthValue;
-		}
-	}
 
 	//蒐集資訊，目前蒐集深度與找到面的id與Normal，與連接方式??? 有需要連接方式?
 	for (int i = 0; i < 600; i++)
@@ -2419,9 +2389,7 @@ void NewDetectRoof()
 			vec4 worldSapcePosition = viewMaterixInv * viewSpacePosition;
 			//vec3 FinalPos = view_position.xyz / view_position.w;
 			double RDepth = view_position.y / view_position.w;
-			
-			double depthValue = RealDepthMap[(i)+(599 - j) * 600];
-			//double depthValue = worldSapcePosition.y + 1000;
+			double depthValue = worldSapcePosition.y + 1000;
 #pragma endregion
 			//float depthValue = depthmap[(i)+(599 - j) * 600];
 			float D = Dmap[(i)+(599 - j) * 600];
@@ -2446,39 +2414,6 @@ void NewDetectRoof()
 
 			}
 
-			glm::vec3 tempNormal;
-			//normal 與深度計算
-			if (D == 0)
-			{
-				tempNormal = glm::vec3(-1);
-			}
-			else
-			{
-				double UPx = RealDepthMap[(i + 1) + (599 - j) * 600];
-				double DOWNx = RealDepthMap[(i - 1) + (599 - j) * 600];
-				double UPy = RealDepthMap[(i)+(599 - (j + 1)) * 600];
-				double DOWNy = RealDepthMap[(i)+(599 - (j - 1)) * 600];
-				if (UPx == 0 || DOWNx == 0 || UPy == 0 || DOWNy == 0)
-				{
-					tempNormal = glm::vec3(-1);
-				}
-				else
-				{
-					//這就是微分? NO?
-					double dx = (UPx - DOWNx) ;
-					double dy = (UPy - DOWNy) ;
-
-					//微分轉normal
-					//還需要修改
-					double dLenght = sqrt(dx * dx + dy * dy);
-
-					glm::vec3 PointNormal(dx, 1, dy);
-
-					tempNormal = PointNormal;
-				}
-			}
-
-
 			//紀錄深度與ID
 			Rawdata[(i)+(599 - j) * 600] = depthValue;
 			RawIdxdata[(i)+(599 - j) * 600] = D;
@@ -2487,15 +2422,13 @@ void NewDetectRoof()
 			{
 				Idx[D] = 1;
 				ALL_Idx_Depth[D].push_back(depthValue);
-				ALL_Idx_Normal[D].push_back(tempNormal);
-				cout << "Normal: " << tempNormal[0] << " " << tempNormal[1] << " " << tempNormal[2] << " " << endl;
+				ALL_Idx_UV[D].push_back(glm::vec2(i,j));
 			}
 			else
 			{
 				Idx[D] ++;
 				ALL_Idx_Depth[D].push_back(depthValue);
-				ALL_Idx_Normal[D].push_back(tempNormal);
-				
+				ALL_Idx_UV[D].push_back(glm::vec2(i, j));
 			}
 
 			//for (int k = 0; k < ALL_Face.size();k++)
@@ -2531,7 +2464,6 @@ void NewDetectRoof()
 
 		cout << "Avg Normal: " << totalnormal[0] << " " << totalnormal[1] << " " << totalnormal[2] << " " << endl;
 	}
-
 
 	//IdxFile.close();
 	//DepthFile.close();
@@ -2572,7 +2504,6 @@ void NewDetectRoof()
 
 	Idx.erase(0);
 	ALL_Idx_Depth.erase(0);
-
 
 	//平均深度
 	for (map<int, std::vector<double>>::iterator ID = ALL_Idx_Depth.begin(); ID != ALL_Idx_Depth.end(); ID++)
@@ -2621,6 +2552,19 @@ void NewDetectRoof()
 	cout << "DeepY " << DeepY << "\n";
 	//mesh TopDown
 
+	//產生Face Data資料
+	for (map<int, std::vector<double>>::iterator ID = ALL_Idx_Depth.begin(); ID != ALL_Idx_Depth.end(); ID++)
+	{
+		FaceData TempFaceData;
+		TempFaceData.ID = ID->first;
+		TempFaceData.pointcount = ID->second.size();
+		TempFaceData.Depth = ID->second;
+		TempFaceData.UV = ALL_Idx_UV[ID->first];
+		MyMesh::FHandle FH = model.model.mesh.face_handle(ID->first - 1);
+		MyMesh::Normal N = model.model.mesh.normal(FH);
+		TempFaceData.realNormal = glm::vec3(N[0],N[1],N[2]);
+	}
+
 #define Kmeans
 #ifdef Kmeans
 	//K means 分群原本面
@@ -2658,8 +2602,6 @@ void NewDetectRoof()
 		cout << "Avg Depth" << AvgDepth / (double)(Point_Count) << "\n";
 	}
 
-
-
 	//save Kmeans class end
 	for (int i = 0; i < 360000; i++)
 	{
@@ -2692,6 +2634,31 @@ void NewDetectRoof()
 	stbi_write_png("Fileeee_Color.png", 600, 600, 3, Colordata, 0);
 	stbi_image_free(Colordata);
 #endif // Kmeans
+
+
+#ifdef Face_Data_Kmeans
+	//K means 分群原本面
+	std::vector<FaceData> kx;
+	int SEED = 5;
+	//預設seed
+	for (int i = 0; i < SEED; i++)
+	{
+		double nkx = ((MaxDepth - MinDepth) / (double)SEED) * i + MinDepth;
+
+		kx.push_back(nkx);
+	}
+	//k means分類
+	std::vector<std::map<int, std::vector<double>>> R = pre_Cluster_Kmeans(ALL_Idx_Depth, kx, 0, SEED);
+
+
+
+
+#endif // Face_Data_Kmeans
+
+
+
+
+
 
 	//舊vertex 與 新vertex對應
 	//給舊vertex Index回傳新vertex Index

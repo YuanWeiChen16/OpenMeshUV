@@ -19,11 +19,8 @@ public:
 	int pointcount = 0;
 	//raycast到的點的深度
 	std::vector<double> Depth;
-	//raycast到的點的Normal
-	std::vector<glm::vec3> Normal;
 	//平均normal
 	glm::vec3 realNormal;
-	
 	//點在圖上的UV位置，計算在圖上位置
 	std::vector<glm::vec2> UV;
 
