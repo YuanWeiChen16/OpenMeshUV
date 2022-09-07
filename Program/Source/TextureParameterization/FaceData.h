@@ -19,18 +19,26 @@ public:
 	int pointcount = 0;
 	//raycast到的點的深度
 	std::vector<double> Depth;
+	
+	//點在圖上的UV位置，計算在圖上位置
+	std::vector<glm::vec2> UV;	
+
+	glm::vec3 position;
 	//平均normal
 	glm::vec3 realNormal;
-	//點在圖上的UV位置，計算在圖上位置
-	std::vector<glm::vec2> UV;
+	//
+	glm::vec2 AvgUV;
 
-	double FaceData::operator-(FaceData& FaceData);
-	
+	//面與連接關系?
+	//只記錄ID
+	std::vector<int> ConnectFace;
+
 	//計算兩面的距離，需考慮多種情況
 	double FaceDistance(FaceData, FaceData);
+	// 
 	//
 	FaceData FaceAdd(FaceData, FaceData);
-	FaceData FaceAvg(FaceData, int);
+	FaceData FaceAvg(std::vector<FaceData>);
 
-	FaceData FaceData::operator+(FaceData& FaceData);
+	bool CheckConnect(FaceData);
 };
