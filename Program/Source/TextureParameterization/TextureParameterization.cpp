@@ -313,8 +313,8 @@ void SetupGUI()
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
 	modelNames.push_back("Wave.obj");
-	modelNames.push_back("Stairs.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
+	modelNames.push_back("Stairs.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
 	modelNames.push_back("gta06_dt1_20_build2_high_fillhole.obj");
@@ -2569,13 +2569,36 @@ void NewDetectRoof()
 		TempFaceData.Depth = ID->second;
 		TempFaceData.UV = ALL_Idx_UV[ID->first];
 
+		glm::vec2 Max(-10,-10);
+		glm::vec2 Min(1000,1000);
 		glm::vec2 tempUV;
 		for (int i = 0; i < ALL_Idx_UV[ID->first].size(); i++)
 		{
 			tempUV += ALL_Idx_UV[ID->first][i];
+
+			//§ä bounding box
+			if (ALL_Idx_UV[ID->first][i][0] > Max[0])
+			{
+				Max[0] = ALL_Idx_UV[ID->first][i][0];
+			}
+			if (ALL_Idx_UV[ID->first][i][1] > Max[1])
+			{
+				Max[1] = ALL_Idx_UV[ID->first][i][1];
+			}
+
+			if (ALL_Idx_UV[ID->first][i][0] < Min[0])
+			{
+				Min[0] = ALL_Idx_UV[ID->first][i][0];
+			}
+			if (ALL_Idx_UV[ID->first][i][1] < Min[1])
+			{
+				Min[1] = ALL_Idx_UV[ID->first][i][1];
+			}
 		}
 		tempUV /= ALL_Idx_UV[ID->first].size();
 		TempFaceData.AvgUV = tempUV;
+		TempFaceData.Max = Max;
+		TempFaceData.Min = Min;
 		MyMesh::FHandle FH = model.model.mesh.face_handle(ID->first - 1);
 		MyMesh::Normal N = model.model.mesh.normal(FH);
 		TempFaceData.realNormal = glm::vec3(N[0], N[1], N[2]);

@@ -91,6 +91,19 @@ FaceData FaceData::FaceAvg(std::vector<FaceData> FD)
 bool FaceData::CheckConnect(FaceData FD)
 {
 	int FilterSize = 1;
+	//bounding 計算，不在bounding的直接跳過
+	//FD X太大	X太小
+	if ((this->Max[0] + FilterSize) < (FD.Min[0] - FilterSize) || (this->Min[0] - FilterSize) > (FD.Max[0] + FilterSize))
+	{
+		return false;
+	}
+	//FD Y太大 Y太小
+	if ((this->Max[1] + FilterSize) < (FD.Min[1] - FilterSize) || (this->Min[1] - FilterSize) > (FD.Max[1] + FilterSize))
+	{
+		return false;
+	}
+
+
 	int* RawIdxdata = new int[360000];
 
 #pragma omp parallel for
@@ -107,7 +120,7 @@ bool FaceData::CheckConnect(FaceData FD)
 		for (int j = -FilterSize; j <= FilterSize; j++)
 		{
 			//#pragma omp parallel for
-			for (int count = 0; count < this->pointcount-1; count++)
+			for (int count = 0; count < this->pointcount - 1; count++)
 			{
 				glm::vec2 temp = this->UV[count];
 				temp[0] += i;
@@ -135,7 +148,7 @@ bool FaceData::CheckConnect(FaceData FD)
 	}
 
 	//#pragma omp parallel for
-	for (int count = 0; count < FD.pointcount-1; count++)
+	for (int count = 0; count < FD.pointcount - 1; count++)
 	{
 		glm::vec2 temp = FD.UV[count];
 		RawIdxdata[(int)(temp.x) + (int)(temp.y) * 600] += 1;
@@ -143,7 +156,7 @@ bool FaceData::CheckConnect(FaceData FD)
 	int Connect = 0;
 	for (int i = 0; i < 360000; i++)
 	{
-		if (RawIdxdata[i] > 1 )
+		if (RawIdxdata[i] > 1)
 		{
 			Connect = 1;
 			break;
