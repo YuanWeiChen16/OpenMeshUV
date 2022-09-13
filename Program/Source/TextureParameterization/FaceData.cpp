@@ -55,6 +55,13 @@ double FaceData::FaceDistance(FaceData A, FaceData B)
 	//Noraml 距離
 	double NormalTerm = glm::length(A.realNormal - B.realNormal) * ((double)(TotalPointCount));
 
+	if (CheckConnect)
+	{
+		double QEMError = A.QEM(B);
+	}
+
+
+
 	//真正距離Term
 	return abs(DepthTerm) + abs(UVterm) + abs(NormalTerm);
 
@@ -92,7 +99,9 @@ FaceData FaceData::FaceAvg(std::vector<FaceData> FD)
 
 bool FaceData::CheckConnect(FaceData FD)
 {
+
 	int FilterSize = 1;
+
 	//bounding 計算，不在bounding的直接跳過
 	//FD X太大	X太小
 	if ((this->Max[0] + FilterSize) < (FD.Min[0] - FilterSize) || (this->Min[0] - FilterSize) > (FD.Max[0] + FilterSize))

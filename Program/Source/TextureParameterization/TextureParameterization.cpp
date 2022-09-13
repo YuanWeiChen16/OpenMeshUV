@@ -2720,10 +2720,6 @@ void NewDetectRoof()
 #endif // Face_Data_Kmeans
 
 
-
-
-
-
 	//舊vertex 與 新vertex對應
 	//給舊vertex Index回傳新vertex Index
 	//排除重複點
