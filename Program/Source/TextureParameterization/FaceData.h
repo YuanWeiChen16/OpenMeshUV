@@ -45,7 +45,7 @@ public:
 	// 
 	//
 
-
+	double QEM(FaceData);
 
 	FaceData FaceAdd(FaceData, FaceData);
 	FaceData FaceAvg(std::vector<FaceData>);

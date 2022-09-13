@@ -2624,11 +2624,6 @@ void NewDetectRoof()
 		cout << " //////" << endl;
 	}
 
-
-
-
-
-
 #define Kmeans
 #ifdef Kmeans
 	//K means 分群原本面
