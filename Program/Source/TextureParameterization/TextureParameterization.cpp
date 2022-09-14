@@ -2522,7 +2522,7 @@ void NewDetectRoof()
 			totalDepth += ID->second[i];
 		}
 		ID->second.push_back(totalDepth / (double)ID->second.size());
-		}
+	}
 
 	for (map<int, int>::iterator ID = Idx.begin(); ID != Idx.end(); ID++)
 	{
@@ -2560,7 +2560,7 @@ void NewDetectRoof()
 	cout << "DeepY " << DeepY << "\n";
 	//mesh TopDown
 
-	//產生Face Data資料
+	//產生Face Data資料#######################################
 	for (map<int, std::vector<double>>::iterator ID = ALL_Idx_Depth.begin(); ID != ALL_Idx_Depth.end(); ID++)
 	{
 		FaceData TempFaceData;
@@ -2569,8 +2569,22 @@ void NewDetectRoof()
 		TempFaceData.Depth = ID->second;
 		TempFaceData.UV = ALL_Idx_UV[ID->first];
 
-		glm::vec2 Max(-10,-10);
-		glm::vec2 Min(1000,1000);
+
+
+		//計算平均中心點
+		MyMesh::FHandle FH = model.model.mesh.face_handle(ID->first - 1);
+		glm::vec3 MidPoint(0);
+		for (MyMesh::FVIter FVI = model.model.mesh.fv_begin(FH); FVI != model.model.mesh.fv_end(FH); FVI++)
+		{
+			MyMesh::VHandle VH = model.model.mesh.vertex_handle(FVI->idx());
+			MyMesh::Point p = model.model.mesh.point(VH);
+			MidPoint += glm::vec3(p[0], p[1], p[2]);
+		}
+		MidPoint /= 3;
+		TempFaceData.position = MidPoint;
+
+		glm::vec2 Max(-10, -10);
+		glm::vec2 Min(1000, 1000);
 		glm::vec2 tempUV;
 		for (int i = 0; i < ALL_Idx_UV[ID->first].size(); i++)
 		{
@@ -2599,7 +2613,6 @@ void NewDetectRoof()
 		TempFaceData.AvgUV = tempUV;
 		TempFaceData.Max = Max;
 		TempFaceData.Min = Min;
-		MyMesh::FHandle FH = model.model.mesh.face_handle(ID->first - 1);
 		MyMesh::Normal N = model.model.mesh.normal(FH);
 		TempFaceData.realNormal = glm::vec3(N[0], N[1], N[2]);
 
@@ -2746,8 +2759,8 @@ void NewDetectRoof()
 				VectorSerise[FV1->idx()] = Size;
 				vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
 				BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
+			}
 		}
-	}
 	}
 #endif // original
 
@@ -3070,7 +3083,7 @@ void NewDetectRoof()
 			//			cout << "FACE " << ID->first - 1 << " Is be Rebuild" << endl;
 			//#endif // CREATE_FACE_DEBUG
 			//			count++;
-}
+		}
 	}
 #endif // original
 
@@ -3557,90 +3570,96 @@ std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans(std::map<int,
 
 #pragma region Normal_shift
 //以FaceData為單位分類
-//std::vector<std::vector<FaceData>> FaceData_K_means_cluster(std::vector<FaceData> x, std::vector<FaceData> kx, int seed)
-//{
-//	std::vector<std::vector<FaceData>> team;
-//
-//	//依照原始點對分點的距離 做最近點分群
-//	//map第一項是 面id 第二項是次數 與深度(深度有可能會不一樣!!!)
-//	//每個面去找與他最近的kx面
-//	for (int i = 0; i < x.size(); i++)
-//	{
-//		double min_dis = 999999999;
-//		int smallKJ = 0;
-//		for (int j = 0; j < seed; j++)
-//		{
-//			//針對面計算距離
-//			double total_dis = 0;
-//			//total_dis = x[i] - kx[j];
-//			total_dis = x[i].FaceDistance(x[i],kx[j]);
-//
-//			if (total_dis < min_dis)
-//			{
-//				min_dis = total_dis;
-//				smallKJ = j;
-//			}
-//		}
-//		//找完距離最小，加入team
-//		team[smallKJ].push_back(x[i]);
-//	}
-//	//回傳所有點分群結果
-//	return team;
-//}
-////FaceData
-//std::vector<FaceData> FaceData_K_means_re_seed(std::vector<std::vector<FaceData>> Team, std::vector<FaceData> kx, int seed)
-//{
-//	double sumx = 0;
-//	std::vector<FaceData> new_seed;
-//	int Point_Length = 0;
-//
-//	//需要找到一個最中心的
-//
-//	for (int i = 0; i < Team.size(); i++)
-//	{
-//		if (Team.size() == 0)
-//		{
-//			new_seed.push_back(kx[0]);
-//		}
-//		Point_Length = 0;
-//		FaceData tempFaceData;
-//		
-//		//計算新平均
-//
-//
-//		tempFaceData = Team[0][0].FaceAvg(Team[i]);
-//
-//		new_seed.push_back(tempFaceData);
-//	}
-//	return new_seed;
-//}
-//
-//std::vector<std::vector<FaceData>> FaceData_Cluster_Kmeans(std::vector<FaceData> x, std::vector<FaceData> kx, int fig, int seed)
-//{
-//	std::vector<std::vector<FaceData>> Team = FaceData_K_means_cluster(x, kx, seed);
-//	std::vector<FaceData> nkx = FaceData_K_means_re_seed(Team, kx, seed);
-//	cout << "Kmeans " << fig << "\n";
-//
-//	double Error = 0.01;
-//	int Done = true;
-//	for (int i = 0; i < seed; i++)
-//	{
-//		if (abs(nkx[i] - kx[i]) < Error)
-//		{
-//			Done = false;
-//		}
-//	}
-//
-//	if ((Done == true) || (fig > 2))
-//	{
-//		return Team;
-//	}
-//	else
-//	{
-//		return FaceData_Cluster_Kmeans(x, nkx, fig += 1, seed);
-//	}
-//
-//
-//
-//}
+std::vector<std::vector<FaceData>> FaceData_K_means_cluster(std::vector<FaceData> x, std::vector<FaceData> kx, int seed)
+{
+	std::vector<std::vector<FaceData>> team;
+
+	//依照原始點對分點的距離 做最近點分群
+	//map第一項是 面id 第二項是次數 與深度(深度有可能會不一樣!!!)
+	//每個面去找與他最近的kx面
+	for (int i = 0; i < x.size(); i++)
+	{
+		double min_dis = 999999999;
+		int smallKJ = 0;
+		for (int j = 0; j < seed; j++)
+		{
+			//針對面計算距離
+			double total_dis = 0;
+			//total_dis = x[i] - kx[j];
+			total_dis = x[i].FaceDistance(x[i], kx[j]);
+
+			if (total_dis < min_dis)
+			{
+				min_dis = total_dis;
+				smallKJ = j;
+			}
+		}
+		//找完距離最小，加入team
+		team[smallKJ].push_back(x[i]);
+	}
+	//回傳所有點分群結果
+	return team;
+}
+//FaceData
+std::vector<FaceData> FaceData_K_means_re_seed(std::vector<std::vector<FaceData>> Team, std::vector<FaceData> kx, int seed)
+{
+	double sumx = 0;
+	std::vector<FaceData> new_seed;
+	int Point_Length = 0;
+
+	//需要找到一個最中心的(使用其中一個已經存在的Face)
+	//for loop 找到最近的
+	for (int i = 0; i < Team.size(); i++)
+	{
+
+		double SmallDis = 1000000;
+		FaceData MidestFace;
+		for (int j = 0; j < Team[i].size(); j++)
+		{
+			double totalDis = 0;
+			for (int k = 0; k < Team[i].size(); k++)
+			{
+				totalDis += Team[i][j].FaceDistance(Team[i][k], Team[i][j]);
+			}
+			if (totalDis < SmallDis)
+			{
+				MidestFace = Team[i][j];
+			}
+		}
+
+		FaceData tempFaceData;
+		//計算新平均
+		tempFaceData = MidestFace;
+
+		new_seed.push_back(tempFaceData);
+	}
+	return new_seed;
+}
+
+std::vector<std::vector<FaceData>> FaceData_Cluster_Kmeans(std::vector<FaceData> x, std::vector<FaceData> kx, int fig, int seed)
+{
+	std::vector<std::vector<FaceData>> Team = FaceData_K_means_cluster(x, kx, seed);
+	std::vector<FaceData> nkx = FaceData_K_means_re_seed(Team, kx, seed);
+	cout << "Kmeans " << fig << "\n";
+
+	double Error = 0.01;
+	int Done = true;
+	for (int i = 0; i < seed; i++)
+	{
+		if (nkx[i].ID != kx[i].ID)
+		{
+			Done = false;
+		}
+	}
+
+	if ((Done == true) || (fig > 3))
+	{
+		return Team;
+	}
+	else
+	{
+		return FaceData_Cluster_Kmeans(x, nkx, fig += 1, seed);
+	}
+
+}
 #pragma endregion

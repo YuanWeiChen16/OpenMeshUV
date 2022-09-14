@@ -12,6 +12,9 @@
 #include <omp.h>
 
 #include <Eigen/Sparse>
+#include <Eigen/Dense>
+
+//同一面但是在2D投影上分成兩塊，在這裡也會分成兩塊
 class FaceData {
 public:
 	int ID = -1;
@@ -23,7 +26,9 @@ public:
 	//點在圖上的UV位置，計算在圖上位置
 	std::vector<glm::vec2> UV;	
 
+
 	//與normal組成 平面方程式計算QEM
+	//點為三角面的在2D投影的中心點
 	glm::vec3 position;
 	//平面normal
 	glm::vec3 realNormal;

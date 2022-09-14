@@ -55,16 +55,12 @@ double FaceData::FaceDistance(FaceData A, FaceData B)
 	//Noraml ¶ZÂ÷
 	double NormalTerm = glm::length(A.realNormal - B.realNormal) * ((double)(TotalPointCount));
 
-	if (CheckConnect)
+	if (A.CheckConnect(B))
 	{
 		double QEMError = A.QEM(B);
 	}
-
-
-
 	//¯u¥¿¶ZÂ÷Term
 	return abs(DepthTerm) + abs(UVterm) + abs(NormalTerm);
-
 }
 
 
@@ -207,8 +203,9 @@ double FaceData::QEM(FaceData FD)
 	
 	Eigen::Vector4d B(0, 0, 0, 1);
 	Eigen::Matrix4d Qbar = AQ + BQ;
-	Qbar.row(3) = B;
-	Eigen::Vector4d NewPoint = Qbar.partialPivLu().solve(B);
+	Eigen::Matrix4d Qab = Qbar;
+	Qab.row(3) = B;
+	Eigen::Vector4d NewPoint = Qab.partialPivLu().solve(B);
 
 	double QEMError = NewPoint.transpose() * (Qbar * NewPoint);
 	return QEMError;
