@@ -193,12 +193,12 @@ double FaceData::QEM(FaceData FD)
 
 	//取得平面方程式 A
 	Eigen::Vector4d APlan(ANormal[0], ANormal[1], ANormal[2], 0);
-	APlan[4] = ANormal[0] * -APoint[0] + ANormal[1] * -APoint[1] + ANormal[2] * -APoint[2];
+	APlan[3] = ANormal[0] * -APoint[0] + ANormal[1] * -APoint[1] + ANormal[2] * -APoint[2];
 	AQ = APlan * APlan.transpose();
 
 	//平面方程式B
 	Eigen::Vector4d BPlan(BNormal[0], BNormal[1], BNormal[2], 0);
-	BPlan[4] = BNormal[0] * -BPoint[0] + BNormal[1] * -BPoint[1] + BNormal[2] * -BPoint[2];
+	BPlan[3] = BNormal[0] * -BPoint[0] + BNormal[1] * -BPoint[1] + BNormal[2] * -BPoint[2];
 	BQ = BPlan * BPlan.transpose();
 	
 	Eigen::Vector4d B(0, 0, 0, 1);

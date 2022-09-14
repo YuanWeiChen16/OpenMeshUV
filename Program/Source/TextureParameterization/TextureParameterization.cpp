@@ -290,6 +290,12 @@ std::vector<std::map<int, std::vector<double>>> pre_K_means_cluster(std::map<int
 std::vector<double> pre_K_means_re_seed(std::vector<std::map<int, std::vector<double>>> Team, std::vector<double> kx, int seed);
 std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans(std::map<int, std::vector<double>> x, std::vector < double > kx, int fig, int seed);
 
+std::vector<std::vector<FaceData>> FaceData_K_means_cluster(std::vector<FaceData> x, std::vector<FaceData> kx, int seed);
+std::vector<FaceData> FaceData_K_means_re_seed(std::vector<std::vector<FaceData>> Team, std::vector<FaceData> kx, int seed);
+std::vector<std::vector<FaceData>> FaceData_Cluster_Kmeans(std::vector<FaceData> x, std::vector<FaceData> kx, int fig, int seed);
+
+
+
 void MergeBoundary();
 void detectRoof();
 void caluBoundary();
@@ -2512,9 +2518,9 @@ void NewDetectRoof()
 
 	Idx.erase(0);
 	ALL_Idx_Depth.erase(0);
-
+	ALL_Idx_UV.erase(0);
 	//平均深度
-	for (map<int, std::vector<double>>::iterator ID = ALL_Idx_Depth.begin(); ID != ALL_Idx_Depth.end(); ID++)
+	/*for (map<int, std::vector<double>>::iterator ID = ALL_Idx_Depth.begin(); ID != ALL_Idx_Depth.end(); ID++)
 	{
 		double totalDepth = 0;
 		for (int i = 0; i < ID->second.size(); i++)
@@ -2522,7 +2528,7 @@ void NewDetectRoof()
 			totalDepth += ID->second[i];
 		}
 		ID->second.push_back(totalDepth / (double)ID->second.size());
-	}
+	}*/
 
 	for (map<int, int>::iterator ID = Idx.begin(); ID != Idx.end(); ID++)
 	{
@@ -2619,6 +2625,7 @@ void NewDetectRoof()
 		ALL_Face.push_back(TempFaceData);
 	}
 	//確認連接狀況
+#ifdef CheckConnect
 #pragma omp parallel for
 	for (int i = 0; i < ALL_Face.size(); i++)
 	{
@@ -2636,9 +2643,13 @@ void NewDetectRoof()
 		}
 		cout << " //////" << endl;
 	}
+#endif // CheckConnect
 
-#define Kmeans
+//#define Kmeans
 #ifdef Kmeans
+#ifdef Kmeans_Cluster
+
+
 	//K means 分群原本面
 	std::vector<double> kx;
 	int SEED = 5;
@@ -2705,30 +2716,60 @@ void NewDetectRoof()
 	}
 	stbi_write_png("Fileeee_Color.png", 600, 600, 3, Colordata, 0);
 	stbi_image_free(Colordata);
+#endif // Kmeans_Cluster
 #endif // Kmeans
 
-
+#define Face_Data_Kmeans
 #ifdef Face_Data_Kmeans
 	//K means 分群原本面
-	std::vector<FaceData> kx;
+	std::vector<FaceData> FDkx;
 	int SEED = 5;
 
 	//預設seed 
-	// 
-	//隨機挑幾個??
+	// 如何算是隨機挑? 面積較大的?
+	//隨機挑幾個**************************************************************
+	FDkx.push_back(ALL_Face[0]);
 
-	for (int i = 0; i < SEED; i++)
+	for (int i = 1; i < ALL_Face.size(); i++)
 	{
-		double nkx = ((MaxDepth - MinDepth) / (double)SEED) * i + MinDepth;
+		if (FDkx.size() != SEED)
+		{
 
-		kx.push_back(nkx);
+			if (FDkx[FDkx.size() - 1].pointcount > ALL_Face[i].pointcount)
+			{
+				continue;
+			}
+			for (int j = 0; j <FDkx.size(); j++)
+			{
+				if (FDkx[j].pointcount < ALL_Face[i].pointcount)
+				{
+					FDkx.insert(FDkx.begin() + j, ALL_Face[i]);
+					//FDkx.pop_back();
+					break;
+				}
+			}
+		}
+		else
+		{
+			if (FDkx[SEED - 1].pointcount > ALL_Face[i].pointcount)
+			{
+				continue;
+			}
+			for (int j = 0; j < FDkx.size(); j++)
+			{
+				if (FDkx[j].pointcount < ALL_Face[i].pointcount)
+				{
+					FDkx.insert(FDkx.begin() + j, ALL_Face[i]);
+					FDkx.pop_back();
+					break;
+				}
+			}
+		}
 	}
-
 	//k means分類
-	std::vector<std::map<int, std::vector<double>>> R = pre_Cluster_Kmeans(ALL_Idx_Depth, kx, 0, SEED);
+	std::vector<std::vector<FaceData>> FDR = FaceData_Cluster_Kmeans(ALL_Face, FDkx, 0, SEED);
 
-
-
+	//同一分群轉換成 普通R
 
 #endif // Face_Data_Kmeans
 
@@ -3148,7 +3189,7 @@ void NewDetectRoof()
 	stbi_image_free(normalColordata);
 	Showwwwwwwwww = 1000;
 	//model.AddSelectedFace(0);
-}
+	}
 
 //切換相機方向 需要確定 牆壁面方向 牆壁大小(中心點)
 //Face_Diraction 單一 xyz 向量 向牆壁方向       Fce_Size  xyz 左上 xyz 右上 xyz 左下 xyz 右下  共四個xyz
@@ -3568,11 +3609,17 @@ std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans(std::map<int,
 }
 #pragma endregion
 
-#pragma region Normal_shift
+#pragma region FaceData_Base_KMeans_Cluster
 //以FaceData為單位分類
 std::vector<std::vector<FaceData>> FaceData_K_means_cluster(std::vector<FaceData> x, std::vector<FaceData> kx, int seed)
 {
 	std::vector<std::vector<FaceData>> team;
+
+	for (int i = 0; i < seed; i++)
+	{
+		team.push_back(std::vector<FaceData>());
+	}
+
 
 	//依照原始點對分點的距離 做最近點分群
 	//map第一項是 面id 第二項是次數 與深度(深度有可能會不一樣!!!)
