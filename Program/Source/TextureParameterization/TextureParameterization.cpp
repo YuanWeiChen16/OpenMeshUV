@@ -2644,7 +2644,7 @@ void NewDetectRoof()
 	}
 #endif // CheckConnect
 
-	//#define Kmeans
+#define Kmeans
 #ifdef Kmeans
 #ifdef Kmeans_Cluster
 
@@ -2662,6 +2662,100 @@ void NewDetectRoof()
 	std::vector<std::map<int, std::vector<double>>> R = pre_Cluster_Kmeans(ALL_Idx_Depth, kx, 0, SEED);
 
 	//輸出與統計分類結果  //計算平均深度
+
+#endif // Kmeans_Cluster
+#endif // Kmeans
+
+#define Face_Data_Kmeans
+#ifdef Face_Data_Kmeans
+	//K means 分群原本面
+	std::vector<FaceData> FDkx;
+	int SEED = 5;
+	//預設seed 
+	// 如何算是隨機挑? 面積較大的?
+	//隨機挑幾個**************************************************************
+	cout << "Cluster into " << SEED << "\n";
+	FDkx.push_back(ALL_Face[0]);
+	for (int i = 1; i < ALL_Face.size(); i++)
+	{
+		if (FDkx.size() != SEED)
+		{
+
+			/*if (FDkx[FDkx.size() - 1].pointcount > ALL_Face[i].pointcount)
+			{
+				continue;
+			}*/
+			for (int j = 0; j < FDkx.size(); j++)
+			{
+				if (FDkx[j].pointcount < ALL_Face[i].pointcount)
+				{
+					FDkx.insert(FDkx.begin() + j, ALL_Face[i]);
+					//FDkx.pop_back();
+					break;
+				}
+			}
+		}
+		else
+		{
+			if (FDkx[SEED - 1].pointcount > ALL_Face[i].pointcount)
+			{
+				continue;
+			}
+			for (int j = 0; j < FDkx.size(); j++)
+			{
+				if (FDkx[j].pointcount < ALL_Face[i].pointcount)
+				{
+					FDkx.insert(FDkx.begin() + j, ALL_Face[i]);
+					FDkx.pop_back();
+					break;
+				}
+			}
+		}
+	}
+
+	for (int i = 0; i < 5; i++)
+	{
+		cout << "SEED " << i << " " << FDkx[i].ID << "\n";
+	}
+
+	//k means分類
+
+	for (int i = 0; i < ALL_Face.size(); i++)
+	{
+		cout << "Check Distance " << i << " / " << ALL_Face.size() << "\n";
+		for (int j = 0; j < ALL_Face.size(); j++)
+		{
+			if (ALL_Face[i].PreDis.find(ALL_Face[j].ID) != ALL_Face[i].PreDis.end())
+			{
+				continue;
+			}
+			else
+			{
+				double dis = ALL_Face[i].FaceDistance(ALL_Face[i], ALL_Face[j]);
+				ALL_Face[i].PreDis[ALL_Face[j].ID] = dis;
+				ALL_Face[j].PreDis[ALL_Face[i].ID] = dis;
+			}
+		}
+	}
+
+	cout << "START KMEANS\n";
+	std::vector<std::vector<FaceData>> FDR = FaceData_Cluster_Kmeans(ALL_Face, FDkx, 0, SEED);
+
+	//同一分群轉換成 普通R
+	std::vector<std::map<int, std::vector<double>>> R;
+
+	for (int i = 0; i < FDR.size(); i++)
+	{
+		std::map<int, std::vector<double>> temp;
+		for (int j = 0; j < FDR[i].size(); j++)
+		{
+			temp[FDR[i][j].ID] = FDR[i][j].Depth;
+			cout << FDR[i][j].ID << " ";
+		}
+		R.push_back(temp);
+		cout << "\n";
+	}
+
 	std::vector<double> IDDepth;
 	for (int i = 0; i < R.size(); i++)
 	{
@@ -2715,80 +2809,6 @@ void NewDetectRoof()
 	}
 	stbi_write_png("Fileeee_Color.png", 600, 600, 3, Colordata, 0);
 	stbi_image_free(Colordata);
-#endif // Kmeans_Cluster
-#endif // Kmeans
-
-#define Face_Data_Kmeans
-#ifdef Face_Data_Kmeans
-	//K means 分群原本面
-	std::vector<FaceData> FDkx;
-	int SEED = 5;
-	//預設seed 
-	// 如何算是隨機挑? 面積較大的?
-	//隨機挑幾個**************************************************************
-	cout << "Cluster into " << SEED << "\n";
-	FDkx.push_back(ALL_Face[0]);
-
-	for (int i = 1; i < ALL_Face.size(); i++)
-	{
-		if (FDkx.size() != SEED)
-		{
-
-			/*if (FDkx[FDkx.size() - 1].pointcount > ALL_Face[i].pointcount)
-			{
-				continue;
-			}*/
-			for (int j = 0; j < FDkx.size(); j++)
-			{
-				if (FDkx[j].pointcount < ALL_Face[i].pointcount)
-				{
-					FDkx.insert(FDkx.begin() + j, ALL_Face[i]);
-					//FDkx.pop_back();
-					break;
-				}
-			}
-		}
-		else
-		{
-			if (FDkx[SEED - 1].pointcount > ALL_Face[i].pointcount)
-			{
-				continue;
-			}
-			for (int j = 0; j < FDkx.size(); j++)
-			{
-				if (FDkx[j].pointcount < ALL_Face[i].pointcount)
-				{
-					FDkx.insert(FDkx.begin() + j, ALL_Face[i]);
-					FDkx.pop_back();
-					break;
-				}
-			}
-		}
-	}
-	//k means分類
-
-	for (int i = 0; i < ALL_Face.size(); i++)
-	{
-		cout << "Check Distance " << i << " / " << ALL_Face.size() << "\n";
-		for (int j = 0; j < ALL_Face.size(); j++)
-		{
-			if (ALL_Face[i].PreDis.find(ALL_Face[j].ID) != ALL_Face[i].PreDis.end())
-			{
-				continue;
-			}
-			else
-			{
-				double dis = ALL_Face[i].FaceDistance(ALL_Face[i], ALL_Face[j]);
-				ALL_Face[i].PreDis[ALL_Face[j].ID] = dis;
-				ALL_Face[j].PreDis[ALL_Face[i].ID] = dis;
-			}
-		}
-	}
-
-	cout << "START KMEANS\n";
-	std::vector<std::vector<FaceData>> FDR = FaceData_Cluster_Kmeans(ALL_Face, FDkx, 0, SEED);
-
-	//同一分群轉換成 普通R
 
 #endif // Face_Data_Kmeans
 
@@ -3717,7 +3737,7 @@ std::vector<std::vector<FaceData>> FaceData_Cluster_Kmeans(std::vector<FaceData>
 			Done = false;
 		}
 	}
-	if ((Done == true) || (fig > 3))
+	if ((Done == true) || (fig > 1))
 	{
 		return Team;
 	}

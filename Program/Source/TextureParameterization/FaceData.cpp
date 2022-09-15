@@ -60,7 +60,8 @@ double FaceData::FaceDistance(FaceData A, FaceData B)
 	//Noraml ¶ZÂ÷
 	double NormalTerm = glm::length(A.realNormal - B.realNormal) * ((double)(TotalPointCount));
 	double QEMError = A.QEM(B);
-	double REALDISTANCE = abs(DepthTerm) + abs(UVterm) + abs(NormalTerm) + abs(QEMError*10000);
+	//double REALDISTANCE = abs(DepthTerm) + abs(UVterm) + abs(NormalTerm) + abs(QEMError * 10000);
+	double REALDISTANCE = abs(QEMError*10000);
 	//¯u¥¿¶ZÂ÷Term
 	return REALDISTANCE;
 }
