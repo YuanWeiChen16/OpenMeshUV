@@ -45,6 +45,11 @@ public:
 	glm::vec2 Max;
 	glm::vec2 Min;
 
+	//已經算過的dis
+	std::map<int, double> PreDis;
+
+
+
 	//計算兩面的距離，需考慮多種情況
 	double FaceDistance(FaceData, FaceData);
 	// 
@@ -56,4 +61,7 @@ public:
 	FaceData FaceAvg(std::vector<FaceData>);
 
 	bool CheckConnect(FaceData);
+	
+
+
 };

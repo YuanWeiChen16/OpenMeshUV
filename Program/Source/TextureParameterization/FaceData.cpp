@@ -3,6 +3,11 @@
 //­pºâ¶ZÂ÷
 double FaceData::FaceDistance(FaceData A, FaceData B)
 {
+	if (A.PreDis.find(B.ID) != A.PreDis.end())
+	{
+		return A.PreDis[B.ID];
+	}
+
 	int TotalPointCount = A.pointcount * B.pointcount;
 	//Depth ¶ZÂ÷
 	double DepthTerm = 0;
@@ -54,13 +59,10 @@ double FaceData::FaceDistance(FaceData A, FaceData B)
 
 	//Noraml ¶ZÂ÷
 	double NormalTerm = glm::length(A.realNormal - B.realNormal) * ((double)(TotalPointCount));
-
-	if (A.CheckConnect(B))
-	{
-		double QEMError = A.QEM(B);
-	}
+	double QEMError = A.QEM(B);
+	double REALDISTANCE = abs(DepthTerm) + abs(UVterm) + abs(NormalTerm) + abs(QEMError*10000);
 	//¯u¥¿¶ZÂ÷Term
-	return abs(DepthTerm) + abs(UVterm) + abs(NormalTerm);
+	return REALDISTANCE;
 }
 
 
@@ -200,13 +202,21 @@ double FaceData::QEM(FaceData FD)
 	Eigen::Vector4d BPlan(BNormal[0], BNormal[1], BNormal[2], 0);
 	BPlan[3] = BNormal[0] * -BPoint[0] + BNormal[1] * -BPoint[1] + BNormal[2] * -BPoint[2];
 	BQ = BPlan * BPlan.transpose();
-	
+
 	Eigen::Vector4d B(0, 0, 0, 1);
 	Eigen::Matrix4d Qbar = AQ + BQ;
 	Eigen::Matrix4d Qab = Qbar;
 	Qab.row(3) = B;
 	Eigen::Vector4d NewPoint = Qab.partialPivLu().solve(B);
-
+	for (int i = 0; i < 4; i++)
+	{
+		if (isnan(NewPoint[i]))
+		{
+			glm::vec3 temp=(APoint+BPoint);
+			NewPoint = Eigen::Vector4d(temp[0] / 2, temp[1] / 2, temp[2] / 2, 1);
+		}
+	}
 	double QEMError = NewPoint.transpose() * (Qbar * NewPoint);
+	
 	return QEMError;
 }

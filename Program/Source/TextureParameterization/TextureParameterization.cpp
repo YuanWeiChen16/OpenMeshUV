@@ -318,8 +318,8 @@ void SetupGUI()
 	// Adding season to bar
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
-	modelNames.push_back("Wave.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
+	modelNames.push_back("Wave.obj");
 	modelNames.push_back("Stairs.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
@@ -2575,8 +2575,6 @@ void NewDetectRoof()
 		TempFaceData.Depth = ID->second;
 		TempFaceData.UV = ALL_Idx_UV[ID->first];
 
-
-
 		//計算平均中心點
 		MyMesh::FHandle FH = model.model.mesh.face_handle(ID->first - 1);
 		glm::vec3 MidPoint(0);
@@ -2624,6 +2622,7 @@ void NewDetectRoof()
 
 		ALL_Face.push_back(TempFaceData);
 	}
+	cout << "Made FaceData\n";
 	//確認連接狀況
 #ifdef CheckConnect
 #pragma omp parallel for
@@ -2645,7 +2644,7 @@ void NewDetectRoof()
 	}
 #endif // CheckConnect
 
-//#define Kmeans
+	//#define Kmeans
 #ifdef Kmeans
 #ifdef Kmeans_Cluster
 
@@ -2724,10 +2723,10 @@ void NewDetectRoof()
 	//K means 分群原本面
 	std::vector<FaceData> FDkx;
 	int SEED = 5;
-
 	//預設seed 
 	// 如何算是隨機挑? 面積較大的?
 	//隨機挑幾個**************************************************************
+	cout << "Cluster into " << SEED << "\n";
 	FDkx.push_back(ALL_Face[0]);
 
 	for (int i = 1; i < ALL_Face.size(); i++)
@@ -2735,11 +2734,11 @@ void NewDetectRoof()
 		if (FDkx.size() != SEED)
 		{
 
-			if (FDkx[FDkx.size() - 1].pointcount > ALL_Face[i].pointcount)
+			/*if (FDkx[FDkx.size() - 1].pointcount > ALL_Face[i].pointcount)
 			{
 				continue;
-			}
-			for (int j = 0; j <FDkx.size(); j++)
+			}*/
+			for (int j = 0; j < FDkx.size(); j++)
 			{
 				if (FDkx[j].pointcount < ALL_Face[i].pointcount)
 				{
@@ -2767,6 +2766,26 @@ void NewDetectRoof()
 		}
 	}
 	//k means分類
+
+	for (int i = 0; i < ALL_Face.size(); i++)
+	{
+		cout << "Check Distance " << i << " / " << ALL_Face.size() << "\n";
+		for (int j = 0; j < ALL_Face.size(); j++)
+		{
+			if (ALL_Face[i].PreDis.find(ALL_Face[j].ID) != ALL_Face[i].PreDis.end())
+			{
+				continue;
+			}
+			else
+			{
+				double dis = ALL_Face[i].FaceDistance(ALL_Face[i], ALL_Face[j]);
+				ALL_Face[i].PreDis[ALL_Face[j].ID] = dis;
+				ALL_Face[j].PreDis[ALL_Face[i].ID] = dis;
+			}
+		}
+	}
+
+	cout << "START KMEANS\n";
 	std::vector<std::vector<FaceData>> FDR = FaceData_Cluster_Kmeans(ALL_Face, FDkx, 0, SEED);
 
 	//同一分群轉換成 普通R
@@ -2924,7 +2943,7 @@ void NewDetectRoof()
 
 				BeSelectModel.model.mesh.add_face(face_vhandles);
 
-			}
+}
 		}
 	}
 #endif // Kmeans
@@ -3189,7 +3208,7 @@ void NewDetectRoof()
 	stbi_image_free(normalColordata);
 	Showwwwwwwwww = 1000;
 	//model.AddSelectedFace(0);
-	}
+}
 
 //切換相機方向 需要確定 牆壁面方向 牆壁大小(中心點)
 //Face_Diraction 單一 xyz 向量 向牆壁方向       Fce_Size  xyz 左上 xyz 右上 xyz 左下 xyz 右下  共四個xyz
@@ -3613,14 +3632,12 @@ std::vector<std::map<int, std::vector<double>>> pre_Cluster_Kmeans(std::map<int,
 //以FaceData為單位分類
 std::vector<std::vector<FaceData>> FaceData_K_means_cluster(std::vector<FaceData> x, std::vector<FaceData> kx, int seed)
 {
+	cout << "Clustering\n";
 	std::vector<std::vector<FaceData>> team;
-
 	for (int i = 0; i < seed; i++)
 	{
 		team.push_back(std::vector<FaceData>());
 	}
-
-
 	//依照原始點對分點的距離 做最近點分群
 	//map第一項是 面id 第二項是次數 與深度(深度有可能會不一樣!!!)
 	//每個面去找與他最近的kx面
@@ -3650,6 +3667,7 @@ std::vector<std::vector<FaceData>> FaceData_K_means_cluster(std::vector<FaceData
 //FaceData
 std::vector<FaceData> FaceData_K_means_re_seed(std::vector<std::vector<FaceData>> Team, std::vector<FaceData> kx, int seed)
 {
+	cout << "REseed\n";
 	double sumx = 0;
 	std::vector<FaceData> new_seed;
 	int Point_Length = 0;
@@ -3659,10 +3677,10 @@ std::vector<FaceData> FaceData_K_means_re_seed(std::vector<std::vector<FaceData>
 	for (int i = 0; i < Team.size(); i++)
 	{
 
-		double SmallDis = 1000000;
 		FaceData MidestFace;
 		for (int j = 0; j < Team[i].size(); j++)
 		{
+			double SmallDis = 1000000;
 			double totalDis = 0;
 			for (int k = 0; k < Team[i].size(); k++)
 			{
@@ -3670,6 +3688,7 @@ std::vector<FaceData> FaceData_K_means_re_seed(std::vector<std::vector<FaceData>
 			}
 			if (totalDis < SmallDis)
 			{
+				SmallDis = totalDis;
 				MidestFace = Team[i][j];
 			}
 		}
@@ -3688,9 +3707,9 @@ std::vector<std::vector<FaceData>> FaceData_Cluster_Kmeans(std::vector<FaceData>
 	std::vector<std::vector<FaceData>> Team = FaceData_K_means_cluster(x, kx, seed);
 	std::vector<FaceData> nkx = FaceData_K_means_re_seed(Team, kx, seed);
 	cout << "Kmeans " << fig << "\n";
-
 	double Error = 0.01;
 	int Done = true;
+	//seed沒動過 指已經找到最佳解
 	for (int i = 0; i < seed; i++)
 	{
 		if (nkx[i].ID != kx[i].ID)
@@ -3698,7 +3717,6 @@ std::vector<std::vector<FaceData>> FaceData_Cluster_Kmeans(std::vector<FaceData>
 			Done = false;
 		}
 	}
-
 	if ((Done == true) || (fig > 3))
 	{
 		return Team;
