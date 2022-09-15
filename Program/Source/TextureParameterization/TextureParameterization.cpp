@@ -319,8 +319,8 @@ void SetupGUI()
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
+	modelNames.push_back("MultiSizeSide.obj");
 	modelNames.push_back("Wave.obj");
-	modelNames.push_back("Stairs.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
 	modelNames.push_back("gta06_dt1_20_build2_high_fillhole.obj");
@@ -2670,59 +2670,68 @@ void NewDetectRoof()
 #ifdef Face_Data_Kmeans
 	//K means 分群原本面
 	std::vector<FaceData> FDkx;
-	int SEED = 5;
+	int SEED = 20;
 	//預設seed 
 	// 如何算是隨機挑? 面積較大的?
 	//隨機挑幾個**************************************************************
 	cout << "Cluster into " << SEED << "\n";
-	FDkx.push_back(ALL_Face[0]);
-	for (int i = 1; i < ALL_Face.size(); i++)
-	{
-		if (FDkx.size() != SEED)
-		{
+	//FDkx.push_back(ALL_Face[0]);
+	//for (int i = 1; i < ALL_Face.size(); i++)
+	//{
+	//	if (FDkx.size() != SEED)
+	//	{
+	//		/*if (FDkx[FDkx.size() - 1].pointcount > ALL_Face[i].pointcount)
+	//		{
+	//			continue;
+	//		}*/
+	//		int HasInsert = 0;
+	//		for (int j = 0; j < FDkx.size(); j++)
+	//		{
+	//			if (FDkx[j].pointcount < ALL_Face[i].pointcount)
+	//			{
+	//				FDkx.insert(FDkx.begin() + j, ALL_Face[i]);
+	//				//FDkx.pop_back();
+	//				HasInsert = 1;
+	//				break;
+	//			}
+	//		}
+	//		if (HasInsert == 0)
+	//		{
+	//			FDkx.push_back(ALL_Face[i]);
+	//		}
+	//	}
+	//	else
+	//	{
+	//		if (FDkx[SEED - 1].pointcount > ALL_Face[i].pointcount)
+	//		{
+	//			continue;
+	//		}
+	//		for (int j = 0; j < FDkx.size(); j++)
+	//		{
+	//			if (FDkx[j].pointcount < ALL_Face[i].pointcount)
+	//			{
+	//				FDkx.insert(FDkx.begin() + j, ALL_Face[i]);
+	//				FDkx.pop_back();
+	//				break;
+	//			}
+	//		}
+	//	}
+	//}
 
-			/*if (FDkx[FDkx.size() - 1].pointcount > ALL_Face[i].pointcount)
-			{
-				continue;
-			}*/
-			for (int j = 0; j < FDkx.size(); j++)
-			{
-				if (FDkx[j].pointcount < ALL_Face[i].pointcount)
-				{
-					FDkx.insert(FDkx.begin() + j, ALL_Face[i]);
-					//FDkx.pop_back();
-					break;
-				}
-			}
-		}
-		else
-		{
-			if (FDkx[SEED - 1].pointcount > ALL_Face[i].pointcount)
-			{
-				continue;
-			}
-			for (int j = 0; j < FDkx.size(); j++)
-			{
-				if (FDkx[j].pointcount < ALL_Face[i].pointcount)
-				{
-					FDkx.insert(FDkx.begin() + j, ALL_Face[i]);
-					FDkx.pop_back();
-					break;
-				}
-			}
-		}
-	}
-
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < SEED; i++)
 	{
+		int RandNumber = rand();
+		FDkx.push_back(ALL_Face[RandNumber % ALL_Face.size()]);
 		cout << "SEED " << i << " " << FDkx[i].ID << "\n";
 	}
 
 	//k means分類
-
+	//確認 Error範圍
+	double MinError = 100000000000000;
+	double MaxError = -100000000000000;
 	for (int i = 0; i < ALL_Face.size(); i++)
 	{
-		cout << "Check Distance " << i << " / " << ALL_Face.size() << "\n";
+		//cout << "Check Distance " << i << " / " << ALL_Face.size() << "\n";
 		for (int j = 0; j < ALL_Face.size(); j++)
 		{
 			if (ALL_Face[i].PreDis.find(ALL_Face[j].ID) != ALL_Face[i].PreDis.end())
@@ -2734,9 +2743,19 @@ void NewDetectRoof()
 				double dis = ALL_Face[i].FaceDistance(ALL_Face[i], ALL_Face[j]);
 				ALL_Face[i].PreDis[ALL_Face[j].ID] = dis;
 				ALL_Face[j].PreDis[ALL_Face[i].ID] = dis;
+				if (dis > MaxError)
+				{
+					MaxError = dis;
+				}
+				if (dis < MinError)
+				{
+					MinError = dis;
+				}
 			}
 		}
 	}
+	cout << "MaxDis" << MaxError << "\n";
+	cout << "MinDis" << MinError << "\n";
 
 	cout << "START KMEANS\n";
 	std::vector<std::vector<FaceData>> FDR = FaceData_Cluster_Kmeans(ALL_Face, FDkx, 0, SEED);
@@ -2839,7 +2858,7 @@ void NewDetectRoof()
 				VectorSerise[FV1->idx()] = Size;
 				vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
 				BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
-			}
+}
 		}
 	}
 #endif // original
@@ -2963,7 +2982,7 @@ void NewDetectRoof()
 
 				BeSelectModel.model.mesh.add_face(face_vhandles);
 
-}
+			}
 		}
 	}
 #endif // Kmeans
@@ -3604,7 +3623,6 @@ std::vector<double> pre_K_means_re_seed(std::vector<std::map<int, std::vector<do
 				}
 				//sumx += TeamIter->second[0] * TeamIter->second.size();
 				//Point_Length += TeamIter->second.size();
-
 			}
 		}
 
@@ -3696,28 +3714,39 @@ std::vector<FaceData> FaceData_K_means_re_seed(std::vector<std::vector<FaceData>
 	//for loop 找到最近的
 	for (int i = 0; i < Team.size(); i++)
 	{
-
-		FaceData MidestFace;
-		for (int j = 0; j < Team[i].size(); j++)
+		if (Team[i].size() == 0)
 		{
-			double SmallDis = 1000000;
-			double totalDis = 0;
+			new_seed.push_back(kx[0]);
+		}
+		else
+		{
+			FaceData MidestFace = Team[i][0];
+			double SmallDis = 0;
 			for (int k = 0; k < Team[i].size(); k++)
 			{
-				totalDis += Team[i][j].FaceDistance(Team[i][k], Team[i][j]);
+				SmallDis += Team[i][0].FaceDistance(Team[i][k], Team[i][0]);
 			}
-			if (totalDis < SmallDis)
+
+			for (int j = 1; j < Team[i].size(); j++)
 			{
-				SmallDis = totalDis;
-				MidestFace = Team[i][j];
+				double totalDis = 0;
+				for (int k = 0; k < Team[i].size(); k++)
+				{
+					totalDis += Team[i][j].FaceDistance(Team[i][k], Team[i][j]);
+				}
+				if (totalDis < SmallDis)
+				{
+					SmallDis = totalDis;
+					MidestFace = Team[i][j];
+				}
 			}
+
+			FaceData tempFaceData;
+			//計算新平均
+			tempFaceData = MidestFace;
+
+			new_seed.push_back(tempFaceData);
 		}
-
-		FaceData tempFaceData;
-		//計算新平均
-		tempFaceData = MidestFace;
-
-		new_seed.push_back(tempFaceData);
 	}
 	return new_seed;
 }
@@ -3737,7 +3766,7 @@ std::vector<std::vector<FaceData>> FaceData_Cluster_Kmeans(std::vector<FaceData>
 			Done = false;
 		}
 	}
-	if ((Done == true) || (fig > 1))
+	if ((Done == true) || (fig > 4))
 	{
 		return Team;
 	}
