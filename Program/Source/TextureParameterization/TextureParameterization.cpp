@@ -318,8 +318,8 @@ void SetupGUI()
 	// Adding season to bar
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
-	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("MultiSizeSide.obj");
+	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("Wave.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
@@ -2624,7 +2624,8 @@ void NewDetectRoof()
 	}
 	cout << "Made FaceData\n";
 	//½T»{³s±µª¬ªp
-#ifdef CheckConnect
+#define CHECKCONNECT
+#ifdef CHECKCONNECT
 #pragma omp parallel for
 	for (int i = 0; i < ALL_Face.size(); i++)
 	{
@@ -2637,6 +2638,8 @@ void NewDetectRoof()
 				if (ALL_Face[i].CheckConnect(ALL_Face[j]))
 				{
 					cout << j << " ";
+					ALL_Face[i].ConnectFace.push_back(ALL_Face[j].ID);
+					ALL_Face[j].ConnectFace.push_back(ALL_Face[i].ID);
 				}
 			}
 		}

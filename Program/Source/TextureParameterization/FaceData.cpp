@@ -7,6 +7,8 @@ double FaceData::FaceDistance(FaceData A, FaceData B)
 	{
 		return A.PreDis[B.ID];
 	}
+
+#define Test
 #ifdef Test
 
 
@@ -34,38 +36,49 @@ double FaceData::FaceDistance(FaceData A, FaceData B)
 	double UVterm = sqrt((Ax - Bx) * (Ax - Bx) + (Ay - By) * (Ay - By));
 
 	//UV ¶ZÂ÷
-	//double UVterm = 0;
-#pragma omp parallel for
-	for (int i = 0; i < A.pointcount; i++)
-	{
-#pragma omp parallel for
-		for (int j = 0; j < B.pointcount; j++)
-		{
-			// UV Distance
-			double DisX = A.UV[i][0] - B.UV[j][0];
-			double DisY = A.UV[i][1] - B.UV[j][1];
-			double UVDistance = sqrt(DisX * DisX + DisY * DisY);
-			//Depth Distance
-			//UVterm += UVDistance;
+//	//double UVterm = 0;
+//#pragma omp parallel for
+//	for (int i = 0; i < A.pointcount; i++)
+//	{
+//#pragma omp parallel for
+//		for (int j = 0; j < B.pointcount; j++)
+//		{
+//			// UV Distance
+//			double DisX = A.UV[i][0] - B.UV[j][0];
+//			double DisY = A.UV[i][1] - B.UV[j][1];
+//			double UVDistance = sqrt(DisX * DisX + DisY * DisY);
+//			//Depth Distance
+//			//UVterm += UVDistance;
+//
+//			if (NormalDiffFlag == 1)
+//			{
+//				double DepthDis = A.Depth[i] - B.Depth[j];
+//				DepthTerm += DepthDis;
+//			}
+//		}
+//	}
 
-			if (NormalDiffFlag == 1)
-			{
-				double DepthDis = A.Depth[i] - B.Depth[j];
-				DepthTerm += DepthDis;
-			}
-		}
-	}
+	
 
-	//UV Normalize?
-	//UVterm /= (double)(TotalPointCount);
 
 	//Noraml ¶ZÂ÷
-	double NormalTerm = glm::length(A.realNormal - B.realNormal) * ((double)(TotalPointCount));
+	double NormalTerm = glm::length(A.realNormal - B.realNormal) * TotalPointCount;
 #endif // Test
 	double QEMError = A.QEM(B);
 	QEMError = QEMError * 10;
 	//double REALDISTANCE = abs(DepthTerm) + abs(UVterm) + abs(NormalTerm) + abs(QEMError * 10000);
-	double REALDISTANCE = QEMError * QEMError * QEMError * QEMError;
+	//double REALDISTANCE = QEMError * QEMError * QEMError * QEMError;
+	double REALDISTANCE = TotalPointCount;
+	//UV Normalize?
+	// 
+	//UVterm /= (double)(TotalPointCount);
+	for (int i = 0; i < A.ConnectFace.size(); i++)
+	{
+		if (A.ConnectFace[i] == B.ID)
+		{
+			REALDISTANCE =  DepthTerm;
+		}
+	}
 	//¯u¥¿¶ZÂ÷Term
 	return REALDISTANCE;
 }
@@ -116,7 +129,13 @@ bool FaceData::CheckConnect(FaceData FD)
 	{
 		return false;
 	}
-
+	for (int i = 0; i < this->ConnectFace.size(); i++)
+	{
+		if (this->ConnectFace[i] == FD.ID)
+		{
+			return true;
+		}
+	}
 
 	int* RawIdxdata = new int[360000];
 
@@ -216,18 +235,18 @@ double FaceData::QEM(FaceData FD)
 	Eigen::Vector4d NewPoint = Qab.partialPivLu().solve(B);
 	//Eigen::Vector4d NewPoint = ;
 
-	/*for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		if (isnan(NewPoint[i]))
 		{
 			glm::vec3 temp = (APoint + BPoint);
 			NewPoint = Eigen::Vector4d(temp[0] / 2.0, temp[1] / 2.0, temp[2] / 2.0, 1.0);
 		}
-	}*/
+	}
 	
 	double QEMError = NewPoint.transpose() * (Qbar * NewPoint);
 	
-	std::cout << QEMError;
+	//std::cout << QEMError;
 
 	return QEMError;
 }
