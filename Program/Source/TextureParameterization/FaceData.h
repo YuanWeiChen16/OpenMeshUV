@@ -39,7 +39,8 @@ public:
 	//面與連接關系?
 	//目前只記錄ID
 	std::vector<int> ConnectFace;
-
+	//與其他面在UV上的graph 距離
+	std::map<int, int> Grapth;
 	//2D UV bounding box
 	//加速計算
 	glm::vec2 Max;

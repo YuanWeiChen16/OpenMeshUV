@@ -302,6 +302,7 @@ void caluBoundary();
 void NewDetectRoof();
 
 void SetupGUI()
+
 {
 #ifdef _MSC_VER
 	TwInit(TW_OPENGL, NULL);
@@ -318,9 +319,10 @@ void SetupGUI()
 	// Adding season to bar
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
-	modelNames.push_back("MultiSizeSide.obj");
-	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
 	modelNames.push_back("Wave.obj");
+	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
+	modelNames.push_back("MultiSizeSide2.obj");
+	modelNames.push_back("MultiSizeSide.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
 	modelNames.push_back("gta07_dt1_02_w01_high_0.obj");
 	modelNames.push_back("gta06_dt1_20_build2_high_fillhole.obj");
@@ -1368,8 +1370,8 @@ void MyKeyboard(unsigned char key, int x, int y)
 	else if (key == 'n')
 	{
 		NewDetectRoof();
-		caluBoundary();
-		MergeBoundary();
+		//caluBoundary();
+		//MergeBoundary();
 		cout << "Done\n";
 	}
 	else if (key == 'o')
@@ -2458,7 +2460,7 @@ void NewDetectRoof()
 	}
 
 	//平均normal
-	for (map<int, std::vector<glm::vec3>>::iterator ID = ALL_Idx_Normal.begin(); ID != ALL_Idx_Normal.end(); ID++)
+	/*for (map<int, std::vector<glm::vec3>>::iterator ID = ALL_Idx_Normal.begin(); ID != ALL_Idx_Normal.end(); ID++)
 	{
 		glm::vec3 totalnormal;
 		for (int i = 0; i < ID->second.size(); i++)
@@ -2469,7 +2471,7 @@ void NewDetectRoof()
 		totalnormal /= ID->second.size();
 
 		cout << "Avg Normal: " << totalnormal[0] << " " << totalnormal[1] << " " << totalnormal[2] << " " << endl;
-	}
+	}*/
 
 	//IdxFile.close();
 	//DepthFile.close();
@@ -2647,6 +2649,33 @@ void NewDetectRoof()
 	}
 #endif // CheckConnect
 
+	for (int i = 0; i < ALL_Face.size(); i++)
+	{
+		if (ALL_Face[i].ConnectFace.size() == 0)
+		{
+			
+		}
+		for (int k = 0; k < ALL_Face.size(); k++)
+		{
+			if (i == k)
+			{
+				continue;
+			}
+			for (int j = 0; j < ALL_Face[i].ConnectFace.size(); j++)
+			{
+				if (k == ALL_Face[i].ConnectFace[j])
+				{
+					ALL_Face[i].Grapth[ALL_Face[i].ConnectFace[j]] = 1;
+				}
+			}
+			
+
+
+		}
+	}
+
+
+
 #define Kmeans
 #ifdef Kmeans
 #ifdef Kmeans_Cluster
@@ -2772,10 +2801,14 @@ void NewDetectRoof()
 		for (int j = 0; j < FDR[i].size(); j++)
 		{
 			temp[FDR[i][j].ID] = FDR[i][j].Depth;
-			cout << FDR[i][j].ID << " ";
+			//cout << FDR[i][j].ID << " ";
 		}
 		R.push_back(temp);
-		cout << "\n";
+		//cout << "\n";
+		if (FDR[i].size() > 0)
+		{
+			cout << "AVG Normal " << FDR[i][0].realNormal[0] << " " << FDR[i][0].realNormal[1] << " " << FDR[i][0].realNormal[2] << "\n";
+		}
 	}
 
 	std::vector<double> IDDepth;
@@ -2887,33 +2920,12 @@ void NewDetectRoof()
 					int Size = VectorSerise.size();
 					VectorSerise[FV1->idx()] = Size;
 
-					////深度返算點位置
-					//mat4 inverse_biased_projection_matrix = pMat * mvMat;
-					//inverse_biased_projection_matrix = inverse(inverse_biased_projection_matrix);
-					//mat4 inverse_projection_matrix = inverse(pMat);
-					////	
-					//vec3 clip_space_position = vec3(vec2(0.5, 0.5), IDDepth[i] * 2.0 + 1.0);
-					//vec4 view_position(vec2(inverse_projection_matrix[0][0], inverse_projection_matrix[1][1]) * clip_space_position.xy, -1.0,
-					//	inverse_projection_matrix[2][3] * clip_space_position.z + inverse_projection_matrix[3][3]);
-
-					//mat4 viewMaterixInv = inverse(mvMat);
-					//vec4 clipSpacePosition = vec4(vec2(0.5, 0.5), IDDepth[i] * 2.0 + 1.0, 1.0);
-					//vec4 viewSpacePosition = inverse_projection_matrix * clipSpacePosition;
-					//viewSpacePosition /= viewSpacePosition.w;
-					//vec4 worldSapcePosition = viewMaterixInv * viewSpacePosition;
-
-					////vec3 FinalPos = view_position.xyz / view_position.w;
-					//double RDepth = view_position.y / view_position.w;
-
-
-					//P[1] = worldSapcePosition.y + 1000;
-					P[1] = IDDepth[i];
+					//P[1] = IDDepth[i];//set Height to AVG******************************************************
+					TC[0] = colormap[i][0];
+					TC[1] = colormap[i][1];
 					//	vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
-
-					//	//BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
-
 					vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
-
+					BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
 				}
 			}
 		}
@@ -3249,6 +3261,7 @@ void NewDetectRoof()
 	stbi_image_free(data);
 	stbi_image_free(normalColordata);
 	Showwwwwwwwww = 1000;
+	BeSelectModel.MY_LoadToShader();
 	//model.AddSelectedFace(0);
 }
 
@@ -3684,19 +3697,23 @@ std::vector<std::vector<FaceData>> FaceData_K_means_cluster(std::vector<FaceData
 	//每個面去找與他最近的kx面
 	for (int i = 0; i < x.size(); i++)
 	{
-		double min_dis = 999999999;
+		double min_dis = DBL_MAX;
 		int smallKJ = 0;
 		for (int j = 0; j < seed; j++)
 		{
+			if (kx[j].ID == -1)
+			{
+				continue;
+			}
 			//針對面計算距離
-			double total_dis = 0;
-			//total_dis = x[i] - kx[j];
-			total_dis = x[i].FaceDistance(x[i], kx[j]);
-
+			double total_dis = x[i].FaceDistance(x[i], kx[j]);
 			if (total_dis < min_dis)
 			{
-				min_dis = total_dis;
-				smallKJ = j;
+				if (abs(total_dis - min_dis) > 10)
+				{
+					min_dis = total_dis;
+					smallKJ = j;
+				}
 			}
 		}
 		//找完距離最小，加入team
@@ -3719,7 +3736,10 @@ std::vector<FaceData> FaceData_K_means_re_seed(std::vector<std::vector<FaceData>
 	{
 		if (Team[i].size() == 0)
 		{
-			new_seed.push_back(kx[0]);
+			FaceData Temp;
+			Temp.ID = -1;
+			new_seed.push_back(Temp);
+			continue;
 		}
 		else
 		{
@@ -3739,8 +3759,11 @@ std::vector<FaceData> FaceData_K_means_re_seed(std::vector<std::vector<FaceData>
 				}
 				if (totalDis < SmallDis)
 				{
-					SmallDis = totalDis;
-					MidestFace = Team[i][j];
+					//if (abs(totalDis - SmallDis) > 1)
+					{
+						SmallDis = totalDis;
+						MidestFace = Team[i][j];
+					}
 				}
 			}
 
@@ -3769,8 +3792,12 @@ std::vector<std::vector<FaceData>> FaceData_Cluster_Kmeans(std::vector<FaceData>
 			Done = false;
 		}
 	}
-	if ((Done == true) || (fig > 4))
+	if ((Done == true) || (fig > 10))
 	{
+		/*for (int i = 0; i < nkx.size(); i++)
+		{
+			cout << "nkx " << nkx[i].realNormal[0] << " " << nkx[i].realNormal[1] << " " << nkx[i].realNormal[2] << "\n";
+		}*/
 		return Team;
 	}
 	else
@@ -3779,4 +3806,28 @@ std::vector<std::vector<FaceData>> FaceData_Cluster_Kmeans(std::vector<FaceData>
 	}
 
 }
+#pragma endregion
+
+
+#pragma region REGIONGROWNING
+
+std::vector<std::vector<FaceData>> RG(double* IMGdepth, glm::vec3 *IMGnormal,int* IMGid)
+{
+	for (int i = 0; i < 600; i++)
+	{
+		for (int j = 0; j < 600; j++)
+		{
+
+			if (IMGid[i + 599 - j] == IMGid[i+1 + 599 - j])
+			{
+
+			}
+		}
+	}
+
+
+
+}
+
+
 #pragma endregion

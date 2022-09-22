@@ -8,16 +8,20 @@ double FaceData::FaceDistance(FaceData A, FaceData B)
 		return A.PreDis[B.ID];
 	}
 
+	if ((A.ID == -1) || (B.ID == -1))
+	{
+		return 10000000000000000000;
+	}
+
 #define Test
 #ifdef Test
-
 
 	int TotalPointCount = A.pointcount * B.pointcount;
 	//Depth ¶ZÂ÷
 	double DepthTerm = 0;
 	//normal ¤@­P
 	int NormalDiffFlag = 0;
-	if (glm::length(A.realNormal - B.realNormal) < 0.0001)
+	if (glm::length(A.realNormal - B.realNormal) < 0.01)
 	{
 		double DepthDis = A.Depth[0] - B.Depth[0];
 		DepthTerm = DepthDis * TotalPointCount;
@@ -27,11 +31,11 @@ double FaceData::FaceDistance(FaceData A, FaceData B)
 		NormalDiffFlag = 1;
 	}
 
-	double Ax = A.AvgUV[0] * A.pointcount;
-	double Ay = A.AvgUV[1] * A.pointcount;
+	double Ax = A.AvgUV[0];
+	double Ay = A.AvgUV[1];
 
-	double Bx = B.AvgUV[0] * B.pointcount;
-	double By = B.AvgUV[1] * B.pointcount;
+	double Bx = B.AvgUV[0];
+	double By = B.AvgUV[1];
 
 	double UVterm = sqrt((Ax - Bx) * (Ax - Bx) + (Ay - By) * (Ay - By));
 
@@ -58,27 +62,27 @@ double FaceData::FaceDistance(FaceData A, FaceData B)
 //		}
 //	}
 
-	
-
-
 	//Noraml ¶ZÂ÷
-	double NormalTerm = glm::length(A.realNormal - B.realNormal) * TotalPointCount;
+	double NormalTerm = glm::length(A.realNormal - B.realNormal) * 100000;
 #endif // Test
 	double QEMError = A.QEM(B);
-	QEMError = QEMError * 10;
+	QEMError = QEMError * 10000;
+
+
 	//double REALDISTANCE = abs(DepthTerm) + abs(UVterm) + abs(NormalTerm) + abs(QEMError * 10000);
 	//double REALDISTANCE = QEMError * QEMError * QEMError * QEMError;
-	double REALDISTANCE = TotalPointCount;
+	double REALDISTANCE = QEMError;
 	//UV Normalize?
 	// 
 	//UVterm /= (double)(TotalPointCount);
+	/*REALDISTANCE = 100000000;
 	for (int i = 0; i < A.ConnectFace.size(); i++)
 	{
 		if (A.ConnectFace[i] == B.ID)
 		{
-			REALDISTANCE =  DepthTerm;
+			REALDISTANCE = 0.01;
 		}
-	}
+	}*/
 	//¯u¥¿¶ZÂ÷Term
 	return REALDISTANCE;
 }
@@ -235,17 +239,35 @@ double FaceData::QEM(FaceData FD)
 	Eigen::Vector4d NewPoint = Qab.partialPivLu().solve(B);
 	//Eigen::Vector4d NewPoint = ;
 
-	for (int i = 0; i < 4; i++)
+	//for (int i = 0; i < 4; i++)
 	{
-		if (isnan(NewPoint[i]))
+		//if (isnan(NewPoint[i]))
 		{
 			glm::vec3 temp = (APoint + BPoint);
+			/*temp = (APoint - BPoint);
+			temp[0] /= (double)(this->pointcount + FD.pointcount);
+			temp[1] /= (double)(this->pointcount + FD.pointcount);
+			temp[2] /= (double)(this->pointcount + FD.pointcount);
+			temp *= this->pointcount;
+			temp += BPoint;*/
+
+			//A     B
+			//
+
+			//NewPoint = Eigen::Vector4d(temp[0],temp[1],temp[2], 1);
 			NewPoint = Eigen::Vector4d(temp[0] / 2.0, temp[1] / 2.0, temp[2] / 2.0, 1.0);
 		}
 	}
-	
 	double QEMError = NewPoint.transpose() * (Qbar * NewPoint);
-	
+
+
+	double Mid2APlane = abs(APlan[0] * NewPoint[0] + APlan[1] * NewPoint[1] + APlan[2] * NewPoint[2] + APlan[3]);
+	double Mid2BPlane = abs(BPlan[0] * NewPoint[0] + BPlan[1] * NewPoint[1] + BPlan[2] * NewPoint[2] + BPlan[3]);
+
+
+	QEMError = Mid2APlane + Mid2BPlane;
+
+
 	//std::cout << QEMError;
 
 	return QEMError;
