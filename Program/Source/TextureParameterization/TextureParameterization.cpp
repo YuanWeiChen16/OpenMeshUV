@@ -1959,6 +1959,15 @@ void DFS(std::vector<std::vector<int>>& M, std::vector<bool>& visited, int i)
 		DFS(M, visited, j);
 	}
 }
+
+int DFS_FaceData(std::vector<std::vector<int>>& M, int i)
+{
+
+
+
+	return DFS_FaceData(M, i) + 1;
+}
+
 //分類
 int FindFriend(std::vector<std::vector<int>>& M)
 {
@@ -2039,6 +2048,42 @@ void MergeBoundary()
 
 	BeSelectModel.MY_LoadToShader();
 }
+
+void MergeBoundary_FaceData(std::vector<FaceData> ALL_FD)
+{
+	//產生朋友矩陣
+	//用ID產生
+	std::vector<std::vector<int>> M;
+	M.resize(ALL_FD.size());
+	for (int i = 0; i < ALL_FD.size(); i++)
+	{
+		M[i].resize(ALL_FD.size());
+	}
+	for (int i = 0; i < ALL_FD.size(); i++)
+	{
+		for (int j = 0; j < ALL_FD.size(); j++)
+		{
+			//如果兩個有相連
+			if (i != j && ALL_FD[i].CheckConnect(ALL_FD[j]))
+			{
+				M[i][j] = 1;
+				M[j][i] = 1;
+			}
+			else
+			{
+				M[i][j] = 0;
+				M[j][i] = 0;
+			}
+		}
+	}
+
+	int ClusterCount = DFS_FaceData(M, 1);
+
+	cout << "Cluster " << ClusterCount << "\n";
+
+}
+
+
 
 //use halfedge find bounding
 void caluBoundary()
@@ -2649,11 +2694,12 @@ void NewDetectRoof()
 	}
 #endif // CheckConnect
 
+
 	for (int i = 0; i < ALL_Face.size(); i++)
 	{
 		if (ALL_Face[i].ConnectFace.size() == 0)
 		{
-			
+
 		}
 		for (int k = 0; k < ALL_Face.size(); k++)
 		{
@@ -2661,14 +2707,22 @@ void NewDetectRoof()
 			{
 				continue;
 			}
+			//search done
 			for (int j = 0; j < ALL_Face[i].ConnectFace.size(); j++)
 			{
 				if (k == ALL_Face[i].ConnectFace[j])
 				{
 					ALL_Face[i].Grapth[ALL_Face[i].ConnectFace[j]] = 1;
+					//return 1;
 				}
 			}
-			
+
+			//search friend
+			int Small_Dis = ALL_Face.size();
+			for (int j = 0; j < ALL_Face[i].ConnectFace.size(); j++)
+			{
+				//recue
+			}
 
 
 		}
@@ -2894,7 +2948,7 @@ void NewDetectRoof()
 				VectorSerise[FV1->idx()] = Size;
 				vhandle.push_back(BeSelectModel.model.mesh.add_vertex(P));
 				BeSelectModel.model.mesh.set_texcoord2D(vhandle[vhandle.size() - 1], TC);
-}
+			}
 		}
 	}
 #endif // original
@@ -3808,17 +3862,16 @@ std::vector<std::vector<FaceData>> FaceData_Cluster_Kmeans(std::vector<FaceData>
 }
 #pragma endregion
 
-
 #pragma region REGIONGROWNING
 
-std::vector<std::vector<FaceData>> RG(double* IMGdepth, glm::vec3 *IMGnormal,int* IMGid)
+std::vector<std::vector<FaceData>> RG(double* IMGdepth, glm::vec3* IMGnormal, int* IMGid)
 {
 	for (int i = 0; i < 600; i++)
 	{
 		for (int j = 0; j < 600; j++)
 		{
 
-			if (IMGid[i + 599 - j] == IMGid[i+1 + 599 - j])
+			if (IMGid[i + 599 - j] == IMGid[i + 1 + 599 - j])
 			{
 
 			}
@@ -3829,5 +3882,99 @@ std::vector<std::vector<FaceData>> RG(double* IMGdepth, glm::vec3 *IMGnormal,int
 
 }
 
+
+
+void add_edge(vector<int> adj[], int src, int dest)
+{
+	adj[src].push_back(dest);
+	adj[dest].push_back(src);
+}
+
+bool BFS_FaceData(std::vector<int> adj[], int src, int dest, int v, int pred[], int dist[])
+{
+	list<int> queue;
+	bool* visited;
+	visited = new bool[v];
+	for (int i = 0; i < v; i++)
+	{
+		visited[i] = false;
+		dist[i] = INT_MAX;
+		pred[i] = -1;
+	}
+
+	while (!queue.empty())
+	{
+		int u = queue.front();
+		queue.pop_front();
+		for (int i = 0; i < adj[u].size(); i++) {
+			if (visited[adj[u][i]] == false) {
+				visited[adj[u][i]] = true;
+				dist[adj[u][i]] = dist[u] + 1;
+				pred[adj[u][i]] = u;
+				queue.push_back(adj[u][i]);
+
+				// We stop BFS when we find
+				// destination.
+				if (adj[u][i] == dest)
+					return true;
+			}
+		}
+	}
+	return false;
+}
+
+int findShortDistace(std::vector<FaceData> adj, int s, int dest, int v)
+{
+	int* pred;
+	int* dist;
+	pred = new int[v];
+	dist = new int[v];
+
+	std::vector<int>* adj_int;
+	adj_int = new std::vector<int>[v];
+	for (int i = 0; i < adj.size(); i++)
+	{
+		for (int j = 0; j < adj.size(); j++)
+		{
+			if (i == j) continue;
+			add_edge(adj_int, adj[i].ID, adj[j].ID);
+		}
+	}
+
+
+
+
+
+
+	if (BFS_FaceData(adj_int, s, dest, v, pred, dist) == false)
+	{
+		cout << "Cant Find";
+	}
+
+	vector<int> path;
+	int crawl = dest;
+	path.push_back(crawl);
+	while (pred[crawl] != -1) {
+		path.push_back(pred[crawl]);
+		crawl = pred[crawl];
+	}
+	cout << "Shortest path length is : " << dist[dest];
+
+
+
+
+}
+
+
+
+
+
+
+
+
+int RGG(std::vector<FaceData> TList, FaceData SourceFD, FaceData destFD, int FaceSze)
+{
+
+}
 
 #pragma endregion

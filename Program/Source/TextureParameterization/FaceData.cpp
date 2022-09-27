@@ -62,7 +62,7 @@ double FaceData::FaceDistance(FaceData A, FaceData B)
 //		}
 //	}
 
-	//Noraml ¶ZÂ÷
+	//Noraml ¶ZÂ÷ 0~
 	double NormalTerm = glm::length(A.realNormal - B.realNormal) * 100000;
 #endif // Test
 	double QEMError = A.QEM(B);
@@ -71,7 +71,7 @@ double FaceData::FaceDistance(FaceData A, FaceData B)
 
 	//double REALDISTANCE = abs(DepthTerm) + abs(UVterm) + abs(NormalTerm) + abs(QEMError * 10000);
 	//double REALDISTANCE = QEMError * QEMError * QEMError * QEMError;
-	double REALDISTANCE = QEMError;
+	double REALDISTANCE = NormalTerm;
 	//UV Normalize?
 	// 
 	//UVterm /= (double)(TotalPointCount);
@@ -86,8 +86,6 @@ double FaceData::FaceDistance(FaceData A, FaceData B)
 	//¯u¥¿¶ZÂ÷Term
 	return REALDISTANCE;
 }
-
-
 
 FaceData FaceData::FaceAdd(FaceData, FaceData)
 {
