@@ -2676,9 +2676,9 @@ void NewDetectRoof()
 #define CHECKCONNECT
 #ifdef CHECKCONNECT
 #pragma omp parallel for
+	cout << "Check Connect \n";
 	for (int i = 0; i < ALL_Face.size(); i++)
 	{
-		cout << "Check Connect " << i << " : ";
 #pragma omp parallel for
 		for (int j = 0; j < ALL_Face.size(); j++)
 		{
@@ -2686,14 +2686,13 @@ void NewDetectRoof()
 			{
 				if (ALL_Face[i].CheckConnect(ALL_Face[j]))
 				{
-					cout << j << " ";
 					ALL_Face[i].ConnectFace.push_back(ALL_Face[j].ID);
 					ALL_Face[j].ConnectFace.push_back(ALL_Face[i].ID);
 				}
 			}
 		}
-		cout << " //////" << endl;
 	}
+	cout << "Check Connect Done\n";
 #endif // CheckConnect
 
 #define CREATEGRAPH
@@ -3837,12 +3836,6 @@ std::vector<std::vector<FaceData>> FaceData_Cluster_Kmeans(std::vector<FaceData>
 
 #pragma region REGIONGROWNING
 
-void add_edge(vector<int> adj[], int src, int dest)
-{
-	adj[src].push_back(dest);
-	adj[dest].push_back(src);
-}
-
 bool BFS_FaceData(std::vector<int> adj[], int src, int dest, int v, int pred[], int dist[])
 {
 	list<int> queue;
@@ -3881,7 +3874,7 @@ bool BFS_FaceData(std::vector<int> adj[], int src, int dest, int v, int pred[], 
 
 void findShortDistace(std::vector<FaceData>& adj)
 {
-
+	cout << "Start Create Graph\n";
 	int adjsize = adj.size();
 	//init edge Data Struct
 	std::vector<int>* adj_int = new std::vector<int>[adjsize];
@@ -3900,12 +3893,8 @@ void findShortDistace(std::vector<FaceData>& adj)
 	{
 		for (int j = 0; j < adj[i].ConnectFace.size(); j++)
 		{
-			//add_edge(adj_int, ID_ser[adj[i].ID], ID_ser[adj[i].ConnectFace[j]]);
 			adj_int[i].push_back(ID_ser[adj[i].ConnectFace[j]]);
 			adj_int[ID_ser[adj[i].ConnectFace[j]]].push_back(i);
-
-
-			cout << ID_ser[adj[i].ID] << " " << ID_ser[adj[i].ConnectFace[j]] <<" "<< adj_int[i].size()<<"\n";
 		}
 	}
 
@@ -3926,7 +3915,7 @@ void findShortDistace(std::vector<FaceData>& adj)
 
 			if (BFS_FaceData(adj_int, source, dest, adjsize, pred, dist) == false)
 			{
-				cout << "Cant" << source << " " << dest << " Find" << "\n";
+				//cout << "Cant" << source << " " << dest << " Find" << "\n";
 				continue;
 			}
 
@@ -3937,7 +3926,7 @@ void findShortDistace(std::vector<FaceData>& adj)
 				path.push_back(pred[crawl]);
 				crawl = pred[crawl];
 			}
-			cout << "Shortest path of " << i << " " << j << " length is : " << dist[dest]<<"\n";
+			//cout << "Shortest path of " << i << " " << j << " length is : " << dist[dest]<<"\n";
 
 			adj[i].Grapth[ser_ID[j]] = dist[dest];
 			adj[j].Grapth[ser_ID[i]] = dist[dest];
@@ -3945,6 +3934,8 @@ void findShortDistace(std::vector<FaceData>& adj)
 			delete[](dist);
 		}
 	}
+
+	cout << "Graph Short path Done\n";
 }
 
 #pragma endregion
