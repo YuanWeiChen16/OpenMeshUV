@@ -294,7 +294,9 @@ std::vector<std::vector<FaceData>> FaceData_K_means_cluster(std::vector<FaceData
 std::vector<FaceData> FaceData_K_means_re_seed(std::vector<std::vector<FaceData>> Team, std::vector<FaceData> kx, int seed);
 std::vector<std::vector<FaceData>> FaceData_Cluster_Kmeans(std::vector<FaceData> x, std::vector<FaceData> kx, int fig, int seed);
 
-
+void add_edge(vector<int> adj[], int src, int dest);
+bool BFS_FaceData(std::vector<int> adj[], int src, int dest, int v, int pred[], int dist[]);
+void findShortDistace(std::vector<FaceData>& adj);
 
 void MergeBoundary();
 void detectRoof();
@@ -319,8 +321,8 @@ void SetupGUI()
 	// Adding season to bar
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
-	modelNames.push_back("Wave.obj");
 	modelNames.push_back("gta01_gta_townobj_fillhole.obj");
+	modelNames.push_back("Wave.obj");
 	modelNames.push_back("MultiSizeSide2.obj");
 	modelNames.push_back("MultiSizeSide.obj");
 	modelNames.push_back("gta02_dt1_03_build2_high.obj");
@@ -2694,39 +2696,10 @@ void NewDetectRoof()
 	}
 #endif // CheckConnect
 
-
-	for (int i = 0; i < ALL_Face.size(); i++)
-	{
-		if (ALL_Face[i].ConnectFace.size() == 0)
-		{
-
-		}
-		for (int k = 0; k < ALL_Face.size(); k++)
-		{
-			if (i == k)
-			{
-				continue;
-			}
-			//search done
-			for (int j = 0; j < ALL_Face[i].ConnectFace.size(); j++)
-			{
-				if (k == ALL_Face[i].ConnectFace[j])
-				{
-					ALL_Face[i].Grapth[ALL_Face[i].ConnectFace[j]] = 1;
-					//return 1;
-				}
-			}
-
-			//search friend
-			int Small_Dis = ALL_Face.size();
-			for (int j = 0; j < ALL_Face[i].ConnectFace.size(); j++)
-			{
-				//recue
-			}
-
-
-		}
-	}
+#define CREATEGRAPH
+#ifdef CREATEGRAPH
+	findShortDistace(ALL_Face);
+#endif // CREATEGRAPH
 
 
 
@@ -3864,24 +3837,6 @@ std::vector<std::vector<FaceData>> FaceData_Cluster_Kmeans(std::vector<FaceData>
 
 #pragma region REGIONGROWNING
 
-std::vector<std::vector<FaceData>> RG(double* IMGdepth, glm::vec3* IMGnormal, int* IMGid)
-{
-	for (int i = 0; i < 600; i++)
-	{
-		for (int j = 0; j < 600; j++)
-		{
-
-			if (IMGid[i + 599 - j] == IMGid[i + 1 + 599 - j])
-			{
-
-			}
-		}
-	}
-
-
-
-}
-
 void add_edge(vector<int> adj[], int src, int dest)
 {
 	adj[src].push_back(dest);
@@ -3899,6 +3854,9 @@ bool BFS_FaceData(std::vector<int> adj[], int src, int dest, int v, int pred[], 
 		dist[i] = INT_MAX;
 		pred[i] = -1;
 	}
+	visited[src] = true;
+	dist[src] = 0;
+	queue.push_back(src);
 
 	while (!queue.empty())
 	{
@@ -3921,21 +3879,33 @@ bool BFS_FaceData(std::vector<int> adj[], int src, int dest, int v, int pred[], 
 	return false;
 }
 
-int findShortDistace(std::vector<FaceData>& adj)
+void findShortDistace(std::vector<FaceData>& adj)
 {
-	int* pred;
-	int* dist;
-	pred = new int[adj.size()];
-	dist = new int[adj.size()];
+
+	int adjsize = adj.size();
 	//init edge Data Struct
-	std::vector<int>* adj_int;
-	adj_int = new std::vector<int>[adj.size()];
+	std::vector<int>* adj_int = new std::vector<int>[adjsize];
+
+	//need a map tranform edge
+	std::map<int, int> ID_ser;
+	std::map<int, int> ser_ID;
+	//remapping
 	for (int i = 0; i < adj.size(); i++)
 	{
-		for (int j = 0; j < adj.size(); j++)
+		ID_ser[adj[i].ID] = i;
+		ser_ID[i] = adj[i].ID;
+	}
+	//add edge
+	for (int i = 0; i < adj.size(); i++)
+	{
+		for (int j = 0; j < adj[i].ConnectFace.size(); j++)
 		{
-			if (i == j) continue;
-			add_edge(adj_int, adj[i].ID, adj[j].ID);
+			//add_edge(adj_int, ID_ser[adj[i].ID], ID_ser[adj[i].ConnectFace[j]]);
+			adj_int[i].push_back(ID_ser[adj[i].ConnectFace[j]]);
+			adj_int[ID_ser[adj[i].ConnectFace[j]]].push_back(i);
+
+
+			cout << ID_ser[adj[i].ID] << " " << ID_ser[adj[i].ConnectFace[j]] <<" "<< adj_int[i].size()<<"\n";
 		}
 	}
 
@@ -3944,18 +3914,19 @@ int findShortDistace(std::vector<FaceData>& adj)
 	{
 		for (int j = 0; j < adj.size(); j++)
 		{
-			if ((adj[i].Grapth.find(j) != adj[i].Grapth.end()) || (i == j))
+			if ((adj[i].Grapth.find(ser_ID[j]) != adj[i].Grapth.end()) || (adj[i].ID == ser_ID[j]))
 			{
 				continue;
 			}
 			int source = i;
 			int dest = j;
-			pred = new int[adj.size()];
-			dist = new int[adj.size()];
 
-			if (BFS_FaceData(adj_int, source, dest, adj_int->size(), pred, dist) == false)
+			int* pred = new int[adjsize];
+			int* dist = new int[adjsize];
+
+			if (BFS_FaceData(adj_int, source, dest, adjsize, pred, dist) == false)
 			{
-				cout << "Cant" << source << " " << dest << " Find";
+				cout << "Cant" << source << " " << dest << " Find" << "\n";
 				continue;
 			}
 
@@ -3966,18 +3937,14 @@ int findShortDistace(std::vector<FaceData>& adj)
 				path.push_back(pred[crawl]);
 				crawl = pred[crawl];
 			}
-			cout << "Shortest path of " << i << " " << j << " length is : " << dist[dest];
-			adj[i].Grapth[j] = dist[dest];
-			adj[j].Grapth[i] = dist[dest];
+			cout << "Shortest path of " << i << " " << j << " length is : " << dist[dest]<<"\n";
+
+			adj[i].Grapth[ser_ID[j]] = dist[dest];
+			adj[j].Grapth[ser_ID[i]] = dist[dest];
 			delete[](pred);
 			delete[](dist);
 		}
 	}
-}
-
-int RGG(std::vector<FaceData> TList, FaceData SourceFD, FaceData destFD, int FaceSze)
-{
-
 }
 
 #pragma endregion
