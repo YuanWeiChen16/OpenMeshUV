@@ -3882,8 +3882,6 @@ std::vector<std::vector<FaceData>> RG(double* IMGdepth, glm::vec3* IMGnormal, in
 
 }
 
-
-
 void add_edge(vector<int> adj[], int src, int dest)
 {
 	adj[src].push_back(dest);
@@ -3923,15 +3921,15 @@ bool BFS_FaceData(std::vector<int> adj[], int src, int dest, int v, int pred[], 
 	return false;
 }
 
-int findShortDistace(std::vector<FaceData> adj, int s, int dest, int v)
+int findShortDistace(std::vector<FaceData>& adj)
 {
 	int* pred;
 	int* dist;
-	pred = new int[v];
-	dist = new int[v];
-
+	pred = new int[adj.size()];
+	dist = new int[adj.size()];
+	//init edge Data Struct
 	std::vector<int>* adj_int;
-	adj_int = new std::vector<int>[v];
+	adj_int = new std::vector<int>[adj.size()];
 	for (int i = 0; i < adj.size(); i++)
 	{
 		for (int j = 0; j < adj.size(); j++)
@@ -3941,36 +3939,41 @@ int findShortDistace(std::vector<FaceData> adj, int s, int dest, int v)
 		}
 	}
 
-
-
-
-
-
-	if (BFS_FaceData(adj_int, s, dest, v, pred, dist) == false)
+	//search all face-2-face distance
+	for (int i = 0; i < adj.size(); i++)
 	{
-		cout << "Cant Find";
+		for (int j = 0; j < adj.size(); j++)
+		{
+			if ((adj[i].Grapth.find(j) != adj[i].Grapth.end()) || (i == j))
+			{
+				continue;
+			}
+			int source = i;
+			int dest = j;
+			pred = new int[adj.size()];
+			dist = new int[adj.size()];
+
+			if (BFS_FaceData(adj_int, source, dest, adj_int->size(), pred, dist) == false)
+			{
+				cout << "Cant" << source << " " << dest << " Find";
+				continue;
+			}
+
+			vector<int> path;
+			int crawl = dest;
+			path.push_back(crawl);
+			while (pred[crawl] != -1) {
+				path.push_back(pred[crawl]);
+				crawl = pred[crawl];
+			}
+			cout << "Shortest path of " << i << " " << j << " length is : " << dist[dest];
+			adj[i].Grapth[j] = dist[dest];
+			adj[j].Grapth[i] = dist[dest];
+			delete[](pred);
+			delete[](dist);
+		}
 	}
-
-	vector<int> path;
-	int crawl = dest;
-	path.push_back(crawl);
-	while (pred[crawl] != -1) {
-		path.push_back(pred[crawl]);
-		crawl = pred[crawl];
-	}
-	cout << "Shortest path length is : " << dist[dest];
-
-
-
-
 }
-
-
-
-
-
-
-
 
 int RGG(std::vector<FaceData> TList, FaceData SourceFD, FaceData destFD, int FaceSze)
 {
