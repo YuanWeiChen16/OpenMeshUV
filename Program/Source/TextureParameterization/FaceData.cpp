@@ -13,6 +13,14 @@ double FaceData::FaceDistance(FaceData A, FaceData B)
 		return 10000000000000000000;
 	}
 
+	if (A.Grapth[B.ID] > 5)
+	{
+		return 10000000000000000000;
+	}
+
+
+
+
 #define Test
 #ifdef Test
 
